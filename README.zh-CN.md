@@ -7,6 +7,12 @@
 </p>
 
 <p align="center">
+	<img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+	<img alt="TypeScript" src="https://img.shields.io/badge/typescript-5.x-3178c6?style=flat-square" />
+	<img alt="Workspace" src="https://img.shields.io/badge/workspace-monorepo-111827?style=flat-square" />
+</p>
+
+<p align="center">
 	<a href="./README.md">English</a> · <a href="./README.zh-CN.md">中文导览</a>
 </p>
 
@@ -14,16 +20,40 @@ Koma 是一个面向 AI 应用的模块化防御工具箱。每个技能都可�
 
 ## 一览
 
-Koma 拆成三个独立技能：
-
-1. `koma-gate` - 语义请求过滤与范围控制
-2. `koma-scout` - 流量控制、上传检查与反机器人策略
-3. `koma-core` - 面向敏感数据的零信任索引/内容分离
+<table>
+	<tr>
+		<td width="33%">
+			<strong>1. Koma Gate</strong><br />
+			语义请求过滤与范围控制。<br />
+			<code>koma-gate</code>
+		</td>
+		<td width="33%">
+			<strong>2. Koma Scout</strong><br />
+			流量控制、上传检查与反机器人策略。<br />
+			<code>koma-scout</code>
+		</td>
+		<td width="33%">
+			<strong>3. Koma Core</strong><br />
+			面向敏感数据的零信任索引/内容分离。<br />
+			<code>koma-core</code>
+		</td>
+	</tr>
+</table>
 
 `koma-core` 的存储层还分成两个模式：
 
-- **Core Lite** - 适合入门的最小 split-store 模式
-- **Core Strict** - 带分级、审计和限次读取的强化模式
+<table>
+	<tr>
+		<td width="50%">
+			<strong>Core Lite</strong><br />
+			适合入门的最小 split-store 模式。
+		</td>
+		<td width="50%">
+			<strong>Core Strict</strong><br />
+			带分级、审计和限次读取的强化模式。
+		</td>
+	</tr>
+</table>
 
 ## 为什么看起来更清楚
 
@@ -53,4 +83,23 @@ Koma 使用语义化版本管理，发布前请先查看 `VERSIONING.md`。
 
 - 源码和说明文档保持 English-first，但中文版本保留在仓库中。
 - 当前仓库是 workspace 风格，根目录负责版本与发布入口，`packages/` 负责功能模块。
+
+## 本地验证 npm 包
+
+如果你想在一个全新的目录里验证发布包，可以直接用仓库自带的 smoke test：
+
+```bash
+npm run smoke:npm
+```
+
+或者手工验证：
+
+```bash
+npm pack packages/koma-gate
+mkdir C:\temp\koma-test
+cd C:\temp\koma-test
+npm init -y
+npm install D:\path\to\koma-gate-0.1.0.tgz
+node --input-type=module -e "import { createGeneralKnowledgeGuard } from 'koma-gate'; console.log(typeof createGeneralKnowledgeGuard)"
+```
 

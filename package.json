@@ -11,6 +11,7 @@
     "build": "npm run build -ws --if-present",
     "check": "npm run typecheck -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
+    "smoke:npm": "node scripts/smoke-npm.mjs",
     "release:patch": "npm version patch -ws --no-git-tag-version",
     "release:minor": "npm version minor -ws --no-git-tag-version",
     "release:major": "npm version major -ws --no-git-tag-version"

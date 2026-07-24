@@ -7,6 +7,12 @@ Production-grade defensive primitives for AI apps.
 </p>
 
 <p align="center">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+  <img alt="TypeScript" src="https://img.shields.io/badge/typescript-5.x-3178c6?style=flat-square" />
+  <img alt="Workspace" src="https://img.shields.io/badge/workspace-monorepo-111827?style=flat-square" />
+</p>
+
+<p align="center">
   <a href="./README.md">English</a> · <a href="./README.zh-CN.md">中文导览</a>
 </p>
 
@@ -14,16 +20,40 @@ Koma is a modular defensive toolkit for AI apps. Each skill can be adopted on it
 
 ## At a Glance
 
-Koma is split into three independent skills:
-
-1. `koma-gate` - semantic request filtering and scope control
-2. `koma-scout` - traffic gating, upload checks, and anti-bot throttling
-3. `koma-core` - zero-trust index/content separation for protected data
+<table>
+  <tr>
+    <td width="33%">
+      <strong>1. Koma Gate</strong><br />
+      Semantic request filtering and scope control.<br />
+      <code>koma-gate</code>
+    </td>
+    <td width="33%">
+      <strong>2. Koma Scout</strong><br />
+      Traffic gating, upload checks, and anti-bot throttling.<br />
+      <code>koma-scout</code>
+    </td>
+    <td width="33%">
+      <strong>3. Koma Core</strong><br />
+      Zero-trust index/content separation for protected data.<br />
+      <code>koma-core</code>
+    </td>
+  </tr>
+</table>
 
 The storage layer inside `koma-core` ships with two operating modes:
 
-- **Core Lite** - minimal split-store pattern for beginners
-- **Core Strict** - hardened split-store pattern with tiers, audit, and token-limited retrieval
+<table>
+  <tr>
+    <td width="50%">
+      <strong>Core Lite</strong><br />
+      Minimal split-store pattern for beginners.
+    </td>
+    <td width="50%">
+      <strong>Core Strict</strong><br />
+      Hardened split-store pattern with tiers, audit, and token-limited retrieval.
+    </td>
+  </tr>
+</table>
 
 ## Why It Feels Simple
 
@@ -97,6 +127,25 @@ Separates public search records from private content payloads and links them wit
 - The demo server is dependency-free and includes a built-in self-test.
 - The three skills are designed to be published independently if you want a broader open-source rollout.
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
+
+## Verifying npm Locally
+
+If you want to test the package in a clean directory before or after publishing, use the repo's smoke test:
+
+```bash
+npm run smoke:npm
+```
+
+Or do it manually with a fresh folder:
+
+```bash
+npm pack packages/koma-gate
+mkdir C:\temp\koma-test
+cd C:\temp\koma-test
+npm init -y
+npm install D:\path\to\koma-gate-0.1.0.tgz
+node --input-type=module -e "import { createGeneralKnowledgeGuard } from 'koma-gate'; console.log(typeof createGeneralKnowledgeGuard)"
+```
 
 ## Bilingual Guide
 
