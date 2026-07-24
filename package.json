@@ -1,0 +1,16 @@
+{
+  "name": "project-koma",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Production-grade defensive primitives for AI apps.",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "demo": "node demo/server.js",
+    "check": "npm run check -ws --if-present"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

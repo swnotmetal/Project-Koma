@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Editor and OS files
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Logs and local environment
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.env
+.env.*
+
+# TypeScript artifacts
+*.tsbuildinfo
+
+# Package archives
+*.tgz
