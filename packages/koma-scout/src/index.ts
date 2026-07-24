@@ -368,14 +368,22 @@ interface GeoCacheEntry {
 export class GeoAllowlist {
   private config: Required<GeoAllowlistConfig>;
   private cache = new Map<string, GeoCacheEntry>();
+  private allowedCountries = new Set<string>();
 
   constructor(config: Partial<GeoAllowlistConfig> = {}) {
-    this.config = {
-      allowedCountries: config.allowedCountries ?? ['US', 'FI'], // Default: US + Finland
+    const resolvedConfig: GeoAllowlistConfig = {
+      allowedCountries: config.allowedCountries ?? ['US', 'FI'],
       ipinfoToken: config.ipinfoToken,
-      cacheTtlMs: config.cacheTtlMs ?? 60 * 60 * 1000, // 1 hour
+      cacheTtlMs: config.cacheTtlMs ?? 60 * 60 * 1000,
       failOpen: config.failOpen ?? true
     };
+    this.config = {
+      allowedCountries: resolvedConfig.allowedCountries,
+      ipinfoToken: resolvedConfig.ipinfoToken ?? '',
+      cacheTtlMs: resolvedConfig.cacheTtlMs,
+      failOpen: resolvedConfig.failOpen
+    };
+    this.allowedCountries = new Set(this.config.allowedCountries);
   }
 
   /**
@@ -394,18 +402,16 @@ export class GeoAllowlist {
     const now = Date.now();
 
     if (cached && now < cached.expiresAt) {
-      return { allowed: this.config.allowedCountries.has(cached.country), country: cached.country };
+      return { allowed: this.allowedCountries.has(cached.country), country: cached.country };
     }
 
     try {
       const token = this.config.ipinfoToken ? `?token=${this.config.ipinfoToken}` : '';
-      const response = await fetch(`https://ipinfo.io/${cleanIp}/json${token}`, {
-        timeout: 3000
-      });
+      const response = await fetch(`https://ipinfo.io/${cleanIp}/json${token}`);
       
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       
-      const data = await response.json();
+      const data: any = await response.json();
       const country = data.country || 'UNKNOWN';
       
       this.cache.set(cleanIp, { country, expiresAt: now + this.config.cacheTtlMs });
@@ -413,7 +419,7 @@ export class GeoAllowlist {
       // Periodic cleanup (1% of requests)
       if (Math.random() < 0.01) this.cleanup(now);
       
-      return { allowed: this.config.allowedCountries.has(country), country };
+      return { allowed: this.allowedCountries.has(country), country };
     } catch (error) {
       console.warn('[GeoAllowlist] Lookup failed, failing open:', error);
       return { allowed: this.config.failOpen, country: 'UNKNOWN' };

@@ -2,7 +2,9 @@
 
 面向 AI 应用的防御型基础能力集合。
 
-![Koma logo](logo/logonobg.png)
+![Koma logo](logo/lognobg.png)
+
+English version: [README.md](README.md)
 
 Koma 拆成三个独立技能，便于按需采用：
 

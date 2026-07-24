@@ -71,6 +71,7 @@ export interface AuditEvent {
   ip?: string;
   token?: string;
   sourceId?: string;
+  error?: string;
   success: boolean;
   metadata?: Record<string, any>;
   timestamp: number;
@@ -486,6 +487,10 @@ export class DualCollectionWriter {
       ...existingContent,
       payload: newPayload,
       contentHash: newContentHash,
+      sourceId: existingContent.sourceId,
+      contentToken,
+      accessTier: existingContent.accessTier,
+      accessCount: existingContent.accessCount,
       updatedAt: Date.now(),
       provenance: {
         ...existingContent.provenance,
@@ -510,11 +515,13 @@ export class DualCollectionWriter {
           category: updates.category || indexDoc.category,
           tags: updates.tags || indexDoc.tags,
           contentHash: newContentHash,
+          contentToken,
+          accessTier: indexDoc.accessTier,
           metadata: updates.metadata ? this.sanitizeMetadata({ ...indexDoc.metadata, ...updates.metadata }) : indexDoc.metadata,
           version: (indexDoc.version || 0) + 1,
           updatedAt: Date.now()
         };
-        await this.indexDb.set(this.indexCollection, indexDoc.id, updatedIndex);
+        await this.indexDb.set(this.indexCollection, indexDoc.id ?? '', updatedIndex);
       }
     }
 
@@ -642,7 +649,7 @@ export class DualCollectionReader {
     const docs = await this.indexDb.query(this.indexCollection, filters, limit);
 
     return docs.map(doc => ({
-      indexId: doc.id,
+      indexId: doc.id ?? '',
       displayName: doc.displayName,
       category: doc.category,
       tags: doc.tags,

@@ -8,9 +8,19 @@
   ],
   "scripts": {
     "demo": "node demo/server.js",
-    "check": "npm run check -ws --if-present"
+    "build": "npm run build -ws --if-present",
+    "check": "npm run typecheck -ws --if-present",
+    "typecheck": "npm run typecheck -ws --if-present",
+    "release:patch": "npm version patch -ws --no-git-tag-version",
+    "release:minor": "npm version minor -ws --no-git-tag-version",
+    "release:major": "npm version major -ws --no-git-tag-version"
   },
   "engines": {
     "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.4",
+    "typescript": "^5.8.3"
   }
 }

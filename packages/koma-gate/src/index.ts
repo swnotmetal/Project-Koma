@@ -233,7 +233,7 @@ class OpenAIAdapter implements LLMAdapter {
       signal: AbortSignal.timeout(this.config.timeoutMs || 5000)
     });
     
-    const data = await response.json();
+    const data: any = await response.json();
     const content = data.choices?.[0]?.message?.content || '{"in_scope": false}';
     return this.parseResponse(content);
   }
@@ -272,7 +272,7 @@ class AnthropicAdapter implements LLMAdapter {
       signal: AbortSignal.timeout(this.config.timeoutMs || 5000)
     });
     
-    const data = await response.json();
+    const data: any = await response.json();
     const content = data.content?.[0]?.text || '{"in_scope": false}';
     return this.parseResponse(content);
   }
@@ -308,7 +308,7 @@ class GoogleAdapter implements LLMAdapter {
       }
     );
     
-    const data = await response.json();
+    const data: any = await response.json();
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '{"in_scope": false}';
     return this.parseResponse(content);
   }
@@ -340,7 +340,7 @@ class OllamaAdapter implements LLMAdapter {
       signal: AbortSignal.timeout(this.config.timeoutMs || 10000)
     });
     
-    const data = await response.json();
+    const data: any = await response.json();
     const content = data.response || '{"in_scope": false}';
     return this.parseResponse(content);
   }

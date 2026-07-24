@@ -2,7 +2,9 @@
 
 Production-grade defensive primitives for AI apps.
 
-![Koma logo](logo/logonobg.png)
+![Koma logo](logo/lognobg.png)
+
+中文导览: [README.zh-CN.md](README.zh-CN.md)
 
 Koma is split into three independent skills so each part can be adopted on its own:
 
@@ -22,6 +24,8 @@ The storage layer ships with two operating modes inside `koma-core`:
 - `packages/koma-core/README.md`
 - `README.zh-CN.md`
 - `VERSIONING.md`
+- `CHANGELOG.md`
+- `LICENSE`
 - `package.json`
 - `demo/server.js`
 - `packages/` - implementation source for the current codebase
@@ -89,7 +93,7 @@ Separates public search records from private content payloads and links them wit
 
 ## Naming Guidance
 
-If you want alternatives to Koma for future modules or forks, good defensive families are:
+If you want alternatives to Koma for future modules or forks, the naming families below are reasonable options:
 
 - `Aegis`
 - `Sentinel`
@@ -98,7 +102,7 @@ If you want alternatives to Koma for future modules or forks, good defensive fam
 
 ## Contributing
 
-Keep changes:
+Contributions should stay:
 
 - English-first in source
 - concise and professional in docs
@@ -107,4 +111,4 @@ Keep changes:
 
 ## License
 
-Choose a permissive open-source license before publishing.
+Koma is released under the MIT License. See [LICENSE](LICENSE).
