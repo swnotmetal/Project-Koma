@@ -2,20 +2,35 @@
 
 Production-grade defensive primitives for AI apps.
 
-![Koma logo](logo/lognobg.png)
+<p align="center">
+  <img src="logo/lognobg.png" alt="Koma logo" width="160" />
+</p>
 
-中文导览: [README.zh-CN.md](README.zh-CN.md)
+<p align="center">
+  <a href="./README.md">English</a> · <a href="./README.zh-CN.md">中文导览</a>
+</p>
 
-Koma is split into three independent skills so each part can be adopted on its own:
+Koma is a modular defensive toolkit for AI apps. Each skill can be adopted on its own, so you can start small and add protection only where you need it.
+
+## At a Glance
+
+Koma is split into three independent skills:
 
 1. `koma-gate` - semantic request filtering and scope control
 2. `koma-scout` - traffic gating, upload checks, and anti-bot throttling
 3. `koma-core` - zero-trust index/content separation for protected data
 
-The storage layer ships with two operating modes inside `koma-core`:
+The storage layer inside `koma-core` ships with two operating modes:
 
 - **Core Lite** - minimal split-store pattern for beginners
 - **Core Strict** - hardened split-store pattern with tiers, audit, and token-limited retrieval
+
+## Why It Feels Simple
+
+- One repository, three clear skills.
+- Each module has a single job.
+- The storage layer is split into a beginner mode and a strict mode.
+- The homepage stays readable on GitHub without extra setup.
 
 ## Repository Layout
 
@@ -29,13 +44,6 @@ The storage layer ships with two operating modes inside `koma-core`:
 - `package.json`
 - `demo/server.js`
 - `packages/` - implementation source for the current codebase
-
-## Why This Structure Works
-
-- Each skill is useful on its own.
-- Beginners can start with one layer and add the rest later.
-- The storage piece is intentionally split into a simple mode and a strict mode.
-- The repository reads like a product, not a notebook dump.
 
 ## Quick Start
 
@@ -88,8 +96,12 @@ Separates public search records from private content payloads and links them wit
 - The repo is friendly to vibecoders, but the APIs stay production-oriented.
 - The demo server is dependency-free and includes a built-in self-test.
 - The three skills are designed to be published independently if you want a broader open-source rollout.
-- To switch to Chinese, open [README.zh-CN.md](README.zh-CN.md).
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
+
+## Bilingual Guide
+
+- English: [README.md](README.md)
+- 中文导览: [README.zh-CN.md](README.zh-CN.md)
 
 ## Contributing
 
