@@ -39,3 +39,4 @@ Koma 使用语义化版本管理，发布前请先查看 `VERSIONING.md`。
 
 - 源码和说明文档保持 English-first，但中文版本保留在仓库中。
 - 当前仓库是 workspace 风格，根目录负责版本与发布入口，`packages/` 负责功能模块。
+

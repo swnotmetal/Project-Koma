@@ -91,15 +91,6 @@ Separates public search records from private content payloads and links them wit
 - To switch to Chinese, open [README.zh-CN.md](README.zh-CN.md).
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
 
-## Naming Guidance
-
-If you want alternatives to Koma for future modules or forks, the naming families below are reasonable options:
-
-- `Aegis`
-- `Sentinel`
-- `Fortress`
-- `Prism`
-
 ## Contributing
 
 Contributions should stay:
