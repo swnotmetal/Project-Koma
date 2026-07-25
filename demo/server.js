@@ -243,12 +243,12 @@ async function handleSelfTest(req, res) {
 
   tests.push({
     name: 'scope classifier accepts technical query',
-    pass: classifyScope('How do I build a rate limiting middleware in Express?') === true,
+    pass: classifyScope('How to build a rate limiting middleware in Express?') === true,
   });
 
   tests.push({
     name: 'scope classifier rejects recipe query',
-    pass: classifyScope('How do I make kung pao chicken?') === false,
+    pass: classifyScope('How to make kung pao chicken?') === false,
   });
 
   const token = deriveToken('demo-item-1');

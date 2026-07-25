@@ -11,7 +11,7 @@ This package exposes a compact intent-classification guard that returns a strict
 
 ## Install
 
-This repository is source-first. Use the package from the workspace or bundle it into your own build pipeline.
+Source-first. Use the package from the workspace or bundle it into a build pipeline.
 
 ## Usage
 

@@ -11,7 +11,7 @@ This package provides low-cost perimeter checks for voice or upload endpoints be
 
 ## Install
 
-This repository is source-first. Use the package from the workspace or bundle it into your own build pipeline.
+Source-first. Use the package from the workspace or bundle it into a build pipeline.
 
 ## Usage
 

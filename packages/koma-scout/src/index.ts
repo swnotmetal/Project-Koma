@@ -438,7 +438,7 @@ export class GeoAllowlist {
       const result = await this.check(req.ip || 'unknown');
       if (!result.allowed) {
         return res.status(403).json({
-          error: 'Service unavailable in your region',
+          error: 'Service unavailable in this region',
           message: `This service is only available in: ${Array.from(this.config.allowedCountries).join(', ')}`,
           country: result.country
         });

@@ -18,7 +18,7 @@
 
 Koma 是一个面向 AI 应用的模块化防御工具箱。每个技能都可以单独采用，先解决最需要的那一层，再逐步叠加防护。
 
-如果你关心 AI guardrails、限流、提示词过滤、上传校验或受保护的检索，这个仓库就是给你快速读懂、快速验证、快速集成的。
+如果关注 AI guardrails、限流、提示词过滤、上传校验或受保护的检索，这个仓库适合用来快速读懂、快速验证、快速集成。
 
 ## 一览
 
@@ -99,7 +99,7 @@ flowchart LR
 
 ## 终端演示
 
-最容易让人理解的方式，是录一段短终端演示。你可以让这个流程出现在 README 里：
+最容易让人理解的方式，是录一段短终端演示。推荐把“先解释、后动图、再给命令”放在 README 里：
 
 建议录制顺序：
 
@@ -127,11 +127,11 @@ Koma demo server listening on http://localhost:8080
 {"success":true,...}
 ```
 
-后面如果你想要最强首屏效果，可以再补一段 `vhs` / `asciinema` 的动图或视频。
+如果首屏还需要更强的视觉效果，可以再补一段 `vhs` / `asciinema` 的动图或视频。
 
 ### Scout 结果到底是什么意思
 
-如果你看到下面这样的结果：
+下面这样的结果表示：
 
 ```json
 {
@@ -158,7 +158,7 @@ Koma demo server listening on http://localhost:8080
 
 VHS 剧本放在 [docs/koma-demo.tape](docs/koma-demo.tape)。
 
-Windows 提示：VHS 最适合在 WSL2、Git Bash 或其他 POSIX shell 里运行。如果你坚持用 PowerShell 做手测，就用本 README 里的 `curl.exe` 示例；但真正录视频时，建议在 POSIX shell 里跑 tape，这样最稳。
+Windows 提示：VHS 最适合在 WSL2、Git Bash 或其他 POSIX shell 里运行。PowerShell 手测可以继续使用本 README 里的 `curl.exe` 示例；真正录视频时，建议在 POSIX shell 里跑 tape，这样最稳。
 
 建议录制顺序：
 
@@ -178,7 +178,7 @@ Koma 使用语义化版本管理，发布前请先查看 `VERSIONING.md`。
 
 ## npm 烟雾测试
 
-如果你想确认“新目录里下载安装到底能不能用”，请直接运行：
+如果要确认“新目录里下载安装到底能不能用”，请直接运行：
 
 ```bash
 npm run smoke:npm

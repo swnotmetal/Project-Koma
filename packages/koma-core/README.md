@@ -11,7 +11,7 @@ This package separates searchable index records from private content records and
 
 ## Install
 
-This repository is source-first. Use the package from the workspace or bundle it into your own build pipeline.
+Source-first. Use the package from the workspace or bundle it into a build pipeline.
 
 ## Usage
 
@@ -63,7 +63,7 @@ A beginner-friendly split-store pattern:
 - private content layer for exact-token retrieval
 - deterministic token mapping from a backend secret
 
-Use this when you want the architecture pattern without the full access-control stack.
+Use this for the architecture pattern without the full access-control stack.
 
 ### Core Strict
 

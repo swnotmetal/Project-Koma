@@ -16,9 +16,9 @@ Open-source AI guardrails, anti-bot throttling, and zero-trust storage for AI ap
   <a href="./README.md">English</a> · <a href="./README.zh-CN.md">中文导览</a>
 </p>
 
-Koma is a modular defensive toolkit for AI apps. Each skill can be adopted on its own, so you can start small and add protection only where you need it.
+Koma is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
 
-If you care about AI guardrails, rate limiting, prompt filtering, upload validation, or protected retrieval, this repo is meant to be readable in under 10 seconds.
+AI guardrails, rate limiting, prompt filtering, upload validation, and protected retrieval are covered in a format that stays readable at a glance.
 
 ## At a Glance
 
@@ -120,7 +120,7 @@ Example guard request:
 ```bash
 curl.exe -X POST http://localhost:8080/guard \
   -H "Content-Type: application/json" \
-  -d "{\"text\":\"How do I build rate limiting middleware in Node?\"}"
+  -d "{\"text\":\"How to build rate limiting middleware in Node?\"}"
 ```
 
 PowerShell note: use `curl.exe` instead of `curl` so the shell does not replace it with `Invoke-WebRequest`.
@@ -129,7 +129,7 @@ PowerShell-safe variant:
 
 ```powershell
 @'
-{"text":"How do I build rate limiting middleware in Node?"}
+{"text":"How to build rate limiting middleware in Node?"}
 '@ | curl.exe -X POST http://localhost:8080/guard -H "Content-Type: application/json" --data-binary '@-'
 ```
 
@@ -163,11 +163,11 @@ Koma demo server listening on http://localhost:8080
 {"success":true,...}
 ```
 
-If you want the strongest first impression later, record this with `vhs` or `asciinema` and embed the GIF/video here.
+For a stronger first impression, record this with `vhs` or `asciinema` and embed the GIF or video here.
 
 ### What the Scout result means
 
-If you see a Scout response like this:
+A Scout response like this means:
 
 ```json
 {
@@ -194,7 +194,7 @@ That is the real product value: fewer wasted API calls and fewer junk uploads.
 
 The demo tape lives in [docs/koma-demo.tape](docs/koma-demo.tape).
 
-Windows tip: VHS is easiest to run from WSL2, Git Bash, or another POSIX shell. If you stay in PowerShell, use the `curl.exe` examples in this README for manual testing, but record the tape from a POSIX shell for the cleanest result.
+Windows tip: VHS is easiest to run from WSL2, Git Bash, or another POSIX shell. In PowerShell, use the `curl.exe` examples in this README for manual testing; record the tape from a POSIX shell for the cleanest result.
 
 Suggested flow for the tape:
 
@@ -222,12 +222,12 @@ Separates public search records from private content payloads and links them wit
 - Source code is English-first.
 - The repo is friendly to vibecoders, but the APIs stay production-oriented.
 - The demo server is dependency-free and includes a built-in self-test.
-- The three skills are designed to be published independently if you want a broader open-source rollout.
+- The three skills are designed to be published independently.
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
 
 ## Verifying npm Locally
 
-If you want to test the package in a clean directory before or after publishing, use the repo's smoke test. This is the answer to “will it work in a fresh folder?”
+To test the package in a clean directory before or after publishing, use the repo's smoke test. This answers “will it work in a fresh folder?”
 
 ```bash
 npm run smoke:npm
@@ -252,7 +252,7 @@ The smoke test does three things automatically:
 
 ## Cross-Platform Testing
 
-Use the command style that matches your shell:
+Command style depends on the shell:
 
 | System | Gate / Scout / Core API test | Notes |
 | --- | --- | --- |
@@ -275,7 +275,7 @@ Example PowerShell-friendly request:
 
 ## One-Click Demo
 
-Koma is currently source-first and npm-first. A browser-only demo can be added later with StackBlitz or CodeSandbox if you want a fully online walkthrough.
+Koma is currently source-first and npm-first. A browser-only demo can be added later with StackBlitz or CodeSandbox for a fully online walkthrough.
 
 ## Contributing
 
