@@ -900,7 +900,7 @@ export class DualCollectionMigrator {
 // Factory & Presets
 // ============================================================================
 
-export function createVibeShieldStorage(config: StorageConfig) {
+export function createKomaStorage(config: StorageConfig) {
   const tokenDeriver = new TokenDeriver(config.masterKey, config.hkdfInfo, config.tokenLength);
   
   const writer = new DualCollectionWriter({
@@ -943,5 +943,5 @@ export default {
   RateLimiter,
   MemoryRateLimitStorage,
   DualCollectionMigrator,
-  createVibeShieldStorage
+  createKomaStorage
 };

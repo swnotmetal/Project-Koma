@@ -4,6 +4,20 @@ Traffic shaping, audio validation, and anti-bot middleware for AI apps.
 
 This package provides low-cost perimeter checks for voice or upload endpoints before any expensive model work begins.
 
+## AI Agent Quick Read
+
+- Read order: this README, then `src/index.ts`, then [../../demo/server.js](../../demo/server.js).
+- Boundary: handle rate limiting, upload validation, and geo allowlisting.
+- Decision style: cheap checks first, expensive work last.
+- Primary use: block bad traffic before the model or storage layer is reached.
+
+## Agent Handoff
+
+- Input: request metadata, file size, duration, MIME type, and optional IP or region.
+- Output: pass or block, with reasons from the perimeter checks.
+- Control point: `createKomaScoutMiddleware()` and the storage or validator config passed into it.
+- Common mistake: using Scout as the main application policy layer instead of a perimeter filter.
+
 ## Entry Point
 
 - Source entry: `src/index.ts`
@@ -16,9 +30,9 @@ Source-first. Use the package from the workspace or bundle it into a build pipel
 ## Usage
 
 ```ts
-import { createVibeShieldMiddleware } from './src';
+import { createKomaScoutMiddleware } from './src';
 
-const middlewares = createVibeShieldMiddleware({
+const middlewares = createKomaScoutMiddleware({
   rateLimit: {
     keyPrefix: 'api:',
     maxRequests: 30,
@@ -43,8 +57,8 @@ middlewares.forEach((mw) => app.use(mw));
 - `FirestoreRateLimitStorage`
 - `AudioValidator`
 - `GeoAllowlist`
-- `createVibeShieldMiddleware()`
-- `applyVibeShield()`
+- `createKomaScoutMiddleware()`
+- `applyKomaScout()`
 - `RateLimitConfig`
 - `AudioValidationConfig`
 - `GeoAllowlistConfig`

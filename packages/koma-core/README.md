@@ -4,6 +4,20 @@ Protected split-store storage for AI apps.
 
 This package separates searchable index records from private content records and links them with opaque backend-derived tokens.
 
+## AI Agent Quick Read
+
+- Read order: this README, then `src/index.ts`, then [../../demo/server.js](../../demo/server.js).
+- Boundary: keep searchable records and private records separate.
+- Token rule: retrieval stays backend-derived and opaque.
+- Primary use: protect sensitive content while preserving discovery and search.
+
+## Agent Handoff
+
+- Input: an item to ingest, a token to resolve, and two storage handles.
+- Output: searchable metadata plus token-addressed private content.
+- Control point: `createKomaStorage()` and the writer or reader it returns.
+- Common mistake: exposing private records to search or assuming tokens are client-generated.
+
 ## Entry Point
 
 - Source entry: `src/index.ts`
@@ -16,9 +30,9 @@ Source-first. Use the package from the workspace or bundle it into a build pipel
 ## Usage
 
 ```ts
-import { createVibeShieldStorage } from './src';
+import { createKomaStorage } from './src';
 
-const storage = createVibeShieldStorage({
+const storage = createKomaStorage({
   masterKey: process.env.AEGIS_MASTER_KEY || 'dev-key',
   indexDb,
   contentDb,
@@ -42,7 +56,7 @@ await storage.writer.ingest({
 - `DualCollectionReader`
 - `RateLimiter`
 - `DualCollectionMigrator`
-- `createVibeShieldStorage()`
+- `createKomaStorage()`
 - `StorageConfig`
 
 ## What It Solves

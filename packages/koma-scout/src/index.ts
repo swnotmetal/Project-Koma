@@ -59,7 +59,7 @@ export interface GeoAllowlistConfig {
   failOpen: boolean;
 }
 
-export interface VibeShieldConfig {
+export interface KomaScoutConfig {
   rateLimit: RateLimitConfig;
   audioValidation?: AudioValidationConfig;
   geoAllowlist?: GeoAllowlistConfig;
@@ -454,9 +454,9 @@ export class GeoAllowlist {
 // ============================================================================
 
 /**
- * Create complete VibeShield protection middleware stack
+ * Create complete Koma Scout protection middleware stack
  */
-export function createVibeShieldMiddleware(config: VibeShieldConfig) {
+export function createKomaScoutMiddleware(config: KomaScoutConfig) {
   const storage = config.storage || new MemoryRateLimitStorage();
   const audioValidator = config.audioValidation ? new AudioValidator(config.audioValidation) : null;
   const geoAllowlist = config.geoAllowlist ? new GeoAllowlist(config.geoAllowlist) : null;
@@ -521,15 +521,15 @@ export function createVibeShieldMiddleware(config: VibeShieldConfig) {
 /**
  * Express-specific helper: apply all middlewares
  */
-export function applyVibeShield(app: any, config: VibeShieldConfig) {
-  const middlewares = createVibeShieldMiddleware(config);
+export function applyKomaScout(app: any, config: KomaScoutConfig) {
+  const middlewares = createKomaScoutMiddleware(config);
   middlewares.forEach(mw => app.use(mw));
   return middlewares;
 }
 
 export default {
-  createVibeShieldMiddleware,
-  applyVibeShield,
+  createKomaScoutMiddleware,
+  applyKomaScout,
   AudioValidator,
   GeoAllowlist,
   MemoryRateLimitStorage,

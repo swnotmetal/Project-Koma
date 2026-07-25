@@ -24,6 +24,14 @@ Koma 是一个面向 AI 应用的模块化防御工具箱。每个技能都可�
 	<img src="koma-demo.gif" alt="Koma 演示 GIF" width="100%" />
 </p>
 
+## AI Agent 快速阅读
+
+- 阅读顺序：本页 README、[demo/server.js](demo/server.js)、目标模块的中文 README。
+- Koma Gate 负责在模型和工具调用之前做范围过滤。
+- Koma Scout 负责在昂贵处理之前做外围防护。
+- Koma Core 负责把索引数据和私有内容数据分离。
+- 这张 GIF 展示了三层防护的完整流程。
+
 ## 一览
 
 <table>

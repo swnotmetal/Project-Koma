@@ -16,11 +16,11 @@ const packages = [
   },
   {
     name: 'koma-scout',
-    symbol: 'createVibeShieldMiddleware'
+    symbol: 'createKomaScoutMiddleware'
   },
   {
     name: 'koma-core',
-    symbol: 'createVibeShieldStorage'
+    symbol: 'createKomaStorage'
   }
 ];
 

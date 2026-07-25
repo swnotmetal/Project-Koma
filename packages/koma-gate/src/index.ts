@@ -433,7 +433,7 @@ class LRUCache<K, V> {
 // Main Guard Class
 // ============================================================================
 
-export class VibeShieldGuard extends TinyEventEmitter {
+export class KomaGuard extends TinyEventEmitter {
   private adapter: LLMAdapter;
   private config: Required<GuardConfig>;
   private cache?: LRUCache<string, GuardDecision>;
@@ -714,8 +714,8 @@ export class VibeShieldGuard extends TinyEventEmitter {
 /**
  * Create a preset for a general-knowledge assistant.
  */
-export function createGeneralKnowledgeGuard(config: Partial<GuardConfig> = {}): VibeShieldGuard {
-  return new VibeShieldGuard({
+export function createGeneralKnowledgeGuard(config: Partial<GuardConfig> = {}): KomaGuard {
+  return new KomaGuard({
     llm: {
       provider: 'google',
       model: 'gemini-2.0-flash-lite',
@@ -761,8 +761,8 @@ export function createGeneralKnowledgeGuard(config: Partial<GuardConfig> = {}): 
 /**
  * Create a preset for a coding assistant.
  */
-export function createCodeAssistantGuard(config: Partial<GuardConfig> = {}): VibeShieldGuard {
-  return new VibeShieldGuard({
+export function createCodeAssistantGuard(config: Partial<GuardConfig> = {}): KomaGuard {
+  return new KomaGuard({
     llm: {
       provider: 'ollama',
       model: 'llama3.1:8b',
@@ -806,8 +806,8 @@ export function createCodeAssistantGuard(config: Partial<GuardConfig> = {}): Vib
 /**
  * Create a preset for support and FAQ assistants.
  */
-export function createSupportGuard(config: Partial<GuardConfig> = {}): VibeShieldGuard {
-  return new VibeShieldGuard({
+export function createSupportGuard(config: Partial<GuardConfig> = {}): KomaGuard {
+  return new KomaGuard({
     llm: {
       provider: 'openai',
       model: 'gpt-4o-mini',
@@ -849,7 +849,7 @@ export function createSupportGuard(config: Partial<GuardConfig> = {}): VibeShiel
 }
 
 export default {
-  VibeShieldGuard,
+  KomaGuard,
   createGeneralKnowledgeGuard,
   createCodeAssistantGuard,
   createSupportGuard,

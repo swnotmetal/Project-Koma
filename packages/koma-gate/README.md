@@ -4,6 +4,20 @@ Semantic request filtering for AI apps.
 
 This package exposes a compact intent-classification guard that returns a strict JSON decision and is designed to sit in front of LLM calls, tool calls, or support workflows.
 
+## AI Agent Quick Read
+
+- Read order: this README, then `src/index.ts`, then [../../demo/server.js](../../demo/server.js).
+- Boundary: decide whether an input is in scope before any model or tool work begins.
+- Output shape: strict JSON decision plus middleware helpers.
+- Primary use: guard the request path, not the downstream business logic.
+
+## Agent Handoff
+
+- Input: a short user request or route text.
+- Output: allow or reject, plus a JSON decision object.
+- Control point: `createGeneralKnowledgeGuard()`, `createCodeAssistantGuard()`, or `createSupportGuard()`.
+- Common mistake: treating this layer as an intent router instead of a guard.
+
 ## Entry Point
 
 - Source entry: `src/index.ts`
@@ -31,7 +45,7 @@ app.post('/api/query', guard.middleware(), async (req, res) => {
 
 ## Exports
 
-- `VibeShieldGuard`
+- `KomaGuard`
 - `GuardConfig`
 - `GuardResult`
 - `GuardDecision`

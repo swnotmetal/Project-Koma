@@ -321,7 +321,7 @@ const server = http.createServer(async (req, res) => {
 
   try {
     if (req.method === 'GET' && url.pathname === '/health') {
-      return json(res, 200, { ok: true, service: 'aegis-vibe-demo' });
+      return json(res, 200, { ok: true, service: 'aegis-koma-demo' });
     }
 
     if (req.method === 'POST' && url.pathname === '/guard') {

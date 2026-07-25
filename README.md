@@ -24,6 +24,14 @@ AI guardrails, rate limiting, prompt filtering, upload validation, and protected
   <img src="koma-demo.gif" alt="Koma demo GIF" width="100%" />
 </p>
 
+## AI Agent Quick Read
+
+- Read order: this README, then [demo/server.js](demo/server.js), then the package README for the target layer.
+- Koma Gate filters scope before model or tool calls.
+- Koma Scout enforces perimeter checks before expensive processing.
+- Koma Core separates public index data from private content data.
+- The demo GIF shows all three layers in one flow.
+
 ## At a Glance
 
 <table>
@@ -224,7 +232,7 @@ Separates public search records from private content payloads and links them wit
 ## Development Notes
 
 - Source code is English-first.
-- The repo is friendly to vibecoders, but the APIs stay production-oriented.
+- The repo is friendly to agent-first users, but the APIs stay production-oriented.
 - The demo server is dependency-free and includes a built-in self-test.
 - The three skills are designed to be published independently.
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
