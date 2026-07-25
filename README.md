@@ -20,6 +20,10 @@ Koma is a modular defensive toolkit for AI apps. Each skill stands alone, so the
 
 AI guardrails, rate limiting, prompt filtering, upload validation, and protected retrieval are covered in a format that stays readable at a glance.
 
+<p align="center">
+  <img src="koma-demo.gif" alt="Koma demo GIF" width="100%" />
+</p>
+
 ## At a Glance
 
 <table>

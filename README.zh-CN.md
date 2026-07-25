@@ -20,6 +20,10 @@ Koma 是一个面向 AI 应用的模块化防御工具箱。每个技能都可�
 
 如果关注 AI guardrails、限流、提示词过滤、上传校验或受保护的检索，这个仓库适合用来快速读懂、快速验证、快速集成。
 
+<p align="center">
+	<img src="koma-demo.gif" alt="Koma 演示 GIF" width="100%" />
+</p>
+
 ## 一览
 
 <table>
