@@ -8,6 +8,11 @@ const MASTER_KEY = process.env.AEGIS_MASTER_KEY || 'demo-master-key';
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 5;
 const MIN_AUDIO_BYTES = 8_000;
+const MAX_AUDIO_BYTES = 5 * 1024 * 1024;
+const MIN_AUDIO_DURATION_MS = 1_500;
+const MAX_AUDIO_DURATION_MS = 12_000;
+const ALLOWED_MIME_TYPES = new Set(['audio/mp4', 'audio/wav']);
+const ALLOWED_COUNTRIES = new Set(['US', 'FI']);
 
 const state = {
   rateLimits: new Map(),
@@ -53,7 +58,7 @@ function classifyScope(text) {
   if (!input) return false;
 
   const allowed = [
-    'how do i', 'how to', 'api', 'middleware', 'rate limit', 'security', 'database',
+    'api', 'middleware', 'rate limit', 'security', 'database',
     'cache', 'token', 'prompt injection', 'llm', 'typescript', 'node', 'express', 'fastapi',
   ];
   const blocked = [
@@ -62,7 +67,7 @@ function classifyScope(text) {
   ];
 
   if (blocked.some((phrase) => input.includes(phrase))) return false;
-  return allowed.some((phrase) => input.includes(phrase)) || input.length >= 8;
+  return allowed.some((phrase) => input.includes(phrase));
 }
 
 function checkRateLimit(key) {
@@ -86,6 +91,20 @@ function extractSafeMetadata(metadata = {}) {
     format: metadata.format || 'text',
     language: metadata.language || 'en',
     tags: Array.isArray(metadata.tags) ? metadata.tags.slice(0, 8) : [],
+  };
+}
+
+function evaluateScoutChecks(body = {}) {
+  const sizeBytes = Number(body.sizeBytes || 0);
+  const durationMs = Number(body.durationMs || 0);
+  const mimeType = String(body.mimeType || '');
+  const country = String(body.country || 'UNKNOWN').toUpperCase();
+
+  return {
+    size: sizeBytes >= MIN_AUDIO_BYTES && sizeBytes <= MAX_AUDIO_BYTES,
+    duration: durationMs >= MIN_AUDIO_DURATION_MS && durationMs <= MAX_AUDIO_DURATION_MS,
+    mime: ALLOWED_MIME_TYPES.has(mimeType),
+    country: country === 'LOCAL' || ALLOWED_COUNTRIES.has(country),
   };
 }
 
@@ -137,6 +156,35 @@ async function handleIngest(req, res) {
     contentToken,
     contentHash,
     note: 'Index and content are separated; only the token links them.',
+  });
+}
+
+async function handleScout(req, res) {
+  const body = await readBody(req);
+  const clientId = String(body.clientId || req.socket.remoteAddress || 'unknown');
+  const rateKey = `scout:${clientId}`;
+  const rate = checkRateLimit(rateKey);
+
+  if (!rate.allowed) {
+    return json(res, 429, {
+      success: false,
+      layer: 'scout',
+      error: 'Rate limit exceeded',
+      retryAfter: rate.retryAfter,
+    });
+  }
+
+  const checks = evaluateScoutChecks(body);
+
+  const allowed = checks.size && checks.duration && checks.mime && checks.country;
+
+  return json(res, allowed ? 200 : 400, {
+    success: allowed,
+    layer: 'scout',
+    checks,
+    summary: allowed
+      ? 'Scout passed: the request is large enough, long enough, and uses an allowed audio type.'
+      : 'Scout blocked early: the request is too small, too short, or otherwise not safe to process.',
   });
 }
 
@@ -216,6 +264,54 @@ async function handleSelfTest(req, res) {
     pass: limitProbe1.allowed === true && limitProbe2.allowed === true,
   });
 
+  const scoutPass = evaluateScoutChecks({
+    sizeBytes: 16_000,
+    durationMs: 2_000,
+    mimeType: 'audio/mp4',
+    country: 'US',
+  });
+  const scoutFail = evaluateScoutChecks({
+    sizeBytes: 1_000,
+    durationMs: 200,
+    mimeType: 'text/plain',
+    country: 'CN',
+  });
+
+  tests.push({
+    name: 'scout accepts valid audio metadata',
+    pass: scoutPass.size && scoutPass.duration && scoutPass.mime && scoutPass.country,
+  });
+
+  tests.push({
+    name: 'scout rejects invalid audio metadata',
+    pass: !scoutFail.size || !scoutFail.duration || !scoutFail.mime || !scoutFail.country,
+  });
+
+  const ingestToken = deriveToken('demo-item-1');
+  state.indexStore.set('demo-item-docs', {
+    displayName: 'Demo Item',
+    category: 'docs',
+    tags: ['demo'],
+    contentHash: hashInput({ title: 'Protected content' }),
+    contentToken: ingestToken,
+    metadata: extractSafeMetadata({ language: 'en' }),
+    accessTier: 'public',
+    createdAt: Date.now(),
+  });
+  state.contentStore.set(ingestToken, {
+    sourceId: 'demo-item-1',
+    contentToken: ingestToken,
+    payload: { title: 'Protected content' },
+    accessTier: 'public',
+    accessCount: 0,
+    createdAt: Date.now(),
+  });
+
+  tests.push({
+    name: 'core keeps index and content separated',
+    pass: state.indexStore.has('demo-item-docs') && state.contentStore.has(ingestToken),
+  });
+
   const passed = tests.every((test) => test.pass);
   return json(res, passed ? 200 : 500, { success: passed, tests });
 }
@@ -234,6 +330,10 @@ const server = http.createServer(async (req, res) => {
 
     if (req.method === 'POST' && url.pathname === '/ingest') {
       return await handleIngest(req, res);
+    }
+
+    if (req.method === 'POST' && url.pathname === '/scout') {
+      return await handleScout(req, res);
     }
 
     if (req.method === 'GET' && url.pathname === '/search') {
@@ -256,5 +356,5 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Koma demo server running on http://localhost:${PORT}`);
-  console.log('Try /health, /guard, /ingest, /search, /content, and /self-test');
+  console.log('Try /health, /guard, /scout, /ingest, /search, /content, and /self-test');
 });
