@@ -1,6 +1,6 @@
-# Koma
+# Koma(**狛犬**)
 
-面向 AI 应用的开源防御能力集合：语义过滤、反机器人控制、零信任存储。
+狛犬立，百邪辟。Koma是一款面向 AI 应用的开源防御能力集合：语义过滤、反机器人控制、零信任存储。
 
 <p align="center">
 	<img src="logo/lognobg.png" alt="Koma logo" width="160" />
@@ -13,19 +13,15 @@
 </p>
 
 <p align="center">
-	<a href="./README.md">English</a> · <a href="./README.zh-CN.md">中文导览</a>
+	<a href="./README.md">English</a>
 </p>
 
-Koma 是一个面向 AI 应用的模块化防御工具箱。每个技能都可以单独采用，先解决最需要的那一层，再逐步叠加防护。
+每个技能都可以单独采用，先解决最需要的那一层，再逐步叠加防护。
 
-这套模式是从一个实际运行的生产环境语音 AI 药物信息系统里蒸馏出来的。
+这套模式从实际运行的生产环境语音 AI 信息系统中蒸馏而来。
 仓库只包含可复用的防御层——没有领域数据、没有私有提示词。
 
 如果关注 AI guardrails、限流、提示词过滤、上传校验或受保护的检索，这个仓库适合用来快速读懂、快速验证、快速集成。
-
-<p align="center">
-	<img src="koma-demo.gif" alt="Koma 演示 GIF" width="100%" />
-</p>
 
 ## AI Agent 快速阅读
 
@@ -72,13 +68,13 @@ Koma 是一个面向 AI 应用的模块化防御工具箱。每个技能都可�
 	</tr>
 </table>
 
-## 为什么更容易看懂
+## 为什么选用Koma
 
 - 一个仓库，三个清晰职责。
 - 每个模块只做一件事。
 - 存储层区分入门模式和严格模式。
 - GitHub 首页可以直接读懂，不需要额外说明。
-- 与 Guardrails AI、NeMo、LLM Guard 等的详细对比见 [COMPARISON.md](COMPARISON.md)。
+- 与 Guardrails AI、NeMo、LLM Guard 等的详细对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。
 - 另外还提供了清洁目录的 npm 验证，避免"看起来能用但其实装不上"的情况。
 
 ## 架构图
@@ -108,10 +104,9 @@ flowchart LR
 - `package.json`
 - `VERSIONING.md`
 
-## 如何切换中文版本
+## 如何切换语言版本
 
 - 英文版：[README.md](README.md)
-- 中文导览：[README.zh-CN.md](README.zh-CN.md)
 
 ## 演示
 
@@ -155,7 +150,7 @@ Koma 使用语义化版本管理，发布前请先查看 `VERSIONING.md`。
 
 - 源码和文档保持 English-first，中文版本同步维护。
 - 仓库采用 workspace 结构：根目录管理版本与发布，`packages/` 承载功能模块。
-- API 面向生产环境设计，文档同时面向人类读者和 AI agent。
+- API 面向生产环境设计，文档同时面向读者和 AI agent。
 - 每个包均可独立发布。
 - 版本与标签规则见 [VERSIONING.md](VERSIONING.md)。
 - Gate 预设、Scout 阈值和 Core 模式提炼自实际运行环境中的真实防御战果——包括提示注入拦截、静音幻觉防护和数据泄露阻止。
@@ -178,11 +173,12 @@ npm run smoke:npm
 
 不同系统建议用不同的命令写法：
 
-| 系统 | API 测试命令风格 | 详情 |
-| --- | --- | --- |
-| Windows PowerShell | `curl.exe` + `--data-binary '@-'` 或 `Invoke-RestMethod` | 裸 `curl` 是 PowerShell 别名。JSON 推荐用 here-string 或 `Invoke-RestMethod`。 |
-| macOS / Linux | 单引号包 JSON 的 `curl` | VHS tape 在该环境下原生运行。 |
-| Windows WSL2 | `curl`（POSIX 风格） | Windows 上录 VHS 最稳的方式。 |
+
+| 系统               | API 测试命令风格                                         | 详情                                                                          |
+| ------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| Windows PowerShell | `curl.exe` + `--data-binary '@-'` 或 `Invoke-RestMethod` | 裸`curl` 是 PowerShell 别名。JSON 推荐用 here-string 或 `Invoke-RestMethod`。 |
+| macOS / Linux      | 单引号包 JSON 的`curl`                                   | VHS tape 在该环境下原生运行。                                                 |
+| Windows WSL2       | `curl`（POSIX 风格）                                     | Windows 上录 VHS 最稳的方式。                                                 |
 
 PowerShell 友好的 Scout 示例：
 
@@ -191,4 +187,3 @@ PowerShell 友好的 Scout 示例：
 {"sizeBytes":16000,"durationMs":2000,"mimeType":"audio/mp4","country":"US"}
 '@ | curl.exe -X POST http://localhost:8080/scout -H "Content-Type: application/json" --data-binary '@-'
 ```
-
