@@ -72,7 +72,7 @@ A technical comparison for engineers evaluating AI defense toolkits.
 ### ✗ Not a Fit
 
 - **Python-only stacks** — use Guardrails AI or LLM Guard instead.
-- **Fully managed platforms** — if already using Cloudflare + Auth0 + Vault, Koma adds less value.
+- **Monoliths that don't need a defense layer** — if mixing business logic and defense in one function works fine, Koma's modularity is unnecessary overhead.
 - **Real-time WebSocket streaming** — Koma is designed for request/response patterns.
 
 ---
