@@ -27,15 +27,25 @@ Koma Gate 是面向 AI 应用的语义请求过滤模块。
 
 ## 导出
 
-- `KomaGuard`
-- `GuardConfig`
-- `GuardResult`
-- `GuardDecision`
-- `createGeneralKnowledgeGuard()` — 通用知识
-- `createCodeAssistantGuard()` — 代码助手
-- `createSupportGuard()` — 客服
-- `createReferenceToolGuard()` — 参考工具 / 语音助手
-- `buildClassificationPrompt()`
+### 守卫工厂
+
+| 导出 | 作用 | 适用场景 |
+|---|---|---|
+| `createGeneralKnowledgeGuard()` | 拦截诊断/建议/闲聊。放行科学、技术、历史。 | 问答机器人、研究助手 |
+| `createCodeAssistantGuard()` | 拦截恶意代码、漏洞利用、破解。放行编程、架构。 | 编程助手、CI 机器人 |
+| `createSupportGuard()` | 拦截医疗/法律/投资建议。放行账单、账户、FAQ。 | 客服机器人 |
+| `createReferenceToolGuard()` | 拦截诊断、角色越权、提示提取。放行事实查询。 | 语音助手、药品查询、文档搜索 |
+
+### 核心类
+
+| 导出 | 作用 |
+|---|---|
+| `KomaGuard` | 主守卫类。`guard.classify(text)` 编程调用，`guard.middleware()` 用于 Express。 |
+| `buildClassificationPrompt()` | 从域配置构建 few-shot 提示词，用于自定义守卫。 |
+
+### 配置类型
+
+`GuardConfig`、`GuardResult`、`GuardDecision` — 完整守卫合约的 TypeScript 类型。
 
 ## 设计
 

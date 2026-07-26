@@ -25,39 +25,62 @@ This package separates searchable index records from private content records and
 
 ## Install
 
-Source-first. Use the package from the workspace or bundle it into a build pipeline.
+```bash
+npm install koma-core
+```
 
 ## Usage
 
 ```ts
-import { createKomaStorage } from './src';
+import { createKomaStorage } from 'koma-core';
 
 const storage = createKomaStorage({
-  masterKey: process.env.AEGIS_MASTER_KEY || 'dev-key',
-  indexDb,
-  contentDb,
+  masterKey: process.env.AEGIS_MASTER_KEY,
+  indexDb,   // Firestore / MongoDB / etc.
+  contentDb, // Firestore / MongoDB / etc.
 });
 
-await storage.writer.ingest({
-  sourceId: 'item-123',
-  displayName: 'Example Item',
-  category: 'docs',
-  tags: ['searchable'],
-  payload: { title: 'Example Item', body: 'Protected content' },
-  provenance: { source: 'import', ingestedBy: 'system' },
+// Write: public index + private content, linked by opaque token
+const result = await storage.writer.ingest({
+  sourceId: 'doc-42',
+  displayName: 'Meeting Notes',
+  category: 'internal',
+  payload: { title: 'Meeting Notes', body: 'Confidential content' },
 });
+
+// Read: search the index, resolve the token, fetch content
+const hits = await storage.reader.search('Meeting');
+const detail = await storage.reader.getContent(hits[0].contentToken);
 ```
 
 ## Exports
 
-- `TokenDeriver`
-- `ContentHasher`
-- `DualCollectionWriter`
-- `DualCollectionReader`
-- `RateLimiter`
-- `DualCollectionMigrator`
-- `createKomaStorage()`
-- `StorageConfig`
+### Main Factory
+
+| Export | What it does | When to use |
+|---|---|---|
+| `createKomaStorage()` | Creates writer + reader + token deriver from two database handles. | Main entry point for all projects |
+
+### Storage Components
+
+| Export | What it does |
+|---|---|
+| `DualCollectionWriter` | Ingests data: writes lightweight metadata to the index, full payload to the content store. |
+| `DualCollectionReader` | Reads data: searches the index, then fetches content by token with optional rate limiting. |
+| `TokenDeriver` | HKDF-based deterministic token generator. Same sourceId always produces the same token. |
+| `ContentHasher` | SHA-256 hash of the payload for integrity verification. |
+| `DualCollectionMigrator` | Batch migration from a legacy flat collection into the dual-store format. |
+
+### Shared Utilities
+
+| Export | What it does |
+|---|---|
+| `RateLimiter` | Per-token or per-IP read rate limiter. Prevents content enumeration. |
+| `MemoryRateLimitStorage` | In-memory backend for RateLimiter. |
+
+### Config Types
+
+`StorageConfig` — TypeScript type for the full storage configuration.
 
 ## What It Solves
 

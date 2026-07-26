@@ -25,18 +25,18 @@ This package exposes a compact intent-classification guard that returns a strict
 
 ## Install
 
-Source-first. Use the package from the workspace or bundle it into a build pipeline.
+```bash
+npm install koma-gate
+```
 
 ## Usage
 
 ```ts
-import {
-  createGeneralKnowledgeGuard,
-  createCodeAssistantGuard,
-  createSupportGuard,
-} from './src';
+import { createGeneralKnowledgeGuard } from 'koma-gate';
 
-const guard = createGeneralKnowledgeGuard();
+const guard = createGeneralKnowledgeGuard({
+  llm: { apiKey: process.env.GEMINI_API_KEY }
+});
 
 app.post('/api/query', guard.middleware(), async (req, res) => {
   res.json({ ok: true });
@@ -45,15 +45,25 @@ app.post('/api/query', guard.middleware(), async (req, res) => {
 
 ## Exports
 
-- `KomaGuard`
-- `GuardConfig`
-- `GuardResult`
-- `GuardDecision`
-- `createGeneralKnowledgeGuard()`
-- `createCodeAssistantGuard()`
-- `createSupportGuard()`
-- `createReferenceToolGuard()`
-- `buildClassificationPrompt()`
+### Guard Factories
+
+| Export | What it does | When to use |
+|---|---|---|
+| `createGeneralKnowledgeGuard()` | Blocks diagnosis, advice, off-topic. Allows science, tech, history. | Q&A bots, research assistants |
+| `createCodeAssistantGuard()` | Blocks malware, exploits, cracking. Allows programming, architecture. | Coding copilots, CI bots |
+| `createSupportGuard()` | Blocks medical/legal/investing advice. Allows billing, accounts, FAQ. | Customer support bots |
+| `createReferenceToolGuard()` | Blocks diagnosis, role-manipulation, prompt extraction. Allows factual lookup. | Voice AI, medication info, doc search |
+
+### Core Classes
+
+| Export | What it does |
+|---|---|
+| `KomaGuard` | The main guard class. Call `guard.classify(text)` for programmatic use, or `guard.middleware()` for Express. |
+| `buildClassificationPrompt()` | Builds the few-shot prompt from domain config. Useful for custom guard setups. |
+
+### Config Types
+
+`GuardConfig`, `GuardResult`, `GuardDecision` — TypeScript types for the full guard contract.
 
 ## What It Solves
 

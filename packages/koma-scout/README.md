@@ -25,19 +25,17 @@ This package provides low-cost perimeter checks for voice or upload endpoints be
 
 ## Install
 
-Source-first. Use the package from the workspace or bundle it into a build pipeline.
+```bash
+npm install koma-scout
+```
 
 ## Usage
 
 ```ts
-import { createKomaScoutMiddleware } from './src';
+import { createKomaScoutMiddleware } from 'koma-scout';
 
 const middlewares = createKomaScoutMiddleware({
-  rateLimit: {
-    keyPrefix: 'api:',
-    maxRequests: 30,
-    windowMs: 60_000,
-  },
+  rateLimit: { keyPrefix: 'api:', maxRequests: 30, windowMs: 60_000 },
   audioValidation: {
     maxSizeBytes: 5 * 1024 * 1024,
     minSizeBytes: 8_000,
@@ -53,15 +51,25 @@ middlewares.forEach((mw) => app.use(mw));
 
 ## Exports
 
-- `MemoryRateLimitStorage`
-- `FirestoreRateLimitStorage`
-- `AudioValidator`
-- `GeoAllowlist`
-- `createKomaScoutMiddleware()`
-- `applyKomaScout()`
-- `RateLimitConfig`
-- `AudioValidationConfig`
-- `GeoAllowlistConfig`
+### Middleware Factories
+
+| Export | What it does | When to use |
+|---|---|---|
+| `createKomaScoutMiddleware()` | Returns an array of Express middlewares: rate limit + audio validation + geo. | Main entry point for most projects |
+| `applyKomaScout()` | Convenience helper: calls `app.use()` on each middleware. | Express apps |
+
+### Standalone Components
+
+| Export | What it does |
+|---|---|
+| `MemoryRateLimitStorage` | In-memory rate limit store. Good for single-instance dev servers. |
+| `FirestoreRateLimitStorage` | Firestore-backed rate limit store. Distributed-safe for production. |
+| `AudioValidator` | Validates base64 audio: size, duration estimate, MIME type, cooldown. |
+| `GeoAllowlist` | IP geolocation lookup with caching. Blocks or allows by country code. |
+
+### Config Types
+
+`RateLimitConfig`, `AudioValidationConfig`, `GeoAllowlistConfig` — TypeScript types for each layer.
 
 ## What It Solves
 

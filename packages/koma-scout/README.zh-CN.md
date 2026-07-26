@@ -23,12 +23,25 @@ Koma Scout 是面向 AI 应用的流量控制与防机器人中间件。
 
 ## 导出
 
-- `MemoryRateLimitStorage`
-- `FirestoreRateLimitStorage`
-- `AudioValidator`
-- `GeoAllowlist`
-- `createKomaScoutMiddleware()`
-- `applyKomaScout()`
+### 中间件工厂
+
+| 导出 | 作用 | 适用场景 |
+|---|---|---|
+| `createKomaScoutMiddleware()` | 返回 Express 中间件数组：限流 + 音频校验 + 地理。 | 大多数项目的主入口 |
+| `applyKomaScout()` | 便捷封装：对每个中间件调用 `app.use()`。 | Express 应用 |
+
+### 独立组件
+
+| 导出 | 作用 |
+|---|---|
+| `MemoryRateLimitStorage` | 内存限流存储。适合单实例开发环境。 |
+| `FirestoreRateLimitStorage` | Firestore 限流存储。生产环境分布式安全。 |
+| `AudioValidator` | 校验 base64 音频：大小、时长估算、MIME 类型、冷却。 |
+| `GeoAllowlist` | IP 地理定位查询 + 缓存。按国家代码放行或拦截。 |
+
+### 配置类型
+
+`RateLimitConfig`、`AudioValidationConfig`、`GeoAllowlistConfig` — 各层的 TypeScript 类型。
 
 ## 设计
 
