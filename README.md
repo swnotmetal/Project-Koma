@@ -16,7 +16,7 @@ Open-source AI guardrails, anti-bot throttling, and zero-trust storage for AI ap
   <a href="./README.zh-CN.md">中文版</a>
 </p>
 
-Koma comes from KomaInu("こまいぬ"- Komainu), stone guardians of Japanese Shinto Shrine. This project is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
+Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shrine. This project is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
 
 Its patterns were distilled from a production voice-AI information system.
 The repo contains the reusable defense layers only — no domain-specific data or proprietary prompts.
