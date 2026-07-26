@@ -13,19 +13,15 @@ Open-source AI guardrails, anti-bot throttling, and zero-trust storage for AI ap
 </p>
 
 <p align="center">
-  <a href="./README.md">English</a> · <a href="./README.zh-CN.md">中文导览</a>
+  <a href="./README.zh-CN.md">中文版</a>
 </p>
 
-Koma is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
+Koma comes from KomaInu("こまいぬ"- Komainu), stone guardians of Japanese Shinto Shrine. This project is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
 
-Its patterns were distilled from a production voice-AI medication-information system.
+Its patterns were distilled from a production voice-AI information system.
 The repo contains the reusable defense layers only — no domain-specific data or proprietary prompts.
 
 AI guardrails, rate limiting, prompt filtering, upload validation, and protected retrieval are covered in a format that stays readable at a glance.
-
-<p align="center">
-  <img src="koma-demo.gif" alt="Koma demo GIF" width="100%" />
-</p>
 
 ## AI Agent Quick Read
 
@@ -243,11 +239,12 @@ The smoke test does three things automatically:
 
 Command style depends on the shell:
 
-| System | API test command style | Details |
-| --- | --- | --- |
-| Windows PowerShell | `curl.exe` + `--data-binary '@-'` or `Invoke-RestMethod` | Bare `curl` is a PowerShell alias. Use here-strings or `Invoke-RestMethod` for JSON bodies. |
-| macOS / Linux | `curl` with single-quoted JSON | VHS tape runs natively in this environment. |
-| Windows WSL2 | `curl` (POSIX style) | Best option for running VHS on Windows. |
+
+| System             | API test command style                                   | Details                                                                                    |
+| ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Windows PowerShell | `curl.exe` + `--data-binary '@-'` or `Invoke-RestMethod` | Bare`curl` is a PowerShell alias. Use here-strings or `Invoke-RestMethod` for JSON bodies. |
+| macOS / Linux      | `curl` with single-quoted JSON                           | VHS tape runs natively in this environment.                                                |
+| Windows WSL2       | `curl` (POSIX style)                                     | Best option for running VHS on Windows.                                                    |
 
 Example PowerShell-friendly request:
 
@@ -259,7 +256,6 @@ Example PowerShell-friendly request:
 
 ## Bilingual Guide
 
-- English: [README.md](README.md)
 - 中文导览: [README.zh-CN.md](README.zh-CN.md)
 
 ## One-Click Demo

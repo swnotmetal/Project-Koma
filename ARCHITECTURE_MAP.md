@@ -8,7 +8,7 @@
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                              │
 │  ┌──────────┐     ┌──────────────────┐     ┌────────────────────────────┐  │
-│  │  Client  │────▶│  API Gateway     │────▶│  Koma Gate                │  │
+│  │  Client  │────▶│  Koma Scout      │────▶│  Koma Gate                │  │
 │  │  (Voice/ │     │  (Rate Limit +   │     │  ┌──────────────────────┐  │  │
 │  │   Text)  │     │   Geo Allowlist) │     │  │  Semantic Classifier │  │  │
 │  └──────────┘     └──────────────────┘     │  │  (Lightweight LLM)   │  │  │
@@ -39,10 +39,10 @@
 KEY DESIGN PRINCIPLES:
 ├── Pre-Filter: Rate Limit + Geo Allowlist (cheap, fast)
 ├── Semantic Gate: Single LLM call with strict JSON output
-├── Few-Shot Prompting: 8-10 examples covering edge cases
+├── Few-Shot Prompting: up to 10 examples covering edge cases
 ├── Fail-Open: Classifier failure → allow request (availability > security)
-├── Token Budget: < 500 tokens per classification call
-└── Latency Target: < 500ms p99
+├── Token Budget: ~500 tokens per classification call (design target)
+└── Latency Target: < 500ms p99 (design target, provider-dependent)
 ```
 
 ---
@@ -111,7 +111,7 @@ KEY DESIGN PRINCIPLES:
 │  ANTI-SCRAPING MECHANICS                                                    │
 │  ─────────────────────                                                      │
 │  ✓ DB_INDEX: Listable, searchable, NO high-value content                   │
-│  ✓ DB_CONTENT: Document ID = cryptographic token (unguessable)             │
+  ✓ DB_CONTENT: Document ID = HKDF-derived token (unguessable)              │
 │  ✓ Token mapping: Stored ONLY in backend, never exposed to client          │
 │  ✓ Rate limiting: Per-token, per-IP, per-user tiers                        │
 │  ✓ Audio validation: Size check + duration check + format verification     │
@@ -124,23 +124,23 @@ TOKEN MAPPING SCHEMA:
 │  ─────────────────                                              │
 │  {                                                              │
 │    "id": "searchable-slug",          // Human-readable          │
-│    "display_name": "Product Name",   // Safe for public         │
+│    "displayName": "Product Name",    // Safe for public         │
 │    "category": "category-tag",       // Filterable              │
-│    "content_hash": "sha256(...)",    // Integrity verification  │
-│    "content_token": "hkdf(secret,    // Opaque reference to     │
-│                       spl_id)",       // DB_CONTENT (NEVER      │
+│    "contentHash": "sha256(...)",     // Integrity verification  │
+│    "contentToken": "hkdf(secret,     // Opaque reference to     │
+│                       sourceId)",     // DB_CONTENT (NEVER      │
 │    "metadata": {...}                 //  exposed to client)     │
 │  }                                                              │
 │                                                                 │
 │  DB_CONTENT Document                                            │
 │  ────────────────────                                           │
 │  {                                                              │
-│    "id": "content_token",          // = HKDF(secret, spl_id)    │
-│    "spl_id": "original-source-id",   // Traceability            │
+│    "id": "contentToken",           // = HKDF(secret, sourceId)  │
+│    "sourceId": "original-source-id", // Traceability            │
 │    "payload": { ... },             // Full high-value content   │
-│    "access_tier": "premium",         // Authorization           │
-│    "created_at": timestamp,          // Audit                   │
-│    "access_count": 0                 // Rate limiting           │
+│    "accessTier": "premium",          // Authorization tier      │
+│    "createdAt": timestamp,           // Audit                   │
+│    "accessCount": 0                  // Rate limiting           │
 │  }                                                              │
 └─────────────────────────────────────────────────────────────────┘
 ```

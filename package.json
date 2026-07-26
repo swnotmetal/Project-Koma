@@ -12,6 +12,8 @@
     "check": "npm run typecheck -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
     "smoke:npm": "node scripts/smoke-npm.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "release:patch": "npm version patch -ws --no-git-tag-version",
     "release:minor": "npm version minor -ws --no-git-tag-version",
     "release:major": "npm version major -ws --no-git-tag-version"
@@ -22,6 +24,7 @@
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.10"
   }
 }
