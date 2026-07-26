@@ -9,7 +9,9 @@ Stop prompt injection, bot flooding, and data scraping — before they hit your 
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
   <img alt="TypeScript" src="https://img.shields.io/badge/typescript-5.x-3178c6?style=flat-square" />
-  <img alt="Workspace" src="https://img.shields.io/badge/workspace-monorepo-111827?style=flat-square" />
+  <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
 </p>
 
 <p align="center">
@@ -55,18 +57,17 @@ Each works standalone. Read the package README for the layer the project needs.
 ## Quick Start
 
 ```bash
+npm install koma-gate
+# or: npm install koma-scout / koma-core
+```
+
+Run the demo:
+
+```bash
 git clone https://github.com/swnotmetal/Project-Koma
 cd Project-Koma
 node demo/server.js
 curl http://localhost:8080/self-test
-```
-
-Or install directly from npm:
-
-```bash
-npm install koma-gate
-npm install koma-scout
-npm install koma-core
 ```
 
 See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard.

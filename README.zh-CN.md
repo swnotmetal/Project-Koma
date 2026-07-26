@@ -9,7 +9,9 @@
 <p align="center">
 	<img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
 	<img alt="TypeScript" src="https://img.shields.io/badge/typescript-5.x-3178c6?style=flat-square" />
-	<img alt="Workspace" src="https://img.shields.io/badge/workspace-monorepo-111827?style=flat-square" />
+	<a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
+	<a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
+	<a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
 </p>
 
 <p align="center">
@@ -55,18 +57,17 @@ Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自�
 ## 快速开始
 
 ```bash
+npm install koma-gate
+# 或：npm install koma-scout / koma-core
+```
+
+运行演示：
+
+```bash
 git clone https://github.com/swnotmetal/Project-Koma
 cd Project-Koma
 node demo/server.js
 curl http://localhost:8080/self-test
-```
-
-或直接从 npm 安装：
-
-```bash
-npm install koma-gate
-npm install koma-scout
-npm install koma-core
 ```
 
 与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。
