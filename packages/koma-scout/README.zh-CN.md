@@ -30,8 +30,9 @@ Koma Scout 是面向 AI 应用的流量控制与防机器人中间件。
 - `createKomaScoutMiddleware()`
 - `applyKomaScout()`
 
-## 说明
+## 设计
 
-- 支持限流、音频校验、地理白名单。
-- 适合语音入口和高频上传入口。
-- 当可选基础设施失败时默认 fail-open。
+- 便宜检查优先，昂贵处理靠后。
+- 共享存储（Firestore）后端支持分布式安全限流。
+- 可选基础设施失败时 fail-open。
+- 可作为独立中间件层使用。

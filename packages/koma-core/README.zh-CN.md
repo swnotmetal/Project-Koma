@@ -31,8 +31,9 @@ Koma Core 是面向敏感数据的分层存储模块。
 - `DualCollectionMigrator`
 - `createKomaStorage()`
 
-## 说明
+## 设计
 
-- Core Lite 适合先落地 split-store 模式。
-- Core Strict 适合上线后加强审计、分级和限次读取。
-- 内容层 token 不暴露给客户端。
+- 公共记录保持最小化（仅元数据）。
+- 私有记录按 token 寻址，不可遍历。
+- token 映射始终在服务端。
+- 版本化和哈希使迁移更安全。

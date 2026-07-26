@@ -37,8 +37,9 @@ Koma Gate 是面向 AI 应用的语义请求过滤模块。
 - `createReferenceToolGuard()` — 参考工具 / 语音助手
 - `buildClassificationPrompt()`
 
-## 说明
+## 设计
 
-- English-first 的源码和提示词。
-- 适合放在 LLM、工具调用或客服流程前面。
+- English-first 源码和提示词。
+- 低 token 消耗（约 500 tokens 每次分类）。
 - 默认 fail-open，优先保证可用性。
+- 通过适配器配置切换本地和云端 LLM。

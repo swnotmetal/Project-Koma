@@ -63,9 +63,9 @@ app.post('/api/query', guard.middleware(), async (req, res) => {
 - noisy or meaningless input
 - basic abuse filtering before expensive model calls
 
-## Notes
+## Design
 
-- English-first source and prompts
-- low token budget
-- fail-open by default for availability
-- easy to swap between local and hosted LLMs
+- English-first source and prompts.
+- Low token budget (~500 tokens per classification).
+- Fail-open by default for availability.
+- Swap between local and hosted LLMs via the adapter config.

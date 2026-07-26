@@ -19,7 +19,7 @@ Open-source AI guardrails, anti-bot throttling, and zero-trust storage for AI ap
 Koma is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
 
 Its patterns were distilled from a production voice-AI medication-information system.
-The repo contains the reusable defense layers only — no domain-specific data, no FDA logic, no proprietary prompts.
+The repo contains the reusable defense layers only — no domain-specific data or proprietary prompts.
 
 AI guardrails, rate limiting, prompt filtering, upload validation, and protected retrieval are covered in a format that stays readable at a glance.
 
@@ -140,7 +140,7 @@ curl.exe -X POST http://localhost:8080/guard \
   -d "{\"text\":\"How to build rate limiting middleware in Node?\"}"
 ```
 
-PowerShell note: use `curl.exe` instead of `curl` so the shell does not replace it with `Invoke-WebRequest`.
+Use `curl.exe` instead of `curl` on Windows — `curl` is a PowerShell alias for `Invoke-WebRequest`.
 
 PowerShell-safe variant:
 
@@ -220,7 +220,7 @@ Suggested flow for the tape:
 3. Show a Scout block and a Scout pass.
 4. Show `ingest`, `search`, and `content` for Core.
 
-## Module Notes
+## Package Overview
 
 ### Koma Gate
 
@@ -234,14 +234,14 @@ Handles request throttling, upload validation, and cheap perimeter checks before
 
 Separates public search records from private content payloads and links them with backend-derived opaque tokens.
 
-## Development Notes
+## Project Conventions
 
 - Source code is English-first.
-- The repo is friendly to agent-first users, but the APIs stay production-oriented.
+- APIs are production-oriented; docs are written for both humans and AI agents.
 - The demo server is dependency-free and includes a built-in self-test.
-- The three skills are designed to be published independently.
+- Each package is designed to be published independently.
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
-- **Distillation notice:** Gate presets, Scout thresholds, and Core patterns were derived from defenses that blocked real prompt-injection, silence-hallucination, and data-exfiltration attempts in a live voice-AI system.
+- Gate presets, Scout thresholds, and Core patterns were derived from defenses that blocked real prompt-injection, silence-hallucination, and data-exfiltration attempts in a live voice-AI system.
 
 ## Verifying npm Locally
 
@@ -272,11 +272,11 @@ The smoke test does three things automatically:
 
 Command style depends on the shell:
 
-| System | Gate / Scout / Core API test | Notes |
+| System | API test command style | Details |
 | --- | --- | --- |
-| Windows PowerShell | `curl.exe` + `--data-binary '@-'` or `Invoke-RestMethod` | Avoid bare `curl`; it is an alias in PowerShell. Use here-strings or `Invoke-RestMethod` for JSON bodies. |
-| macOS / Linux | `curl` with single-quoted JSON | The VHS tape is easiest to record here. |
-| Windows WSL2 | `curl` like Linux | Best option for running VHS on Windows. |
+| Windows PowerShell | `curl.exe` + `--data-binary '@-'` or `Invoke-RestMethod` | Bare `curl` is a PowerShell alias. Use here-strings or `Invoke-RestMethod` for JSON bodies. |
+| macOS / Linux | `curl` with single-quoted JSON | VHS tape runs natively in this environment. |
+| Windows WSL2 | `curl` (POSIX style) | Best option for running VHS on Windows. |
 
 Example PowerShell-friendly request:
 

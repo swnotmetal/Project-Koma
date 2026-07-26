@@ -71,9 +71,9 @@ middlewares.forEach((mw) => app.use(mw));
 - unsupported audio formats
 - optional geographic allowlisting
 
-## Notes
+## Design
 
-- cheap checks first, expensive checks last
-- distributed-safe rate limiting when backed by a shared store
-- fail-open on optional infrastructure failures
-- works as a standalone middleware layer
+- Cheap checks first, expensive work last.
+- Distributed-safe rate limiting when backed by a shared store (Firestore).
+- Fail-open on optional infrastructure failures.
+- Works as a standalone middleware layer.

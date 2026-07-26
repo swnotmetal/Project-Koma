@@ -19,7 +19,7 @@
 Koma 是一个面向 AI 应用的模块化防御工具箱。每个技能都可以单独采用，先解决最需要的那一层，再逐步叠加防护。
 
 这套模式是从一个实际运行的生产环境语音 AI 药物信息系统里蒸馏出来的。
-仓库只包含可复用的防御层——没有领域数据、没有 FDA 逻辑、没有私有提示词。
+仓库只包含可复用的防御层——没有领域数据、没有私有提示词。
 
 如果关注 AI guardrails、限流、提示词过滤、上传校验或受保护的检索，这个仓库适合用来快速读懂、快速验证、快速集成。
 
@@ -186,12 +186,16 @@ Windows 提示：VHS 最适合在 WSL2、Git Bash 或其他 POSIX shell 里运�
 
 Koma 使用语义化版本管理，发布前请先查看 `VERSIONING.md`。
 
-## 说明
+## 项目约定
 
-- 源码和说明文档保持 English-first，但中文版本保留在仓库中。
-- 当前仓库是 workspace 风格，根目录负责版本与发布入口，`packages/` 负责功能模块。
+- 源码和文档保持 English-first，中文版本同步维护。
+- 仓库采用 workspace 结构：根目录管理版本与发布，`packages/` 承载功能模块。
+- API 面向生产环境设计，文档同时面向人类读者和 AI agent。
+- 每个包均可独立发布。
+- 版本与标签规则见 [VERSIONING.md](VERSIONING.md)。
+- Gate 预设、Scout 阈值和 Core 模式提炼自实际运行环境中的真实防御战果——包括提示注入拦截、静音幻觉防护和数据泄露阻止。
 
-## npm 烟雾测试
+## npm 验证
 
 如果要确认“新目录里下载安装到底能不能用”，请直接运行：
 
@@ -209,11 +213,11 @@ npm run smoke:npm
 
 不同系统建议用不同的命令写法：
 
-| 系统 | Gate / Scout / Core 接口测试 | 说明 |
+| 系统 | API 测试命令风格 | 详情 |
 | --- | --- | --- |
-| Windows PowerShell | `curl.exe` + `--data-binary '@-'` 或 `Invoke-RestMethod` | 不要直接用裸 `curl`，它是 PowerShell 别名。JSON 推荐用 here-string 或 `Invoke-RestMethod`。 |
-| macOS / Linux | 单引号包 JSON 的 `curl` | VHS tape 最适合在这类 shell 里录。 |
-| Windows WSL2 | 像 Linux 一样用 `curl` | Windows 上录 VHS 最稳的方式。 |
+| Windows PowerShell | `curl.exe` + `--data-binary '@-'` 或 `Invoke-RestMethod` | 裸 `curl` 是 PowerShell 别名。JSON 推荐用 here-string 或 `Invoke-RestMethod`。 |
+| macOS / Linux | 单引号包 JSON 的 `curl` | VHS tape 在该环境下原生运行。 |
+| Windows WSL2 | `curl`（POSIX 风格） | Windows 上录 VHS 最稳的方式。 |
 
 PowerShell 友好的 Scout 示例：
 

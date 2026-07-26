@@ -91,9 +91,9 @@ A hardened variant for production:
 
 Use this when the content layer must stay tightly controlled.
 
-## Notes
+## Design
 
-- public records stay minimal
-- private records are token-addressed, not list-addressed
-- token mapping stays server-side
-- versioning and hashing make migration safer
+- Public records stay minimal (metadata only).
+- Private records are token-addressed, not list-addressable.
+- Token mapping stays server-side.
+- Versioning and hashing make migration safer.
