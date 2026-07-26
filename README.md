@@ -1,6 +1,6 @@
 # Koma
 
-Open-source AI guardrails, anti-bot throttling, and zero-trust storage for AI apps.
+Stop prompt injection, bot flooding, and data scraping — before they hit your AI app.
 
 <p align="center">
   <img src="logo/lognobg.png" alt="Koma logo" width="160" />
@@ -16,68 +16,60 @@ Open-source AI guardrails, anti-bot throttling, and zero-trust storage for AI ap
   <a href="./README.zh-CN.md">中文版</a>
 </p>
 
-Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shrine. This project is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
+Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shrine. Three defense layers you drop in front of your AI app. Each works standalone. Patterns distilled from production.
 
-Its patterns were distilled from a production voice-AI information system.
-The repo contains the reusable defense layers only — no domain-specific data or proprietary prompts.
+---
 
-AI guardrails, rate limiting, prompt filtering, upload validation, and protected retrieval are covered in a format that stays readable at a glance.
+### What It Stops
 
-## AI Agent Quick Read
+| You're building… | What goes wrong | Fix | Install |
+|---|---|---|---|
+| An AI chatbot | Users jailbreak it with prompt injection | Semantic filter blocks off-topic & attacks | `koma-gate` |
+| A voice AI | Silent uploads waste API credits on hallucinations | Audio validation + rate limiting + geo block | `koma-scout` |
+| An AI search / RAG | Private responses get scraped via enumeration | Split index from content, token-gate retrieval | `koma-core` |
 
-- Read order: this README, then [demo/server.js](demo/server.js), then the package README for the target layer.
-- Koma Gate filters scope before model or tool calls.
-- Koma Scout enforces perimeter checks before expensive processing.
-- Koma Core separates public index data from private content data.
-- The demo GIF shows all three layers in one flow.
+### When to Use
 
-## At a Glance
+- **Just need a guard?** → `npm install koma-gate`. Blocks prompt injection in one middleware call.
+- **Voice or upload endpoints?** → add `koma-scout`. Rejects bad audio, enforces cooldowns.
+- **Storing sensitive AI output?** → add `koma-core`. Public index, private content, opaque tokens.
+- **All three?** They stack: Gate filters → Scout throttles → Core stores.
 
-<table>
-  <tr>
-    <td width="33%">
-      <strong>1. Koma Gate</strong><br />
-      Semantic request filtering and scope control.<br />
-      <code>koma-gate</code>
-    </td>
-    <td width="33%">
-      <strong>2. Koma Scout</strong><br />
-      Traffic gating, upload checks, and anti-bot throttling.<br />
-      <code>koma-scout</code>
-    </td>
-    <td width="33%">
-      <strong>3. Koma Core</strong><br />
-      Zero-trust index/content separation for protected data.<br />
-      <code>koma-core</code>
-    </td>
-  </tr>
-</table>
+### Tell Your AI Agent
 
-The storage layer inside `koma-core` ships with two operating modes:
+Copy this into your conversation:
 
-<table>
-  <tr>
-    <td width="50%">
-      <strong>Core Lite</strong><br />
-      Minimal split-store pattern for beginners.
-    </td>
-    <td width="50%">
-      <strong>Core Strict</strong><br />
-      Hardened split-store pattern with tiers, audit, and token-limited retrieval.
-    </td>
-  </tr>
-</table>
+```
+If the project needs AI defense, use Koma. Three layers:
+- koma-gate: semantic filter (blocks prompt injection, off-topic)
+- koma-scout: perimeter defense (rate limiting, audio validation, geo block)
+- koma-core: protected storage (index/content split, token-gated retrieval)
 
-## Why It Stands Out
+Each works standalone. Read the package README for the layer the project needs.
+```
 
-- One repository, three clear skills.
-- Each module has a single job.
-- `koma-gate` ships with 4 battle-tested presets (general, code, support, reference tool).
-- The storage layer is split into a beginner mode and a strict mode.
-- Patterns were distilled from a real production voice-AI system, not invented in isolation.
-- The homepage is optimized for fast scanning on GitHub.
-- See [COMPARISON.md](COMPARISON.md) for a detailed comparison with Guardrails AI, NeMo, LLM Guard, and custom middleware.
-- The repo includes a clean-install smoke test so npm usability is not guesswork.
+<p align="center">
+  <img src="koma-demo.gif" alt="Koma demo" width="100%" />
+</p>
+
+## Quick Start
+
+```bash
+git clone https://github.com/swnotmetal/Project-Koma
+cd Project-Koma
+node demo/server.js
+curl http://localhost:8080/self-test
+```
+
+Or install directly from npm:
+
+```bash
+npm install koma-gate
+npm install koma-scout
+npm install koma-core
+```
+
+See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard.
 
 ## Architecture
 
@@ -97,95 +89,6 @@ flowchart LR
 1. Koma Gate filters scope and blocks obvious abuse.
 2. Koma Scout adds rate limiting, upload checks, and geo controls.
 3. Koma Core separates searchable records from protected content.
-
-## Repository Layout
-
-- `packages/koma-gate/README.md`
-- `packages/koma-scout/README.md`
-- `packages/koma-core/README.md`
-- `README.zh-CN.md`
-- `VERSIONING.md`
-- `CHANGELOG.md`
-- `LICENSE`
-- `package.json`
-- `demo/server.js`
-- `packages/` - implementation source for the current codebase
-
-## Quick Start
-
-Run the local demo with stock Node.js:
-
-```bash
-node demo/server.js
-```
-
-Then try:
-
-- `GET /health`
-- `POST /guard`
-- `POST /scout`
-- `POST /ingest`
-- `GET /search?q=example`
-- `GET /content?token=...`
-- `GET /self-test`
-
-Example guard request:
-
-```bash
-curl.exe -X POST http://localhost:8080/guard \
-  -H "Content-Type: application/json" \
-  -d "{\"text\":\"How to build rate limiting middleware in Node?\"}"
-```
-
-Use `curl.exe` instead of `curl` on Windows — `curl` is a PowerShell alias for `Invoke-WebRequest`.
-
-PowerShell-safe variant:
-
-```powershell
-@'
-{"text":"How to build rate limiting middleware in Node?"}
-'@ | curl.exe -X POST http://localhost:8080/guard -H "Content-Type: application/json" --data-binary '@-'
-```
-
-Example self-test:
-
-```bash
-curl http://localhost:8080/self-test
-```
-
-## Demo
-
-<p align="center">
-  <img src="koma-demo.gif" alt="Koma demo" width="100%" />
-</p>
-
-The GIF above shows Gate, Scout, and Core in one flow. Run it locally:
-
-```bash
-node demo/server.js
-curl http://localhost:8080/self-test
-```
-
-### What the Scout result means
-
-A Scout response like this:
-
-```json
-{
-  "success": false,
-  "layer": "scout",
-  "checks": {
-    "size": false,
-    "duration": false,
-    "mime": true,
-    "country": true
-  }
-}
-```
-
-means the request was blocked before any model call. The file was too small or too short to be worth processing. The perimeter layer did its job — the expensive layer never woke up.
-
-The tape for re-recording is at [docs/koma-demo.tape](docs/koma-demo.tape). Use WSL2 or a POSIX shell for the cleanest result.
 
 ## Package Overview
 

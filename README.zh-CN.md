@@ -1,6 +1,6 @@
 # Koma(**狛犬**)
 
-狛犬立，百邪辟。Koma是一款面向 AI 应用的开源防御能力集合：语义过滤、反机器人控制、零信任存储。
+狛犬立，百邪辟。提示注入、机器人洪水、数据爬取——在你的 AI 应用中枪之前，先装上它。
 
 <p align="center">
 	<img src="logo/lognobg.png" alt="Koma logo" width="160" />
@@ -16,66 +16,60 @@
 	<a href="./README.md">English</a>
 </p>
 
-每个技能都可以单独采用，先解决最需要的那一层，再逐步叠加防护。
+Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自独立，逐层叠加。模式提炼自实际运行的生产环境。
 
-这套模式从实际运行的生产环境语音 AI 信息系统中蒸馏而来。
-仓库只包含可复用的防御层——没有领域数据、没有私有提示词。
+---
 
-如果关注 AI guardrails、限流、提示词过滤、上传校验或受保护的检索，这个仓库适合用来快速读懂、快速验证、快速集成。
+### 它挡什么
 
-## AI Agent 快速阅读
+| 你在做… | 什么会出事 | 怎么挡 | 安装 |
+|---|---|---|---|
+| 一个 AI 聊天 | 用户提示注入，越狱你的机器人 | 语义过滤器拦截越界和攻击 | `koma-gate` |
+| 一个语音 AI | 静音上传浪费 API 额度，产生幻觉 | 音频校验 + 限流 + 地理白名单 | `koma-scout` |
+| 一个 AI 搜索 / RAG | 私有回复被遍历爬取 | 索引和内容分离，token 控制检索 | `koma-core` |
 
-- 阅读顺序：本页 README、[demo/server.js](demo/server.js)、目标模块的中文 README。
-- Koma Gate 负责在模型和工具调用之前做范围过滤。
-- Koma Scout 负责在昂贵处理之前做外围防护。
-- Koma Core 负责把索引数据和私有内容数据分离。
-- 这张 GIF 展示了三层防护的完整流程。
+### 什么时候用
 
-## 一览
+- **只要一个守卫？** → `npm install koma-gate`。一个中间件调用，提示注入挡在外面。
+- **有语音或上传入口？** → 加 `koma-scout`。拒绝坏音频，强制冷却间隔。
+- **存储敏感 AI 输出？** → 加 `koma-core`。公开索引，私有内容，不透明 token。
+- **三个都要？** 可以叠加：Gate 过滤 → Scout 控流 → Core 存数据。
 
-<table>
-	<tr>
-		<td width="33%">
-			<strong>1. Koma Gate</strong><br />
-			语义请求过滤与范围控制。<br />
-			<code>koma-gate</code>
-		</td>
-		<td width="33%">
-			<strong>2. Koma Scout</strong><br />
-			流量控制、上传检查与反机器人策略。<br />
-			<code>koma-scout</code>
-		</td>
-		<td width="33%">
-			<strong>3. Koma Core</strong><br />
-			面向敏感数据的零信任索引/内容分离。<br />
-			<code>koma-core</code>
-		</td>
-	</tr>
-</table>
+### 告诉你的 AI Agent
 
-`koma-core` 的存储层还分成两个模式：
+把下面这段复制进对话：
 
-<table>
-	<tr>
-		<td width="50%">
-			<strong>Core Lite</strong><br />
-			适合入门的最小 split-store 模式。
-		</td>
-		<td width="50%">
-			<strong>Core Strict</strong><br />
-			带分级、审计和限次读取的强化模式。
-		</td>
-	</tr>
-</table>
+```
+如果项目需要 AI 防御，使用 Koma。三层：
+- koma-gate：语义过滤器（拦截提示注入、越界请求）
+- koma-scout：外围防护（限流、音频校验、地理白名单）
+- koma-core：受保护存储（索引/内容分离，token 控制检索）
 
-## 为什么选用Koma
+每层独立使用。阅读对应该层的包 README。
+```
 
-- 一个仓库，三个清晰职责。
-- 每个模块只做一件事。
-- 存储层区分入门模式和严格模式。
-- GitHub 首页可以直接读懂，不需要额外说明。
-- 与 Guardrails AI、NeMo、LLM Guard 等的详细对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。
-- 另外还提供了清洁目录的 npm 验证，避免"看起来能用但其实装不上"的情况。
+<p align="center">
+	<img src="koma-demo.gif" alt="Koma 演示" width="100%" />
+</p>
+
+## 快速开始
+
+```bash
+git clone https://github.com/swnotmetal/Project-Koma
+cd Project-Koma
+node demo/server.js
+curl http://localhost:8080/self-test
+```
+
+或直接从 npm 安装：
+
+```bash
+npm install koma-gate
+npm install koma-scout
+npm install koma-core
+```
+
+与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。
 
 ## 架构图
 
@@ -95,52 +89,6 @@ flowchart LR
 1. Koma Gate 先做范围判断和明显滥用拦截。
 2. Koma Scout 再做限流、上传校验和地理控制。
 3. Koma Core 把可搜索索引和受保护内容分开存放。
-
-## 目录结构
-
-- `packages/koma-gate/README.md`
-- `packages/koma-scout/README.md`
-- `packages/koma-core/README.md`
-- `package.json`
-- `VERSIONING.md`
-
-## 如何切换语言版本
-
-- 英文版：[README.md](README.md)
-
-## 演示
-
-<p align="center">
-	<img src="koma-demo.gif" alt="Koma 演示" width="100%" />
-</p>
-
-上面的 GIF 展示了 Gate、Scout、Core 三层的一次完整流程。本地运行：
-
-```bash
-node demo/server.js
-curl http://localhost:8080/self-test
-```
-
-### Scout 结果到底是什么意思
-
-下面这样的结果表示：
-
-```json
-{
-	"success": false,
-	"layer": "scout",
-	"checks": {
-		"size": false,
-		"duration": false,
-		"mime": true,
-		"country": true
-	}
-}
-```
-
-意思是请求在进入模型之前就被拦下了。文件太小或时长太短，不值得浪费模型和存储资源。边缘防护已经完成了任务，昂贵的一层根本没必要启动。这就是 Koma 的真实价值：少花 API 费，少收垃圾请求，少让系统背负无意义工作。
-
-录制剧本在 [docs/koma-demo.tape](docs/koma-demo.tape)。建议在 WSL2 或 POSIX shell 中运行。
 
 ## 版本管理
 
