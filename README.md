@@ -115,30 +115,7 @@ Separates public search records from private content payloads and links them wit
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
 - Gate presets, Scout thresholds, and Core patterns were derived from defenses that blocked real prompt-injection, silence-hallucination, and data-exfiltration attempts in a live voice-AI system.
 
-## Verifying npm Locally
-
-To test the package in a clean directory before or after publishing, use the repo's smoke test. This answers “will it work in a fresh folder?”
-
-```bash
-npm run smoke:npm
-```
-
-Or do it manually with a fresh folder:
-
-```bash
-npm pack packages/koma-gate
-mkdir C:\temp\koma-test
-cd C:\temp\koma-test
-npm init -y
-npm install D:\path\to\koma-gate-0.1.0.tgz
-node --input-type=module -e "import { createGeneralKnowledgeGuard } from 'koma-gate'; console.log(typeof createGeneralKnowledgeGuard)"
-```
-
-The smoke test does three things automatically:
-
-1. Packs each workspace package.
-2. Installs the tarball into a temporary empty directory.
-3. Imports the public exports to confirm the package actually works.
+## Cross-Platform Testing This answers “will it work in a fresh folder?”
 
 ## Cross-Platform Testing
 

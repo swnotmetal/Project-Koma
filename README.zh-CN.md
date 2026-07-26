@@ -105,19 +105,6 @@ Koma 使用语义化版本管理，发布前请先查看 `VERSIONING.md`。
 - 版本与标签规则见 [VERSIONING.md](VERSIONING.md)。
 - Gate 预设、Scout 阈值和 Core 模式提炼自实际运行环境中的真实防御战果——包括提示注入拦截、静音幻觉防护和数据泄露阻止。
 
-## npm 验证
-
-如果要确认“新目录里下载安装到底能不能用”，请直接运行：
-
-```bash
-npm run smoke:npm
-```
-
-这个脚本会自动：
-
-1. 给每个包打 tarball。
-2. 在临时空目录里安装 tarball。
-3. `import` 导出，确认包真的可用。
 
 ## 跨系统测试
 
