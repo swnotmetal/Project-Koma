@@ -52,6 +52,7 @@ app.post('/api/query', guard.middleware(), async (req, res) => {
 - `createGeneralKnowledgeGuard()`
 - `createCodeAssistantGuard()`
 - `createSupportGuard()`
+- `createReferenceToolGuard()`
 - `buildClassificationPrompt()`
 
 ## What It Solves

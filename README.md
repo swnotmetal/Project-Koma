@@ -18,6 +18,9 @@ Open-source AI guardrails, anti-bot throttling, and zero-trust storage for AI ap
 
 Koma is a modular defensive toolkit for AI apps. Each skill stands alone, so the stack can be adopted in layers.
 
+Its patterns were distilled from a production voice-AI medication-information system.
+The repo contains the reusable defense layers only — no domain-specific data, no FDA logic, no proprietary prompts.
+
 AI guardrails, rate limiting, prompt filtering, upload validation, and protected retrieval are covered in a format that stays readable at a glance.
 
 <p align="center">
@@ -73,7 +76,9 @@ The storage layer inside `koma-core` ships with two operating modes:
 
 - One repository, three clear skills.
 - Each module has a single job.
+- `koma-gate` ships with 4 battle-tested presets (general, code, support, reference tool).
 - The storage layer is split into a beginner mode and a strict mode.
+- Patterns were distilled from a real production voice-AI system, not invented in isolation.
 - The homepage is optimized for fast scanning on GitHub.
 - The repo includes a clean-install smoke test so npm usability is not guesswork.
 
@@ -236,6 +241,7 @@ Separates public search records from private content payloads and links them wit
 - The demo server is dependency-free and includes a built-in self-test.
 - The three skills are designed to be published independently.
 - Release and tag rules live in [VERSIONING.md](VERSIONING.md).
+- **Distillation notice:** Gate presets, Scout thresholds, and Core patterns were derived from defenses that blocked real prompt-injection, silence-hallucination, and data-exfiltration attempts in a live voice-AI system.
 
 ## Verifying npm Locally
 

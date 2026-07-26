@@ -31,9 +31,10 @@ Koma Gate 是面向 AI 应用的语义请求过滤模块。
 - `GuardConfig`
 - `GuardResult`
 - `GuardDecision`
-- `createGeneralKnowledgeGuard()`
-- `createCodeAssistantGuard()`
-- `createSupportGuard()`
+- `createGeneralKnowledgeGuard()` — 通用知识
+- `createCodeAssistantGuard()` — 代码助手
+- `createSupportGuard()` — 客服
+- `createReferenceToolGuard()` — 参考工具 / 语音助手
 - `buildClassificationPrompt()`
 
 ## 说明
