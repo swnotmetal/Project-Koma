@@ -367,6 +367,12 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Koma demo server running on http://localhost:${PORT}`);
+  console.log('╔══════════════════════════════════════════════╗');
+  console.log('║  Koma demo server — SANDBOX MODE            ║');
+  console.log('║  For testing only. No production data.      ║');
+  console.log('║  Docker: docker build -t koma . && \\        ║');
+  console.log('║          docker run -p 8080:8080 koma       ║');
+  console.log('╚══════════════════════════════════════════════╝');
+  console.log(`\nListening on http://localhost:${PORT}`);
   console.log('Try /health, /guard, /scout, /ingest, /search, /content, and /self-test');
 });

@@ -73,6 +73,19 @@ curl http://localhost:8080/self-test
 
 See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard.
 
+## Trust & Safety
+
+Koma is built for vibecoders — fast adoption, zero trust. Defenses that protect the project itself:
+
+- **Docker sandbox.** [Dockerfile](Dockerfile) isolates the demo from the host filesystem. Run `docker build -t koma . && docker run -p 8080:8080 koma` for an ephemeral, read-only environment.
+- **No code execution.** Gate classifies. Scout validates. Core stores. No layer executes AI-generated code, shell commands, or user scripts.
+- **Fail-open.** Every layer defaults to availability. A broken guard does not break the app.
+- **Minimal token budget.** Gate presets use ~500 tokens per call — the cheapest model tier.
+- **Static analysis.** CodeQL scans every push. Security posture visible at a glance: [codeql.yml](.github/workflows/codeql.yml).
+- **Secure by default.** Core tokens are backend-derived. Scout checks are deterministic. No secrets in public index records.
+
+Full policy: [SECURITY.md](SECURITY.md).
+
 ## Architecture
 
 ```mermaid
