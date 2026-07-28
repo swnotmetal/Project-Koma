@@ -73,6 +73,19 @@ curl http://localhost:8080/self-test
 
 与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。
 
+## 信任与安全
+
+Koma 为 Vibe Coder 设计——快速接入，零信任。项目自身的内置防御：
+
+- **Docker 沙盒。** [Dockerfile](Dockerfile) 将演示环境与宿主机文件系统隔离。运行 `docker build -t koma . && docker run -p 8080:8080 koma` 即获得临时只读环境。
+- **不执行代码。** Gate 负责分类。Scout 负责校验。Core 负责存储。没有任何一层会执行 AI 生成的代码、shell 命令或用户脚本。
+- **Fail-open。** 每一层默认放行。守卫挂了，应用不挂。
+- **极低 token 消耗。** Gate 预设每次调用约 500 tokens——最便宜的模型层级。
+- **静态分析。** CodeQL 每次 push 自动扫描。安全态势一览无余：[codeql.yml](.github/workflows/codeql.yml)。
+- **默认安全。** Core token 由后端派生。Scout 检查是确定性的。公共索引不存密钥。
+
+完整策略：[SECURITY.md](SECURITY.md)。贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)。
+
 ## 架构图
 
 ```mermaid
