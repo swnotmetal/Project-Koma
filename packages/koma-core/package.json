@@ -1,6 +1,6 @@
 {
   "name": "koma-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Protected split-store storage for AI apps.",
   "type": "module",
   "main": "./dist/index.js",

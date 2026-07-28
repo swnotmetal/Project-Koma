@@ -8,6 +8,9 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -19,19 +22,19 @@ jobs:
       - run: npm ci
 
       - name: Publish koma-gate
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         working-directory: packages/koma-gate
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish koma-scout
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         working-directory: packages/koma-scout
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish koma-core
-        run: npm publish --access public
+        run: npm publish --access public --provenance
         working-directory: packages/koma-core
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
