@@ -84,7 +84,7 @@ Koma is built for vibecoders — fast adoption, zero trust. Defenses that protec
 - **Static analysis.** CodeQL scans every push. Security posture visible at a glance: [codeql.yml](.github/workflows/codeql.yml).
 - **Secure by default.** Core tokens are backend-derived. Scout checks are deterministic. No secrets in public index records.
 
-Full policy: [SECURITY.md](SECURITY.md).
+Full policy: [SECURITY.md](SECURITY.md). Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Architecture
 

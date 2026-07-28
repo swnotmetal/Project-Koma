@@ -39,6 +39,7 @@ indicate a strong security posture:
 | Signal | Status |
 |---|---|
 | SECURITY.md present | ✅ |
+| CONTRIBUTING.md present | ✅ |
 | CodeQL static analysis | ✅ (see [ci.yml](.github/workflows/ci.yml)) |
 | Docker sandbox available | ✅ |
 | npm packages published with provenance | Manual (planned for CI) |
