@@ -1,0 +1,22 @@
+{
+  "name": "koma-gate-express-example",
+  "version": "1.0.0",
+  "description": "Example: Express + TypeScript server with Koma Gate prompt-injection guard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "koma-gate": "file:../../packages/koma-gate"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
