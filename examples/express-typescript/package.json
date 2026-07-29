@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "express": "^4.21.0",
-    "koma-gate": "file:../../packages/koma-gate"
+    "koma-gate": "^0.1.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",
