@@ -33,5 +33,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "homepage": "https://github.com/swnotmetal/Project-Koma#readme"
 }
