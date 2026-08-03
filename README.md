@@ -14,7 +14,7 @@ Stop prompt injection, bot flooding, and data scraping — before they hit your 
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
   <br />
-  <img alt="downloads" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.npmjs.org%2Fdownloads%2Fpoint%2Flast-week%2Fkoma-gate%2Ckoma-scout%2Ckoma-core&query=%24.downloads&label=Total%20DLs%2Fweek&color=brightgreen&style=flat-square" />
+  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=Total%20DLs&color=blue&style=flat-square" /></p>
 </p>
 
 <p align="center">
