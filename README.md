@@ -13,6 +13,8 @@ Stop prompt injection, bot flooding, and data scraping — before they hit your 
   <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
+  <br />
+  <img alt="downloads" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.npmjs.org%2Fdownloads%2Fpoint%2Flast-week%2Fkoma-gate%2Ckoma-scout%2Ckoma-core&query=%24.downloads&label=Total%20DLs%2Fweek&color=brightgreen&style=flat-square" />
 </p>
 
 <p align="center">
@@ -71,7 +73,7 @@ node demo/server.js
 curl http://localhost:8080/self-test
 ```
 
-See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard.
+See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard. Read [ADOPTERS.md](ADOPTERS.md) for the real-world scenarios behind each layer.
 
 ## Trust & Safety
 

@@ -13,6 +13,8 @@
 	<a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
 	<a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
 	<a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
+	<br />
+	<img alt="downloads" src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fapi.npmjs.org%2Fdownloads%2Fpoint%2Flast-week%2Fkoma-gate%2Ckoma-scout%2Ckoma-core&query=%24.downloads&label=DLs%2F周&color=brightgreen&style=flat-square" />
 </p>
 
 <p align="center">
@@ -71,7 +73,7 @@ node demo/server.js
 curl http://localhost:8080/self-test
 ```
 
-与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。
+与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。每个防御层背后的真实场景见 [ADOPTERS.zh-CN.md](ADOPTERS.zh-CN.md)。
 
 ## 信任与安全
 
