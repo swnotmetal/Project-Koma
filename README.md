@@ -73,7 +73,7 @@ node demo/server.js
 curl http://localhost:8080/self-test
 ```
 
-See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard. Read [ADOPTERS.md](ADOPTERS.md) for the real-world scenarios behind each layer.
+See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard. Read [ADOPTERS.md](ADOPTERS.md) for the real-world scenarios behind each layer. Full backstory on [dev.to](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1).
 
 ## Trust & Safety
 

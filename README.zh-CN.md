@@ -73,7 +73,7 @@ node demo/server.js
 curl http://localhost:8080/self-test
 ```
 
-与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。每个防御层背后的真实场景见 [ADOPTERS.zh-CN.md](ADOPTERS.zh-CN.md)。
+与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。每个防御层背后的真实场景见 [ADOPTERS.zh-CN.md](ADOPTERS.zh-CN.md)。完整来历见 [dev.to](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1)。
 
 ## 信任与安全
 
