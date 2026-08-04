@@ -1,6 +1,6 @@
 {
   "name": "koma-gate",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Semantic request filtering and scope control for AI apps.",
   "author": "Shuang Wu",
   "type": "module",
