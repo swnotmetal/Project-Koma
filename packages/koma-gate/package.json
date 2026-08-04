@@ -24,8 +24,13 @@
   "keywords": [
     "ai",
     "guardrail",
-    "classification",
-    "middleware"
+    "prompt-injection",
+    "semantic-filter",
+    "llm-security",
+    "middleware",
+    "express",
+    "typescript",
+    "nodejs"
   ],
   "repository": {
     "type": "git",
