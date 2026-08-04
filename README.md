@@ -21,7 +21,7 @@ Stop prompt injection, bot flooding, and data scraping — before they hit your 
   <a href="./README.zh-CN.md">中文版</a>
 </p>
 
-Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shrine. Three defense layers you drop in front of your AI app. Each works standalone. Patterns distilled from production.
+Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shrine. Three defense layers you drop in front of your AI app. Each works standalone. Patterns distilled from production. Targets OWASP LLM01 (prompt injection), indirect injection, audio hallucination, and RAG data exfiltration.
 
 ---
 
@@ -83,7 +83,7 @@ Koma is built for vibecoders — fast adoption, zero trust. Defenses that protec
 - **No code execution.** Gate classifies. Scout validates. Core stores. No layer executes AI-generated code, shell commands, or user scripts.
 - **Fail-open.** Every layer defaults to availability. A broken guard does not break the app.
 - **Minimal token budget.** Gate presets use ~500 tokens per call — the cheapest model tier.
-- **Static analysis.** CodeQL scans every push. Security posture visible at a glance: [codeql.yml](.github/workflows/codeql.yml).
+- **Static analysis.** CodeQL scans every push. Targets OWASP Top 10 for LLM threat categories.
 - **Secure by default.** Core tokens are backend-derived. Scout checks are deterministic. No secrets in public index records.
 
 Full policy: [SECURITY.md](SECURITY.md). Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md).

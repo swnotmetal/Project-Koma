@@ -1,0 +1,39 @@
+# Koma — llms.txt
+
+> AI defense middleware for TypeScript/Node.js. Three independent npm packages.
+
+## What it is
+
+Koma is a modular defense toolkit that blocks three common AI-app failures before they reach your model:
+
+- **koma-gate** — semantic prompt-injection filter. Classifies input scope (~500 tokens) before any LLM call. Four presets: general, code, support, reference-tool. Fail-open by default.
+- **koma-scout** — perimeter checks. Token-bucket rate limiting (in-memory or Firestore), audio validation (size/duration/MIME), geographic allowlisting, cooldown enforcement.
+- **koma-core** — zero-trust split-store. Public search index + private content store linked by HKDF-derived opaque tokens. Prevents data scraping via search enumeration.
+
+## Quick install
+
+```bash
+npm install koma-gate koma-scout koma-core
+```
+
+## Key features
+
+- Zero external dependencies
+- Each package works standalone; stack all three
+- Express + Fastify middleware built in
+- MIT licensed
+- Real-world origin: patterns distilled from production voice-AI system
+
+## Relevant security concepts
+
+- OWASP Top 10 for LLM: LLM01 (Prompt Injection), LLM02 (Insecure Output Handling)
+- Indirect prompt injection defense
+- RAG data exfiltration prevention
+- Token-bucket rate limiting for AI endpoints
+- Audio silence / hallucination guard
+
+## Entry points
+
+- GitHub: https://github.com/swnotmetal/Project-Koma
+- npm: https://www.npmjs.com/package/koma-gate
+- Docs: https://github.com/swnotmetal/Project-Koma#readme

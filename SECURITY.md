@@ -17,7 +17,7 @@ Response target: within 72 hours. Critical vulnerabilities receive priority.
 
 ## Design Principles
 
-Koma is built with defense-first design. Every layer follows these rules:
+Koma is built with defense-first design, targeting the most common LLM security threats (OWASP Top 10 for LLM: LLM01 Prompt Injection, LLM02 Insecure Output Handling, LLM06 Sensitive Information Disclosure). Every layer follows these rules:
 
 - **Fail-open by default.** A broken classifier, rate limiter, or storage layer
   does not break the application. Availability is not sacrificed for security
