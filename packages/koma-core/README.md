@@ -4,6 +4,10 @@ Protected split-store storage for AI apps.
 
 This package separates searchable index records from private content records and links them with opaque backend-derived tokens.
 
+## Security Boundary
+
+Koma Core provides the storage pattern (index/content separation), but the integrating application is responsible for deriving a trustworthy `userTier` from authenticated identity. Core does not authenticate users or authorize access tiers — it enforces the tier the application passes in. Always verify identity before calling storage methods.
+
 ## AI Agent Quick Read
 
 - Read order: this README, then `src/index.ts`, then [../../demo/server.js](../../demo/server.js).

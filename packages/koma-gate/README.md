@@ -1,8 +1,18 @@
 # Koma Gate
 
-Semantic request filtering for AI apps.
+LLM-based scope classifier for AI apps.
 
 This package exposes a compact intent-classification guard that returns a strict JSON decision and is designed to sit in front of LLM calls, tool calls, or support workflows.
+
+## Security Boundary
+
+Koma Gate is a scope classifier, not a cryptographic prompt-injection defense. Policy text and user input are sent together in one model message, so an attacker with sufficient control over the input may influence the classifier. For stronger guarantees:
+
+- Use a provider that supports system/user message separation (OpenAI, Anthropic).
+- Set `failOpen: false` in production if availability is less critical than security.
+- Evaluate against public jailbreak corpora before relying on Gate as a primary defense.
+
+Gate is most effective as a first-pass filter that blocks obvious abuse and off-topic traffic before expensive model calls — not as a sole security boundary.
 
 ## AI Agent Quick Read
 
