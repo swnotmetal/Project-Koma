@@ -2,10 +2,19 @@
  * koma-gate evaluation runner
  * 
  * Usage:
- *   export OPENAI_API_KEY=sk-...
+ *   $env:OPENAI_API_KEY = "sk-..."       # Windows PowerShell
+ *   export OPENAI_API_KEY=sk-...          # macOS / Linux
  *   node benchmarks/gate-eval.js
  * 
- * Output: recall, precision, false-positive rate, latency p50/p99
+ * To integrate external corpora:
+ *   1. HuggingFace prompt-injection dataset:
+ *      curl -L https://huggingface.co/datasets/deepset/prompt-injection/resolve/main/data/train.jsonl -o benchmarks/data/prompt-injection.jsonl
+ *      Then run: node benchmarks/gate-eval.js --corpus benchmarks/data/prompt-injection.jsonl
+ *   2. jailbreak-eval (verazuo):
+ *      git clone https://github.com/verazuo/jailbreak-evaluation benchmarks/data/jailbreak-eval
+ *      Then run: node benchmarks/gate-eval.js --corpus benchmarks/data/jailbreak-eval/questions.csv
+ * 
+ * Output: recall, precision, false-positive rate, latency p50/p99 (JSON + human-readable)
  */
 
 // ——— Manual test corpus ——— //
