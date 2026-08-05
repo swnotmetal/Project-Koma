@@ -2,6 +2,8 @@
 
 Stop prompt injection, bot flooding, and data scraping — before they hit your AI app.
 
+Zero-dependency AI firewall for Node.js & TypeScript. A lightweight alternative to Python-heavy guardrails frameworks, built specifically for Express, Fastify, and Next.js API routes.
+
 <p align="center">
   <img src="logo/lognobg.png" alt="Koma logo" width="160" />
 </p>
@@ -73,7 +75,7 @@ node demo/server.js
 curl http://localhost:8080/self-test
 ```
 
-See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard. Read [ADOPTERS.md](ADOPTERS.md) for the real-world scenarios behind each layer. Full backstory on [dev.to](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1).
+See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard — or why Koma is a lightweight, zero-dependency alternative to Python-heavy guardrails frameworks in the TypeScript ecosystem. Read [ADOPTERS.md](ADOPTERS.md) for the real-world scenarios behind each layer. Full backstory on [dev.to](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1).
 
 ## Trust & Safety
 
