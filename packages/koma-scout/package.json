@@ -1,6 +1,6 @@
 {
   "name": "koma-scout",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Traffic shaping, audio validation, and anti-bot middleware for AI apps.",
   "author": "Shuang Wu",
   "type": "module",
