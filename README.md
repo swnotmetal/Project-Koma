@@ -32,6 +32,8 @@ Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shri
 | You're building… | What goes wrong | Fix | Install |
 |---|---|---|---|
 | An AI chatbot | Users jailbreak it with prompt injection | Semantic filter blocks off-topic & attacks | `koma-gate` |
+
+> **Benchmarked**: 92.8–96.2% recall on [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections), 0% false positives. See [BENCHMARKS.md](./BENCHMARKS.md).
 | A voice AI | Silent uploads waste API credits on hallucinations | Audio validation + rate limiting + geo block | `koma-scout` |
 | An AI search / RAG | Private responses get scraped via enumeration | Split index from content, token-gate retrieval | `koma-core` |
 

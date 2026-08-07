@@ -26,3 +26,6 @@ pnpm-debug.log*
 
 # Package archives
 *.tgz
+
+# Benchmark data (only ignore downloaded corpora, keep curated fixtures)
+benchmarks/data/prompt-injection.jsonl

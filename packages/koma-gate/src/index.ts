@@ -173,7 +173,7 @@ export function buildClassificationPrompt(config: DomainConfig, userInput: strin
   const examples = buildFewShotExamples(config);
   
   return SYSTEM_PROMPT_TEMPLATE
-    .replace('{domain_name}', config.name)
+    .replace(/\{domain_name\}/g, config.name)
     .replace('{domain_description}', config.description)
     .replace('{allowed_topics}', config.allowedTopics.join('、'))
     .replace('{blocked_topics}', config.blockedTopics.join('、'))
@@ -213,6 +213,32 @@ interface LLMAdapter {
   classify(prompt: string): Promise<{ inScope: boolean; confidence?: number; rawResponse: string }>;
 }
 
+/** Shared helper: throw on non-2xx API responses so errors propagate to failOpen/failClosed logic. */
+async function checkApiResponse(response: Response, provider: string): Promise<void> {
+  if (response.ok) return;
+  const body = await response.text().catch(() => '');
+  const preview = body.slice(0, 300);
+  throw new Error(`[${provider}] HTTP ${response.status}: ${preview}`);
+}
+
+/** Shared helper: parse LLM JSON output, handling ```json fences and thinking-model artifacts. */
+function parseJsonResponse(content: string): { inScope: boolean; confidence?: number; rawResponse: string } {
+  // Strip ```json / ``` fences that some models wrap around JSON
+  let cleaned = content
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```\s*$/, '')
+    .trim();
+  // Extract the first JSON object if there's extra text
+  const match = cleaned.match(/\{[\s\S]*?\}/);
+  if (match) cleaned = match[0];
+  try {
+    const parsed = JSON.parse(cleaned);
+    return { inScope: Boolean(parsed.in_scope), confidence: parsed.confidence, rawResponse: content };
+  } catch {
+    return { inScope: false, rawResponse: content };
+  }
+}
+
 class OpenAIAdapter implements LLMAdapter {
   constructor(private config: LLMProviderConfig) {}
   
@@ -233,22 +259,10 @@ class OpenAIAdapter implements LLMAdapter {
       signal: AbortSignal.timeout(this.config.timeoutMs || 5000)
     });
     
+    await checkApiResponse(response, 'openai');
     const data: any = await response.json();
     const content = data.choices?.[0]?.message?.content || '{"in_scope": false}';
-    return this.parseResponse(content);
-  }
-  
-  private parseResponse(content: string) {
-    try {
-      const parsed = JSON.parse(content);
-      return { 
-        inScope: Boolean(parsed.in_scope), 
-        confidence: parsed.confidence,
-        rawResponse: content 
-      };
-    } catch {
-      return { inScope: false, rawResponse: content };
-    }
+    return parseJsonResponse(content);
   }
 }
 
@@ -272,18 +286,10 @@ class AnthropicAdapter implements LLMAdapter {
       signal: AbortSignal.timeout(this.config.timeoutMs || 5000)
     });
     
+    await checkApiResponse(response, 'anthropic');
     const data: any = await response.json();
     const content = data.content?.[0]?.text || '{"in_scope": false}';
-    return this.parseResponse(content);
-  }
-  
-  private parseResponse(content: string) {
-    try {
-      const parsed = JSON.parse(content);
-      return { inScope: Boolean(parsed.in_scope), rawResponse: content };
-    } catch {
-      return { inScope: false, rawResponse: content };
-    }
+    return parseJsonResponse(content);
   }
 }
 
@@ -300,26 +306,17 @@ class GoogleAdapter implements LLMAdapter {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0,
-            maxOutputTokens: 20,
-            responseMimeType: 'application/json'
+            maxOutputTokens: 1024
           }
         }),
         signal: AbortSignal.timeout(this.config.timeoutMs || 5000)
       }
     );
     
+    await checkApiResponse(response, 'google');
     const data: any = await response.json();
     const content = data.candidates?.[0]?.content?.parts?.[0]?.text || '{"in_scope": false}';
-    return this.parseResponse(content);
-  }
-  
-  private parseResponse(content: string) {
-    try {
-      const parsed = JSON.parse(content);
-      return { inScope: Boolean(parsed.in_scope), rawResponse: content };
-    } catch {
-      return { inScope: false, rawResponse: content };
-    }
+    return parseJsonResponse(content);
   }
 }
 
@@ -340,18 +337,10 @@ class OllamaAdapter implements LLMAdapter {
       signal: AbortSignal.timeout(this.config.timeoutMs || 10000)
     });
     
+    await checkApiResponse(response, 'ollama');
     const data: any = await response.json();
     const content = data.response || '{"in_scope": false}';
-    return this.parseResponse(content);
-  }
-  
-  private parseResponse(content: string) {
-    try {
-      const parsed = JSON.parse(content);
-      return { inScope: Boolean(parsed.in_scope), rawResponse: content };
-    } catch {
-      return { inScope: false, rawResponse: content };
-    }
+    return parseJsonResponse(content);
   }
 }
 
@@ -360,12 +349,7 @@ class CustomAdapter implements LLMAdapter {
   
   async classify(prompt: string) {
     const content = await this.requestFn(prompt);
-    try {
-      const parsed = JSON.parse(content);
-      return { inScope: Boolean(parsed.in_scope), rawResponse: content };
-    } catch {
-      return { inScope: false, rawResponse: content };
-    }
+    return parseJsonResponse(content);
   }
 }
 
@@ -718,7 +702,7 @@ export function createGeneralKnowledgeGuard(config: Partial<GuardConfig> = {}): 
   return new KomaGuard({
     llm: {
       provider: 'google',
-      model: 'gemini-2.0-flash-lite',
+      model: 'gemini-2.5-flash',
       apiKey: runtimeEnv.GEMINI_API_KEY,
       timeoutMs: 3000,
       maxRetries: 1,
@@ -866,7 +850,7 @@ export function createReferenceToolGuard(config: Partial<GuardConfig> = {}): Kom
   return new KomaGuard({
     llm: {
       provider: 'google',
-      model: 'gemini-2.0-flash-lite',
+      model: 'gemini-2.5-flash',
       apiKey: runtimeEnv.GEMINI_API_KEY,
       timeoutMs: 3000,
       maxRetries: 1,
