@@ -30,6 +30,8 @@ Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自�
 | 你在做… | 什么会出事 | 怎么挡 | 安装 |
 |---|---|---|---|
 | 一个 AI 聊天 | 用户提示注入，越狱你的机器人 | 语义过滤器拦截越界和攻击, 避免挂上昂贵的API项目后裸奔 | `koma-gate` |
+
+> **实测数据**: 在 [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) 公开数据集上达到 92.8–96.2% 召回率，零误拦。详见 [BENCHMARKS.md](./BENCHMARKS.md)。
 | 一个语音 AI | 静音上传浪费 API 额度，产生幻觉 | 音频校验 + 限流 + 地理白名单, 最大程度保证只收录有效内容 | `koma-scout` |
 | 一个 AI 搜索 / RAG | 私有回复被遍历爬取 | 索引和内容分离，token 控制检索, 竞争对手恶意用户扑空 | `koma-core` |
 
