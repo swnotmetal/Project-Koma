@@ -16,7 +16,8 @@ Zero-dependency AI firewall for Node.js & TypeScript. A lightweight alternative 
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
   <br />
-  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=Total%20DLs&color=blue&style=flat-square" /></p>
+  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=Total%20DLs&color=blue&style=flat-square" />
+  <img alt="benchmark" src="https://img.shields.io/badge/benchmark-96.2%25_recall-6e3abe?style=flat-square" /></p>
 </p>
 
 <p align="center">
@@ -32,10 +33,19 @@ Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shri
 | You're building… | What goes wrong | Fix | Install |
 |---|---|---|---|
 | An AI chatbot | Users jailbreak it with prompt injection | Semantic filter blocks off-topic & attacks | `koma-gate` |
-
-> **Benchmarked**: 92.8–96.2% recall on [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections), 0% false positives. See [BENCHMARKS.md](./BENCHMARKS.md).
 | A voice AI | Silent uploads waste API credits on hallucinations | Audio validation + rate limiting + geo block | `koma-scout` |
 | An AI search / RAG | Private responses get scraped via enumeration | Split index from content, token-gate retrieval | `koma-core` |
+
+### Benchmarks ★
+
+`koma-gate` evaluated against the public [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) corpus (263 real prompt-injection attempts) in fail-closed mode, using real providers — not mock adapters.
+
+| Provider | Model | Recall ↑ | Precision | FPR |
+|----------|-------|:--------:|:---------:|:---:|
+| DeepSeek | deepseek-chat | 92.8% | 100.0% | 0.0% |
+| Google | gemini-2.5-flash | **96.2%** | 100.0% | 0.0% |
+
+**Zero false positives** across both providers — all 50 domain-aligned safe queries passed. Full methodology, reproduction steps, and CI-ready runner in [BENCHMARKS.md](./BENCHMARKS.md).
 
 ### When to Use
 
