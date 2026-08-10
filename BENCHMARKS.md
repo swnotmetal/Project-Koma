@@ -75,4 +75,4 @@ This benchmark suite exists because of a detailed community security review. The
 | Need evaluation against public corpora with real providers, not mock adapters | This benchmark suite: 263-sample public corpus, two real providers (DeepSeek + Gemini), fail-closed mode |
 | `failOpen: true` as default is unsafe for security use cases | `failOpen: false` documented as recommended config for evaluation and high-security deployments |
 
-We're grateful for reviews that push projects toward stronger engineering. If you spot a gap in methodology, data, or claims, [open an issue](https://github.com/swnotmetal/Project-Koma/issues).
+I am very grateful for reviews that push projects toward stronger engineering. If you spot a gap in methodology, data, or claims, [open an issue](https://github.com/swnotmetal/Project-Koma/issues).
