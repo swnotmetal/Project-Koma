@@ -64,3 +64,15 @@ All benchmark artifacts are deterministic (temperature=0, no cache). To reproduc
 - [ ] Evaluation against additional corpora (jailbreak-eval, HarmBench)
 - [ ] Anthropic Claude 3 Haiku results
 - [ ] Local model benchmarks (Ollama + Llama)
+
+## Design Decisions
+
+This benchmark suite exists because of a detailed community security review. The reviewer identified three gaps in the initial release:
+
+| Feedback | Action taken |
+|----------|-------------|
+| Scope classifier ≠ cryptographic defense — claims should match mechanism | [Security boundary](https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-gate/README.md#security-boundary) section added to README, with explicit limitations and mitigation advice |
+| Need evaluation against public corpora with real providers, not mock adapters | This benchmark suite: 263-sample public corpus, two real providers (DeepSeek + Gemini), fail-closed mode |
+| `failOpen: true` as default is unsafe for security use cases | `failOpen: false` documented as recommended config for evaluation and high-security deployments |
+
+We're grateful for reviews that push projects toward stronger engineering. If you spot a gap in methodology, data, or claims, [open an issue](https://github.com/swnotmetal/Project-Koma/issues).
