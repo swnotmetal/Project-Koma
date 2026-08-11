@@ -27,7 +27,37 @@
  */
 
 import { readFileSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+// ============================================================================
+// Env-file loading (supports drafts/api.env with googleapi / deepseekapi keys)
+// ============================================================================
+const __dirname = dirname(fileURLToPath(import.meta.url));
+function loadEnvFile(relPath) {
+  const envPath = resolve(__dirname, '..', relPath);
+  if (!existsSync(envPath)) return;
+  const raw = readFileSync(envPath, 'utf-8');
+  const keyMap = {
+    googleapi: 'GEMINI_API_KEY',
+    deepseekapi: 'DEEPSEEK_API_KEY',
+    openaiapi: 'OPENAI_API_KEY',
+    anthropicapi: 'ANTHROPIC_API_KEY',
+  };
+  for (const line of raw.split('\n')) {
+    const eq = line.indexOf('=');
+    if (eq === -1 || line.startsWith('#')) continue;
+    const key = line.slice(0, eq).trim();
+    let val = line.slice(eq + 1).trim();
+    // Fix common typos: leading -sk → sk-
+    if (val.startsWith('-sk-')) val = 'sk' + val.slice(1);
+    const mapped = keyMap[key];
+    if (mapped && val && !process.env[mapped]) {
+      process.env[mapped] = val;
+    }
+  }
+}
+[   'drafts/api.env',   '.env', ].forEach(loadEnvFile);
 
 // ============================================================================
 // CLI argument parsing
