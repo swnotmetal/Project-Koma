@@ -4,11 +4,25 @@ Koma Gate evaluation against public prompt-injection corpora using real LLM prov
 
 ## Methodology
 
-- **Corpus**: [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) — 263 injection attacks, 50 domain-aligned safe queries
+- **Corpora**: Multiple public prompt-injection datasets, merged and de-duplicated
+  - [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) — 662 rows (EN + DE)
+  - Additional sources via `python3 benchmarks/fetch-hf-dataset.py --list`
+- **Positive (safe) queries**: 200 domain-aligned knowledge queries, independently curated
 - **Preset**: `knowledge` (General Knowledge Assistant)
 - **Mode**: `failOpen: false` (fail-closed, security-first)
 - **Cache**: disabled (cold-path measurement)
 - **Retries**: 1
+
+### Important Caveats
+
+This is a **dataset benchmark, not a security guarantee**. Key limitations:
+
+- **Corpus size**: Current evaluation uses O(10³) samples. Production AI applications serve O(10⁶–10⁹) queries. A 0.1% FPR at this scale could mean thousands of false blocks.
+- **Attack diversity**: Public corpora skew toward English direct-injection patterns. Real attackers use multi-turn, indirect, encoded, and cross-language techniques not fully represented here.
+- **Evaluation leakage**: The `knowledge` preset's few-shot examples and the test corpus share distributional properties. Results should be validated against unseen attack distributions.
+- **Single-language classifier**: The prompt template is English-only. Non-English injections (German, Chinese, Japanese) have lower detection rates.
+
+These limitations are tracked in [SECURITY-HARDENING.md](./SECURITY-HARDENING.md).
 
 ## Results
 
@@ -30,23 +44,23 @@ Koma Gate evaluation against public prompt-injection corpora using real LLM prov
 ## Running the Benchmark
 
 ```bash
-# 1. Download the corpus
+# 1. Download all available corpora (merged)
 python3 benchmarks/fetch-hf-dataset.py
 
-# 2. Run evaluation
+# 2. Run evaluation against merged corpus
 export DEEPSEEK_API_KEY=sk-...
 node benchmarks/gate-eval.js \
-  --corpus benchmarks/data/prompt-injection.jsonl \
+  --corpus benchmarks/data/prompt-injection-merged.jsonl \
   --positive benchmarks/data/knowledge-positive.jsonl \
   --provider deepseek \
   --preset knowledge
 
-# 3. Compare providers
-export GEMINI_API_KEY=...
+# 3. Single-source evaluation
+python3 benchmarks/fetch-hf-dataset.py --source deepset
 node benchmarks/gate-eval.js \
-  --corpus benchmarks/data/prompt-injection.jsonl \
+  --corpus benchmarks/data/deepset-prompt-injection.jsonl \
   --positive benchmarks/data/knowledge-positive.jsonl \
-  --provider google \
+  --provider deepseek \
   --preset knowledge
 ```
 
@@ -60,10 +74,26 @@ All benchmark artifacts are deterministic (temperature=0, no cache). To reproduc
 
 ## Future Work
 
-- [ ] Multi-language prompt templates (German, Chinese, Japanese)
-- [ ] Evaluation against additional corpora (jailbreak-eval, HarmBench)
+### Corpus Expansion
+- [ ] Chinese-language injection corpus (hand-curated)
+- [ ] Japanese, Korean, Arabic injection samples
+- [ ] Mixed-language and code-switching attacks
+- [ ] Multi-turn conversation injection sequences
+- [ ] Indirect injection via tool outputs and RAG context
+- [ ] Encoded/obfuscated payloads (Base64, URL-encode, Unicode homoglyph)
+
+### Evaluation Rigor
+- [ ] 500+ domain-aligned safe queries for statistical FPR confidence
+- [ ] Per-language recall breakdown
+- [ ] Per-attack-category precision/recall
+- [ ] Cross-preset evaluation (support, code, reference)
 - [ ] Anthropic Claude 3 Haiku results
 - [ ] Local model benchmarks (Ollama + Llama)
+
+### Automation
+- [ ] CI-integrated benchmark run (on schedule, not per-commit)
+- [ ] Regression test for every fixed bypass
+- [ ] Leaderboard-style results page
 
 ## Design Decisions
 
