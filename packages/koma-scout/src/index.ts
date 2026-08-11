@@ -98,11 +98,27 @@ export interface RateLimitStorage {
 
 export class MemoryRateLimitStorage implements RateLimitStorage {
   private store = new Map<string, RateLimitEntry>();
+  private locks = new Map<string, Promise<void>>();
   private cleanupInterval: NodeJS.Timeout;
 
   constructor() {
-    // Periodic cleanup of expired entries
     this.cleanupInterval = setInterval(() => this.cleanup(), 60_000);
+  }
+
+  /** Per-key mutual exclusion to prevent concurrent increment races. */
+  private async withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+    while (this.locks.has(key)) {
+      await this.locks.get(key);
+    }
+    let release: () => void;
+    const lock = new Promise<void>(resolve => { release = resolve; });
+    this.locks.set(key, lock);
+    try {
+      return await fn();
+    } finally {
+      this.locks.delete(key);
+      release!();
+    }
   }
 
   async get(key: string): Promise<RateLimitEntry | null> {
@@ -123,6 +139,7 @@ export class MemoryRateLimitStorage implements RateLimitStorage {
   }
 
   async incrementAndCheck(key: string, windowMs: number, maxRequests: number): Promise<RateLimitResult> {
+    return this.withLock(key, async () => {
     const now = Date.now();
     const entry = await this.get(key) || { attempts: [], updatedAt: now };
     
@@ -147,6 +164,7 @@ export class MemoryRateLimitStorage implements RateLimitStorage {
       remaining: maxRequests - recent.length,
       resetAt: now + windowMs
     };
+    });
   }
 
   private cleanup(): void {

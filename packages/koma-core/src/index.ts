@@ -10,7 +10,7 @@
  */
 
 import { EventEmitter } from 'events';
-import { createHash, createHmac, randomBytes } from 'crypto';
+import { createHash, randomBytes, hkdfSync } from 'crypto';
 
 // ============================================================================
 // Types
@@ -121,15 +121,20 @@ export interface ContentDocument extends Document {
 }
 
 // ============================================================================
-// Token Derivation (HKDF-based)
+// Token Derivation (HKDF-based, RFC 5869)
 // ============================================================================
 
 /**
- * Derive a content token from the master key using HKDF.
+ * Derive a content token from the master key using HKDF (RFC 5869).
  * Guarantees:
- * 1. The token cannot be reversed back to sourceId
- * 2. The same sourceId always maps to the same token
+ * 1. The token cannot be reversed back to sourceId (HKDF is one-way)
+ * 2. The same sourceId always maps to the same token (deterministic)
  * 3. Different applications or tenants can isolate token spaces with different info contexts
+ * 4. Optional user-binding: when a userId is provided, the token is scoped to that user
+ *
+ * Security note: Token derivation is deterministic by design. Access control
+ * (who can use a token) must be enforced at the application layer. Core does
+ * not authenticate users — it derives tokens and enforces tiers.
  */
 export class TokenDeriver {
   private masterKey: Buffer;
@@ -138,6 +143,9 @@ export class TokenDeriver {
 
   constructor(masterKey: string | Buffer, info = 'koma-content-token', tokenLength = 32) {
     this.masterKey = Buffer.isBuffer(masterKey) ? masterKey : Buffer.from(masterKey, 'utf-8');
+    if (this.masterKey.length < 32) {
+      throw new Error('masterKey must be at least 32 bytes (256 bits) for HKDF');
+    }
     this.info = info;
     this.tokenLength = tokenLength;
   }
@@ -145,18 +153,19 @@ export class TokenDeriver {
   /**
    * Derive a content token.
    * @param sourceId Business identifier such as SPL_ID, SKU, or DOI.
+   * @param userId Optional user identifier for user-scoped tokens.
    * @returns Token as a hexadecimal string.
    */
-  derive(sourceId: string): string {
-    // HKDF-Extract: PRK = HMAC-Hash(salt, IKM)
-    // This implementation uses a fixed salt shape and the master key as IKM.
-    const prk = createHmac('sha256', this.masterKey).update(sourceId).digest();
-    
-    // HKDF-Expand: T = HMAC-Hash(PRK, info || counter)
-    const infoBuffer = Buffer.from(this.info + '\x01', 'utf-8');
-    const expanded = createHmac('sha256', prk).update(infoBuffer).digest();
-    
-    return expanded.subarray(0, this.tokenLength).toString('hex');
+  derive(sourceId: string, userId?: string): string {
+    const ikm = Buffer.from(sourceId, 'utf-8');
+    const salt = this.masterKey;
+    // If userId is provided, include it in the info context for user-binding
+    const infoContext = userId
+      ? `${this.info}:user=${userId}`
+      : this.info;
+    const infoBuffer = Buffer.from(infoContext, 'utf-8');
+    const derived = hkdfSync('sha256', ikm, salt, infoBuffer, this.tokenLength);
+    return Buffer.from(derived).toString('hex');
   }
 
   /**

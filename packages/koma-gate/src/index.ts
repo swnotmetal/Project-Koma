@@ -641,6 +641,7 @@ export class KomaGuard extends TinyEventEmitter {
   private sanitizeInput(input: string): string {
     return input
       .slice(0, this.config.behavior.maxInputLength)
+      .normalize('NFKC')
       .replace(/[\u200B-\u200D\uFEFF]/g, '') // Zero-width chars
       .trim();
   }
