@@ -576,6 +576,8 @@ export interface SearchOptions {
   accessTier?: 'public' | 'premium' | 'enterprise';
   limit?: number;
   offset?: number;
+  /** Set to true only for backend-internal use where the caller is trusted. Default: false. */
+  includeTokens?: boolean;
 }
 
 export interface SearchResult {
@@ -583,11 +585,15 @@ export interface SearchResult {
   displayName: string;
   category: string;
   tags: string[];
-  contentToken: string;
   accessTier: string;
   metadata: Record<string, any>;
-  // Content preview (optional, public fields only).
+  /** Content preview (optional, public fields only). */
   preview?: Record<string, any>;
+}
+
+/** Backend-internal search result — includes the content token. Never expose to clients. */
+export interface InternalSearchResult extends SearchResult {
+  contentToken: string;
 }
 
 export interface ContentFetchOptions {
@@ -637,7 +643,8 @@ export class DualCollectionReader {
 
   /**
    * Search the index layer.
-   * Returns lightweight results plus the content token.
+   * Returns public-safe results by default. contentToken is only included
+   * when includeTokens is explicitly set to true (backend-internal use only).
    */
   async search(options: SearchOptions = {}): Promise<SearchResult[]> {
     const filters: QueryFilter[] = [];
@@ -653,20 +660,23 @@ export class DualCollectionReader {
       filters.push({ field: 'accessTier', operator: '==', value: options.accessTier });
     }
 
-    // Text search requires database support such as Algolia, MeiliSearch, or Firestore array-contains.
-    // This demo keeps the search step intentionally simple.
     const docs = await this.indexDb.query(this.indexCollection, filters, limit);
 
-    return docs.map(doc => ({
-      indexId: doc.id ?? '',
-      displayName: doc.displayName,
-      category: doc.category,
-      tags: doc.tags,
-      contentToken: doc.contentToken,
-      accessTier: doc.accessTier,
-      metadata: doc.metadata,
-      preview: this.extractPreview(doc.metadata)
-    }));
+    return docs.map(doc => {
+      const base: SearchResult = {
+        indexId: doc.id ?? '',
+        displayName: doc.displayName,
+        category: doc.category,
+        tags: doc.tags,
+        accessTier: doc.accessTier,
+        metadata: doc.metadata,
+        preview: this.extractPreview(doc.metadata)
+      };
+      if (options.includeTokens) {
+        (base as any).contentToken = doc.contentToken;
+      }
+      return base;
+    });
   }
 
   /**
@@ -738,12 +748,19 @@ export class DualCollectionReader {
   }
 
   /**
-   * Get a content preview without incrementing the access count.
+   * Get a content preview with authorization enforcement.
+   * Requires userTier — preview access is gated the same as full content access.
    */
-  async getPreview(contentToken: string): Promise<Record<string, any> | null> {
+  async getPreview(contentToken: string, opts: { userTier: string }): Promise<Record<string, any> | null> {
     const contentDoc = await this.contentDb.get(this.contentCollection, contentToken);
     if (!contentDoc) return null;
-    
+
+    // Enforce access tier — preview is not a backdoor past authorization
+    if (!this.canAccess(opts.userTier, contentDoc.accessTier || 'public')) {
+      await this.auditLog('ACCESS_DENIED', { token: contentToken, success: false });
+      throw Object.assign(new Error('Access denied'), { code: 'ACCESS_DENIED' });
+    }
+
     // Return only safe preview fields.
     return this.extractPreview(contentDoc.payload);
   }

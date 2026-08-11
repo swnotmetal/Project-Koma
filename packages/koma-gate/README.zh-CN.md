@@ -11,6 +11,7 @@ Koma Gate 是一个范围分类器，不是密码学级别的提示注入防御�
 - 使用支持 system/user 消息分离的供应商（OpenAI、Anthropic）。
 - 生产环境中如果可用性不如安全重要，设置 `failOpen: false`。
 - 在依赖 Gate 作为主要防线之前，用公开的越狱测试集进行评估。
+- 已知限制及修复状态见 [SECURITY-HARDENING.md](../../SECURITY-HARDENING.md)。
 
 Gate 最有效的用法是作为第一道过滤器，在昂贵的模型调用之前拦截明显的滥用和越界流量——而不是作为唯一的安全边界。
 

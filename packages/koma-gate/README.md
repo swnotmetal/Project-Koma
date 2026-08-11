@@ -11,6 +11,7 @@ Koma Gate is a scope classifier, not a cryptographic prompt-injection defense. P
 - Use a provider that supports system/user message separation (OpenAI, Anthropic).
 - Set `failOpen: false` in production if availability is less critical than security.
 - Evaluate against public jailbreak corpora before relying on Gate as a primary defense.
+- See [SECURITY-HARDENING.md](../../SECURITY-HARDENING.md) for known limitations and their status.
 
 Gate is most effective as a first-pass filter that blocks obvious abuse and off-topic traffic before expensive model calls — not as a sole security boundary.
 

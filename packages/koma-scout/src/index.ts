@@ -369,8 +369,9 @@ export class AudioValidator {
    */
   async validateAudioFile(filePath: string, mimeType: string, clientId: string): Promise<AudioValidationResult> {
     const fs = await import('fs/promises');
-    const stats = await fs.stat(filePath);
-    return this.validateBase64Audio('', mimeType, clientId); // Simplified - would read actual file
+    const buffer = await fs.readFile(filePath);
+    const base64 = buffer.toString('base64');
+    return this.validateBase64Audio(base64, mimeType, clientId);
   }
 }
 
@@ -393,7 +394,7 @@ export class GeoAllowlist {
       allowedCountries: config.allowedCountries ?? ['US', 'FI'],
       ipinfoToken: config.ipinfoToken,
       cacheTtlMs: config.cacheTtlMs ?? 60 * 60 * 1000,
-      failOpen: config.failOpen ?? true
+      failOpen: config.failOpen ?? false
     };
     this.config = {
       allowedCountries: resolvedConfig.allowedCountries,

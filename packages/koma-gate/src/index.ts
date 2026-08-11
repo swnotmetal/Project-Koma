@@ -430,7 +430,7 @@ export class KomaGuard extends TinyEventEmitter {
       llm: config.llm,
       domain: config.domain,
       behavior: {
-        failOpen: config.behavior?.failOpen ?? true,
+        failOpen: config.behavior?.failOpen ?? false,
         confidenceThreshold: config.behavior?.confidenceThreshold,
         maxInputLength: config.behavior?.maxInputLength ?? 500,
         logDecisions: config.behavior?.logDecisions ?? true,
@@ -733,7 +733,7 @@ export function createGeneralKnowledgeGuard(config: Partial<GuardConfig> = {}): 
       ...config.domain
     },
     behavior: {
-      failOpen: true,
+      failOpen: false,
       maxInputLength: 500,
       logDecisions: true,
       rejectMessage: 'Sorry, this question is outside the assistant scope. Only general knowledge queries are supported.',
@@ -781,7 +781,7 @@ export function createCodeAssistantGuard(config: Partial<GuardConfig> = {}): Kom
       ...config.domain
     },
     behavior: {
-      failOpen: true,
+      failOpen: false,
       maxInputLength: 1000,
       logDecisions: true,
       rejectMessage: 'Only programming and technical development questions are supported.',
@@ -828,7 +828,7 @@ export function createSupportGuard(config: Partial<GuardConfig> = {}): KomaGuard
       ...config.domain
     },
     behavior: {
-      failOpen: true,
+      failOpen: false,
       maxInputLength: 500,
       logDecisions: true,
       rejectMessage: 'This question is outside support scope. Please consult the appropriate professional.',
@@ -882,7 +882,7 @@ export function createReferenceToolGuard(config: Partial<GuardConfig> = {}): Kom
       ...config.domain
     },
     behavior: {
-      failOpen: true,
+      failOpen: false,
       maxInputLength: 500,
       logDecisions: true,
       rejectMessage: 'This request is outside the reference scope. Only factual lookups are supported.',
