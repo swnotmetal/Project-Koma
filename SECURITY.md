@@ -8,12 +8,25 @@
 
 ## Reporting a Vulnerability
 
-**Do not open a public issue.** Email the maintainer directly. If the repository contact is
+**Do not open a public issue for exploitable vulnerabilities affecting users.**
+Email the maintainer directly. If the repository contact is
 not listed in the README, open a private vulnerability report via GitHub:
 
 [Report a vulnerability](https://github.com/swnotmetal/Project-Koma/security/advisories/new)
 
 Response target: within 72 hours. Critical vulnerabilities receive priority.
+
+### Public Security Challenge
+
+We also run a permanent **public security challenge** for adversarial testing,
+bypass attempts, and red-team discussion. If you want to try breaking Koma and
+discuss your approach openly, that's the place:
+
+→ [Can You Break Koma? — Public Security Challenge](https://github.com/swnotmetal/Project-Koma/issues)
+
+**Rule of thumb**: If your finding could harm deployed users, report privately.
+If you're testing boundaries, probing defenses, or want to discuss a bypass
+technique, the challenge issue is public.
 
 ## Design Principles
 
