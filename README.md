@@ -2,7 +2,7 @@
 
 Stop prompt injection, bot flooding, and data scraping — before they hit your AI app.
 
-Zero-dependency AI firewall for Node.js & TypeScript. A lightweight alternative to Python-heavy guardrails frameworks, built specifically for Express, Fastify, and Next.js API routes.
+Zero-dependency defensive toolkit for Node.js & TypeScript. Three standalone packages you drop in front of Express, Fastify, or Next.js API routes. Patterns distilled from production, not from papers.
 
 <p align="center">
   <img src="logo/lognobg.png" alt="Koma logo" width="160" />

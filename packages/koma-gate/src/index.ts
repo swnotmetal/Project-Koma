@@ -143,7 +143,7 @@ export interface GuardResult {
  * 3. Cover common attack patterns with few-shot examples
  * 4. Explicitly reject diagnosis-style or advice-seeking requests
  */
-export const SYSTEM_PROMPT_TEMPLATE = `You are the intent classifier for {domain_name}.
+export const CLASSIFIER_PROMPT_TEMPLATE = `You are the intent classifier for {domain_name}.
 Task: decide whether the user input is a valid query within the {domain_name} scope.
 Output JSON only: {"in_scope": true/false}
 
@@ -173,7 +173,7 @@ User input:`;
  */
 export function buildSystemPrompt(config: DomainConfig): string {
   const examples = buildFewShotExamples(config);
-  return SYSTEM_PROMPT_TEMPLATE
+  return CLASSIFIER_PROMPT_TEMPLATE
     .replace(/\{domain_name\}/g, config.name)
     .replace('{domain_description}', config.description)
     .replace('{allowed_topics}', config.allowedTopics.join('、'))
@@ -245,7 +245,11 @@ function parseJsonResponse(content: string): { inScope: boolean; confidence?: nu
   if (match) cleaned = match[0];
   try {
     const parsed = JSON.parse(cleaned);
-    return { inScope: Boolean(parsed.in_scope), confidence: parsed.confidence, rawResponse: content };
+    // Strict boolean check: reject string "false"/"true" as ambiguous
+    const inScope = typeof parsed.in_scope === 'boolean'
+      ? parsed.in_scope
+      : String(parsed.in_scope).toLowerCase() === 'true';
+    return { inScope, confidence: parsed.confidence, rawResponse: content };
   } catch {
     return { inScope: false, rawResponse: content };
   }
@@ -933,5 +937,5 @@ export default {
   createSupportGuard,
   createReferenceToolGuard,
   buildClassificationPrompt,
-  SYSTEM_PROMPT_TEMPLATE
+  CLASSIFIER_PROMPT_TEMPLATE
 };

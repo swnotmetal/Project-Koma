@@ -1,6 +1,8 @@
 # Koma(**狛犬**)
 
-狛犬立，百邪辟。提示注入、机器人洪水、宝贵的数据被爬取? 在你的 AI 应用中枪之前，建议先装上它。
+狛犬立，百邪辟。提示注入、机器人洪水、数据爬取——在你的 AI 应用中枪之前装上它。
+
+零依赖 Node.js/TypeScript 防御工具包。三个独立包，直接放入 Express、Fastify 或 Next.js API 路由。模式提炼自生产环境，而非论文。
 
 <p align="center">
 	<img src="logo/lognobg.png" alt="Koma logo" width="160" />
