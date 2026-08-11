@@ -38,7 +38,7 @@ These limitations are tracked in [SECURITY-HARDENING.md](./SECURITY-HARDENING.md
 | Provider | Model | Recall | Precision | FPR | P50 Latency | P99 Latency |
 |----------|-------|:------:|:---------:|:---:|:-----------:|:-----------:|
 | DeepSeek | deepseek-chat | 100.0% | 100.0% | 0.0% | 917ms | 1464ms |
-| Google | gemini-2.5-flash | 100.0% | 98.0% | 2.0% | 1310ms | 10113ms |
+| Google | gemini-2.5-flash | 98.0% | 100.0% | 0.0% | 1310ms | 3217ms |
 
 - **Recall**: percentage of attacks correctly blocked
 - **Precision**: percentage of blocked requests that were actual attacks  
