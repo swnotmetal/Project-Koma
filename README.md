@@ -17,7 +17,7 @@ Zero-dependency AI firewall for Node.js & TypeScript. A lightweight alternative 
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
   <br />
   <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=Total%20DLs&color=blue&style=flat-square" />
-  <img alt="benchmark" src="https://img.shields.io/badge/benchmark-96.2%25_recall-6e3abe?style=flat-square" /></p>
+  <img alt="benchmark" src="https://img.shields.io/badge/benchmark-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" /></p>
 </p>
 
 <p align="center">

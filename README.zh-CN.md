@@ -15,7 +15,7 @@
 	<a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
 	<br />
 	<img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=累计下载&color=blue&style=flat-square" />
-	<img alt="benchmark" src="https://img.shields.io/badge/实测-96.2%25_召回率-6e3abe?style=flat-square" /></p>
+	<img alt="benchmark" src="https://img.shields.io/badge/实测-98.8%25_召回率_0%25_误拦-6e3abe?style=flat-square" /></p>
 </p>
 
 <p align="center">
