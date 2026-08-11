@@ -712,7 +712,7 @@ export function createGeneralKnowledgeGuard(config: Partial<GuardConfig> = {}): 
     domain: {
       name: 'General Knowledge Assistant',
       description: 'Answer general knowledge questions, provide factual information, and support learning and research.',
-      allowedTopics: ['science', 'history', 'technology', 'programming', 'mathematics', 'language', 'geography', 'culture'],
+      allowedTopics: ['science', 'history', 'technology', 'programming', 'mathematics', 'language', 'geography', 'culture', 'data privacy', 'compliance'],
       blockedTopics: ['medical diagnosis', 'legal advice', 'financial advice', 'mental health counseling', 'dangerous material production'],
       positiveExamples: [
         'What are the basic principles of quantum computing?',
