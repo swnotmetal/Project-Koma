@@ -43,7 +43,7 @@ for name, dataset in targets.items():
     try:
         size_url = f'https://datasets-server.huggingface.co/size?dataset={dataset}'
         size_data = json.loads(urllib.request.urlopen(size_url).read())
-        splits = {s['split']: s['num_rows'] for s in size_data.get('splits', [])}
+        splits = {s['split']: s['num_rows'] for s in size_data.get('size', {}).get('splits', [])}
     except Exception as e:
         print(f'  ⚠ {name}: cannot fetch size ({e}), skipping')
         continue
