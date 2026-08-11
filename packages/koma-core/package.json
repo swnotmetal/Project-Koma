@@ -1,6 +1,6 @@
 {
   "name": "koma-core",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "Protected split-store storage for AI apps.",
   "author": "Shuang Wu",
   "type": "module",
