@@ -6,8 +6,10 @@ Koma Gate evaluation against public prompt-injection corpora using real LLM prov
 
 - **Corpora**: Multiple public prompt-injection datasets, merged and de-duplicated
   - [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) — 662 rows (EN + DE)
-  - Additional sources via `python3 benchmarks/fetch-hf-dataset.py --list`
-- **Positive (safe) queries**: 200 domain-aligned knowledge queries, independently curated
+  - [jayavibhav/prompt-injection](https://huggingface.co/datasets/jayavibhav/prompt-injection) — 4900 rows sampled (mixed)
+  - Chinese custom corpus: 50 attacks across 8 categories + 50 hard-negative benign
+  - Download: `python3 benchmarks/fetch-hf-dataset.py`
+- **Positive (safe) queries**: 50 domain-aligned knowledge queries (`benchmarks/data/knowledge-positive.jsonl`)
 - **Preset**: `knowledge` (General Knowledge Assistant)
 - **Mode**: `failOpen: false` (fail-closed, security-first)
 - **Cache**: disabled (cold-path measurement)
@@ -17,16 +19,22 @@ Koma Gate evaluation against public prompt-injection corpora using real LLM prov
 
 This is a **dataset benchmark, not a security guarantee**. Key limitations:
 
-- **Corpus size**: Current evaluation uses O(10³) samples. Production AI applications serve O(10⁶–10⁹) queries. A 0.1% FPR at this scale could mean thousands of false blocks.
+- **Corpus size**: Merged evaluation uses ~1800 attack samples. Production AI applications serve O(10⁶–10⁹) queries. A 0.1% FPR at scale would mean thousands of false blocks.
 - **Attack diversity**: Public corpora skew toward English direct-injection patterns. Real attackers use multi-turn, indirect, encoded, and cross-language techniques not fully represented here.
-- **Evaluation leakage**: The `knowledge` preset's few-shot examples and the test corpus share distributional properties. Results should be validated against unseen attack distributions.
-- **Single-language classifier**: The prompt template is English-only. Non-English injections (German, Chinese, Japanese) have lower detection rates.
+- **Evaluation leakage**: The `knowledge` preset's few-shot examples and corpus distribution may overlap. Results should be validated against unseen attack distributions.
+- **Single-language classifier**: The prompt template is English-only. Non-English injections have lower detection rates.
 
 These limitations are tracked in [SECURITY-HARDENING.md](./SECURITY-HARDENING.md).
 
 ## Results
 
-### English Corpus (deepset/prompt-injections — 263 attacks, 50 safe)
+### Merged English Corpus (jayavibhav + deepset — 1,769 attacks, 50 safe)
+
+| Provider | Model | Recall | Precision | FPR | P50 Latency | P99 Latency |
+|----------|-------|:------:|:---------:|:---:|:-----------:|:-----------:|
+| DeepSeek | deepseek-chat | **98.8%** | 100.0% | 0.0% | 1044ms | 1706ms |
+
+### Single-Source (deepset/prompt-injections — 263 attacks, 50 safe)
 
 | Provider | Model | Recall | Precision | FPR | P50 Latency | P99 Latency |
 |----------|-------|:------:|:---------:|:---:|:-----------:|:-----------:|

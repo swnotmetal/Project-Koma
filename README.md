@@ -47,6 +47,12 @@ Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shri
 | DeepSeek | deepseek-chat | 93.2% | 100.0% | 0.0% |
 | Google | gemini-2.5-flash | **96.2%** | 100.0% | 0.0% |
 
+**Merged** (multi-source — 1,769 attacks, 50 safe):
+
+| Provider | Model | Recall ↑ | Precision | FPR |
+|----------|-------|:--------:|:---------:|:---:|
+| DeepSeek | deepseek-chat | **98.8%** | 100.0% | 0.0% |
+
 **Chinese** ([zh-injection-50](./benchmarks/data/zh-injection-50.jsonl) — 50 attacks across 8 categories, 50 hard-negative benign):
 
 | Provider | Model | Recall ↑ | Precision | FPR |
@@ -54,7 +60,7 @@ Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shri
 | DeepSeek | deepseek-chat | **100.0%** | 100.0% | 0.0% |
 | Google | gemini-2.5-flash | 98.0% | 100.0% | 0.0% |
 
-**0% false positives** across both corpora and providers. Full methodology, reproduction steps, and CI-ready runner in [BENCHMARKS.md](./BENCHMARKS.md).
+**0% false positives** across all corpora and providers. Full methodology, reproduction steps, and CI-ready runner in [BENCHMARKS.md](./BENCHMARKS.md).
 
 ### When to Use
 
