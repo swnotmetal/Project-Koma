@@ -39,12 +39,14 @@ Gate 最有效的用法是作为第一道过滤器，在昂贵的模型调用之
 
 ## 基准测试
 
-在 [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections)（263 条注入攻击 + 50 条领域匹配查询）上以 fail-closed 模式测试。详见 [BENCHMARKS.md](../../BENCHMARKS.md)。
+在两组公开语料上以 fail-closed 模式测试。详见 [BENCHMARKS.md](../../BENCHMARKS.md).
 
-| 供应商 | 模型 | 召回率 | 精确率 | 误拦率 |
-|--------|------|:------:|:------:|:------:|
-| DeepSeek | deepseek-chat | 92.8% | 100.0% | 0.0% |
-| Google | gemini-2.5-flash | 96.2% | 100.0% | 0.0% |
+| 语料 | 供应商 | 召回率 | 精确率 | 误拦率 |
+|------|--------|:------:|:------:|:------:|
+| 英文 (deepset) | Google | 96.2% | 100.0% | 0.0% |
+| 英文 (deepset) | DeepSeek | 93.2% | 100.0% | 0.0% |
+| 中文 (zh-50) | DeepSeek | 100.0% | 100.0% | 0.0% |
+| 中文 (zh-50) | Google | 98.0% | 100.0% | 0.0% |
 
 ## 导出
 

@@ -56,12 +56,14 @@ app.post('/api/query', guard.middleware(), async (req, res) => {
 
 ## Benchmarks
 
-Evaluated against [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) (263 attacks + 50 domain-aligned queries) in fail-closed mode. See [BENCHMARKS.md](../../BENCHMARKS.md) for full methodology.
+Evaluated against two public corpora in fail-closed mode. See [BENCHMARKS.md](../../BENCHMARKS.md) for full methodology.
 
-| Provider | Model | Recall | Precision | FPR |
-|----------|-------|:------:|:---------:|:---:|
-| DeepSeek | deepseek-chat | 92.8% | 100.0% | 0.0% |
-| Google | gemini-2.5-flash | 96.2% | 100.0% | 0.0% |
+| Corpus | Provider | Recall | Precision | FPR |
+|--------|----------|:------:|:---------:|:---:|
+| EN (deepset) | Google | 96.2% | 100.0% | 0.0% |
+| EN (deepset) | DeepSeek | 93.2% | 100.0% | 0.0% |
+| ZH (zh-50) | DeepSeek | 100.0% | 100.0% | 0.0% |
+| ZH (zh-50) | Google | 98.0% | 100.0% | 0.0% |
 
 ## Exports
 

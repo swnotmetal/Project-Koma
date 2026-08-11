@@ -38,14 +38,23 @@ Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shri
 
 ### Benchmarks ★
 
-`koma-gate` evaluated against the public [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) corpus (263 real prompt-injection attempts) in fail-closed mode, using real providers — not mock adapters.
+`koma-gate` evaluated against public prompt-injection corpora in fail-closed mode, using real providers — not mock adapters.
+
+**English** ([deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) — 263 attacks, 50 safe):
 
 | Provider | Model | Recall ↑ | Precision | FPR |
 |----------|-------|:--------:|:---------:|:---:|
-| DeepSeek | deepseek-chat | 92.8% | 100.0% | 0.0% |
+| DeepSeek | deepseek-chat | 93.2% | 100.0% | 0.0% |
 | Google | gemini-2.5-flash | **96.2%** | 100.0% | 0.0% |
 
-**Zero false positives** across both providers — all 50 domain-aligned safe queries passed. Full methodology, reproduction steps, and CI-ready runner in [BENCHMARKS.md](./BENCHMARKS.md).
+**Chinese** ([zh-injection-50](./benchmarks/data/zh-injection-50.jsonl) — 50 attacks across 8 categories, 50 hard-negative benign):
+
+| Provider | Model | Recall ↑ | Precision | FPR |
+|----------|-------|:--------:|:---------:|:---:|
+| DeepSeek | deepseek-chat | **100.0%** | 100.0% | 0.0% |
+| Google | gemini-2.5-flash | 98.0% | 100.0% | 0.0% |
+
+**0% false positives** across both corpora and providers. Full methodology, reproduction steps, and CI-ready runner in [BENCHMARKS.md](./BENCHMARKS.md).
 
 ### When to Use
 

@@ -36,14 +36,23 @@ Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自�
 
 ### ★ 实测数据
 
-`koma-gate` 在 [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) 公开数据集（263 条真实注入攻击）上以 fail-closed 模式测试，使用真实商用模型——非 mock 适配器。
+`koma-gate` 在公开注入攻击数据集上以 fail-closed 模式测试，使用真实商用模型——非 mock 适配器。
+
+**英文** ([deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) — 263 条攻击, 50 条正常):
 
 | 供应商 | 模型 | 召回率 ↑ | 精确率 | 误拦率 |
 |--------|------|:--------:|:------:|:------:|
-| DeepSeek | deepseek-chat | 92.8% | 100.0% | 0.0% |
+| DeepSeek | deepseek-chat | 93.2% | 100.0% | 0.0% |
 | Google | gemini-2.5-flash | **96.2%** | 100.0% | 0.0% |
 
-**零误拦** — 50 条领域匹配的正常查询全部放行。完整方法学、复现步骤和 CI 集成脚本见 [BENCHMARKS.md](./BENCHMARKS.md)。
+**中文** ([zh-injection-50](./benchmarks/data/zh-injection-50.jsonl) — 50 条攻击覆盖 8 个类别, 50 条 hard-negative 正常查询):
+
+| 供应商 | 模型 | 召回率 ↑ | 精确率 | 误拦率 |
+|--------|------|:--------:|:------:|:------:|
+| DeepSeek | deepseek-chat | **100.0%** | 100.0% | 0.0% |
+| Google | gemini-2.5-flash | 98.0% | 100.0% | 0.0% |
+
+**双语料双供应商零误拦**。完整方法学、复现步骤和 CI 集成脚本见 [BENCHMARKS.md](./BENCHMARKS.md).
 
 ### 什么时候用
 
