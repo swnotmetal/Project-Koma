@@ -9,6 +9,8 @@
  * 5. Token budget: ~500 input tokens per classification (output ~10 tokens)
  */
 
+import { createHash } from 'crypto';
+
 const runtimeEnv = (globalThis as any).process?.env ?? {};
 
 class TinyEventEmitter {
@@ -167,18 +169,28 @@ Examples:
 User input:`;
 
 /**
- * Build the complete classification prompt.
+ * Build the classification system prompt (policy + examples, no user input).
  */
-export function buildClassificationPrompt(config: DomainConfig, userInput: string): string {
+export function buildSystemPrompt(config: DomainConfig): string {
   const examples = buildFewShotExamples(config);
-  
   return SYSTEM_PROMPT_TEMPLATE
     .replace(/\{domain_name\}/g, config.name)
     .replace('{domain_description}', config.description)
     .replace('{allowed_topics}', config.allowedTopics.join('、'))
     .replace('{blocked_topics}', config.blockedTopics.join('、'))
     .replace('{examples}', examples)
-    + `\n"${escapeForPrompt(userInput)}"`;
+    .replace('User input:', '')  // Remove the user input placeholder from system message
+    .trim();
+}
+
+/**
+ * Build the complete classification prompt (legacy — single-message format).
+ * Prefer buildSystemPrompt + user input separation for providers that support
+ * system/user message roles.
+ */
+export function buildClassificationPrompt(config: DomainConfig, userInput: string): string {
+  return buildSystemPrompt(config)
+    + `\n\nUser input:\n"${escapeForPrompt(userInput)}"`;
 }
 
 /**
@@ -210,7 +222,7 @@ function escapeForPrompt(text: string): string {
 // ============================================================================
 
 interface LLMAdapter {
-  classify(prompt: string): Promise<{ inScope: boolean; confidence?: number; rawResponse: string }>;
+  classify(prompt: string, systemPrompt?: string): Promise<{ inScope: boolean; confidence?: number; rawResponse: string }>;
 }
 
 /** Shared helper: throw on non-2xx API responses so errors propagate to failOpen/failClosed logic. */
@@ -242,7 +254,10 @@ function parseJsonResponse(content: string): { inScope: boolean; confidence?: nu
 class OpenAIAdapter implements LLMAdapter {
   constructor(private config: LLMProviderConfig) {}
   
-  async classify(prompt: string) {
+  async classify(prompt: string, systemPrompt?: string) {
+    const messages: any[] = systemPrompt
+      ? [{ role: 'system', content: systemPrompt }, { role: 'user', content: prompt }]
+      : [{ role: 'user', content: prompt }];
     const response = await fetch(`${this.config.baseUrl || 'https://api.openai.com'}/v1/chat/completions`, {
       method: 'POST',
       headers: {
@@ -251,7 +266,7 @@ class OpenAIAdapter implements LLMAdapter {
       },
       body: JSON.stringify({
         model: this.config.model,
-        messages: [{ role: 'user', content: prompt }],
+        messages,
         temperature: 0,
         max_tokens: 20,
         response_format: { type: 'json_object' }
@@ -269,7 +284,14 @@ class OpenAIAdapter implements LLMAdapter {
 class AnthropicAdapter implements LLMAdapter {
   constructor(private config: LLMProviderConfig) {}
   
-  async classify(prompt: string) {
+  async classify(prompt: string, systemPrompt?: string) {
+    const body: any = {
+      model: this.config.model,
+      max_tokens: 20,
+      temperature: 0,
+      messages: [{ role: 'user', content: prompt }]
+    };
+    if (systemPrompt) body.system = systemPrompt;
     const response = await fetch(`${this.config.baseUrl || 'https://api.anthropic.com'}/v1/messages`, {
       method: 'POST',
       headers: {
@@ -277,12 +299,7 @@ class AnthropicAdapter implements LLMAdapter {
         'Content-Type': 'application/json',
         'anthropic-version': '2023-06-01'
       },
-      body: JSON.stringify({
-        model: this.config.model,
-        max_tokens: 20,
-        temperature: 0,
-        messages: [{ role: 'user', content: prompt }]
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(this.config.timeoutMs || 5000)
     });
     
@@ -296,19 +313,20 @@ class AnthropicAdapter implements LLMAdapter {
 class GoogleAdapter implements LLMAdapter {
   constructor(private config: LLMProviderConfig) {}
   
-  async classify(prompt: string) {
+  async classify(prompt: string, systemPrompt?: string) {
+    const body: any = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0, maxOutputTokens: 1024 }
+    };
+    if (systemPrompt) {
+      body.systemInstruction = { parts: [{ text: systemPrompt }] };
+    }
     const response = await fetch(
       `${this.config.baseUrl || 'https://generativelanguage.googleapis.com'}/v1beta/models/${this.config.model}:generateContent?key=${this.config.apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0,
-            maxOutputTokens: 1024
-          }
-        }),
+        body: JSON.stringify(body),
         signal: AbortSignal.timeout(this.config.timeoutMs || 5000)
       }
     );
@@ -323,17 +341,19 @@ class GoogleAdapter implements LLMAdapter {
 class OllamaAdapter implements LLMAdapter {
   constructor(private config: LLMProviderConfig) {}
   
-  async classify(prompt: string) {
+  async classify(prompt: string, systemPrompt?: string) {
+    const body: any = {
+      model: this.config.model,
+      prompt: prompt,
+      format: 'json',
+      options: { temperature: 0, num_predict: 20 },
+      stream: false
+    };
+    if (systemPrompt) body.system = systemPrompt;
     const response = await fetch(`${this.config.baseUrl || 'http://localhost:11434'}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: this.config.model,
-        prompt: prompt,
-        format: 'json',
-        options: { temperature: 0, num_predict: 20 },
-        stream: false
-      }),
+      body: JSON.stringify(body),
       signal: AbortSignal.timeout(this.config.timeoutMs || 10000)
     });
     
@@ -347,7 +367,7 @@ class OllamaAdapter implements LLMAdapter {
 class CustomAdapter implements LLMAdapter {
   constructor(private requestFn: (prompt: string) => Promise<string>) {}
   
-  async classify(prompt: string) {
+  async classify(prompt: string, _systemPrompt?: string) {
     const content = await this.requestFn(prompt);
     return parseJsonResponse(content);
   }
@@ -450,6 +470,24 @@ export class KomaGuard extends TinyEventEmitter {
   /** Core classification method. */
   async classify(input: string, context?: Partial<GuardContext>): Promise<GuardResult> {
     const startTime = Date.now();
+
+    // Reject inputs that exceed the inspection limit — never silently truncate
+    // and pass unchecked content to downstream.
+    if (input.length > this.config.behavior.maxInputLength) {
+      return {
+        allowed: false,
+        decision: {
+          inScope: false,
+          latencyMs: Date.now() - startTime,
+          cached: false,
+          model: this.config.llm.model,
+          inputHash: this.hashInput(input.slice(0, 64)),
+          timestamp: Date.now()
+        },
+        rejectReason: `Input exceeds maximum length (${this.config.behavior.maxInputLength} chars)`
+      };
+    }
+
     const sanitizedInput = this.sanitizeInput(input);
     const inputHash = this.hashInput(sanitizedInput);
     const fullContext: GuardContext = { input: sanitizedInput, ...context } as GuardContext;
@@ -470,8 +508,9 @@ export class KomaGuard extends TinyEventEmitter {
       }
     }
     
-    // Build prompt
-    const prompt = buildClassificationPrompt(this.config.domain, sanitizedInput);
+    // Build prompt with system/user separation for providers that support it
+    const systemPrompt = buildSystemPrompt(this.config.domain);
+    const userPrompt = `"${escapeForPrompt(sanitizedInput)}"`;
     
     try {
       // Call LLM with retries
@@ -480,7 +519,7 @@ export class KomaGuard extends TinyEventEmitter {
       
       for (let attempt = 0; attempt <= (this.config.llm.maxRetries || 2); attempt++) {
         try {
-          result = await this.adapter.classify(prompt);
+          result = await this.adapter.classify(userPrompt, systemPrompt);
           break;
         } catch (error) {
           lastError = error as Error;
@@ -640,20 +679,13 @@ export class KomaGuard extends TinyEventEmitter {
   
   private sanitizeInput(input: string): string {
     return input
-      .slice(0, this.config.behavior.maxInputLength)
       .normalize('NFKC')
       .replace(/[\u200B-\u200D\uFEFF]/g, '') // Zero-width chars
       .trim();
   }
   
   private hashInput(input: string): string {
-    // Simple hash for cache key
-    let hash = 0;
-    for (let i = 0; i < input.length; i++) {
-      hash = ((hash << 5) - hash) + input.charCodeAt(i);
-      hash |= 0;
-    }
-    return Math.abs(hash).toString(36);
+    return createHash('sha256').update(input).digest('hex');
   }
   
   private createResult(
