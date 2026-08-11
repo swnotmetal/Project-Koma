@@ -20,8 +20,8 @@
  *   ollama    → (none, uses localhost:11434)
  * 
  * Supported corpus formats:
- *   .jsonl — HuggingFace format with {text, label} where label=1 is injection
- *   .csv   — jailbreak-eval format (reads "prompt" or "question" column, all treated as attacks)
+ *   .jsonl — {text, label} or {prompt, expected: "block"|"allow"}
+ *   .csv   — jailbreak-eval format (reads "prompt" or "question" column)
  * 
  * Output: recall, precision, false-positive rate, latency p50/p99 (JSON + human-readable)
  */
@@ -56,10 +56,9 @@ function parseArgs() {
 // ============================================================================
 
 /**
- * Load a JSONL file in HuggingFace prompt-injection format.
- * Expected format per line: {"text": "...", "label": 0|1}
- *   label=1 → prompt injection (should be BLOCKED)
- *   label=0 → safe query (should be ALLOWED)
+ * Load a JSONL file. Supports two formats:
+ *   1. {text, label: 0|1} — HuggingFace format
+ *   2. {prompt, expected: "block"|"allow"} — Koma benchmark format
  */
 function loadJSONL(filePath) {
   if (!existsSync(filePath)) {
@@ -75,7 +74,12 @@ function loadJSONL(filePath) {
       const item = JSON.parse(line);
       const text = (item.text || item.prompt || '').trim();
       if (!text) continue;
-      if (item.label === 1) {
+      // Koma benchmark format: expected: "block"|"allow"
+      if (item.expected === 'block') {
+        negative.push(text);
+      } else if (item.expected === 'allow') {
+        positive.push(text);
+      } else if (item.label === 1) {
         negative.push(text);
       } else if (item.label === 0) {
         positive.push(text);

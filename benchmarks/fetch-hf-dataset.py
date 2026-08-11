@@ -101,23 +101,3 @@ if len(targets) > 1:
             f.write(json.dumps(m) + '\n')
     print(f'\nMerged: {len(merged)} rows ({total_neg} attacks, {total_pos} safe) → {merged_path}')
     print(f'  Run: node benchmarks/gate-eval.js --corpus {merged_path} --provider deepseek --preset knowledge')
-            data = json.loads(urllib.request.urlopen(url).read())
-            rows = data.get('rows', [])
-            if not rows:
-                break
-            for r in rows:
-                out.write(json.dumps(r['row']) + '\n')
-                count += 1
-            offset += len(rows)
-            print(f'  {split}: {offset}/{splits[split]} rows')
-
-print(f'\nDone: {count} rows → {OUTPUT}')
-
-# Show distribution
-neg = pos = 0
-with open(OUTPUT) as f:
-    for line in f:
-        r = json.loads(line)
-        if r.get('label') == 1: neg += 1
-        else: pos += 1
-print(f'Injection (label=1): {neg} | Safe (label=0): {pos}')
