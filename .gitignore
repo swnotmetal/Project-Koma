@@ -32,5 +32,9 @@ benchmarks/data/prompt-injection.jsonl
 benchmarks/data/*-prompt-injection.jsonl
 benchmarks/data/prompt-injection-merged.jsonl
 
+# Python artifacts
+__pycache__/
+*.pyc
+
 # Drafts (Reddit posts, social media copy)
 drafts/
