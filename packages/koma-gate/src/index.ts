@@ -6,7 +6,7 @@
  * 2. Return only the minimal JSON payload: {"in_scope": true/false}
  * 3. Use few-shot prompting to cover edge cases
  * 4. Fail open when the classifier is unavailable to preserve availability
- * 5. Keep the token budget below 500 tokens per call and latency below 500ms p99
+ * 5. Token budget: ~500 input tokens per classification (output ~10 tokens)
  */
 
 const runtimeEnv = (globalThis as any).process?.env ?? {};

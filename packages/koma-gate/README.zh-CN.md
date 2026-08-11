@@ -71,6 +71,6 @@ Gate 最有效的用法是作为第一道过滤器，在昂贵的模型调用之
 ## 设计
 
 - English-first 源码和提示词。
-- 低 token 消耗（约 500 tokens 每次分类）。
+- 低 token 消耗（约 500 input tokens 每次分类）。
 - 默认 fail-open，优先保证可用性。
 - 通过适配器配置切换本地和云端 LLM。

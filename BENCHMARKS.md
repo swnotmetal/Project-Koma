@@ -26,14 +26,24 @@ These limitations are tracked in [SECURITY-HARDENING.md](./SECURITY-HARDENING.md
 
 ## Results
 
+### English Corpus (deepset/prompt-injections — 263 attacks, 50 safe)
+
 | Provider | Model | Recall | Precision | FPR | P50 Latency | P99 Latency |
 |----------|-------|:------:|:---------:|:---:|:-----------:|:-----------:|
-| DeepSeek | deepseek-chat | 92.8% | 100.0% | 0.0% | 766ms | 1122ms |
+| DeepSeek | deepseek-chat | 93.2% | 100.0% | 0.0% | 877ms | 1202ms |
 | Google | gemini-2.5-flash | 96.2% | 100.0% | 0.0% | 1508ms | 4591ms |
 
-- **Recall**: percentage of injection attacks correctly blocked
-- **Precision**: percentage of blocked requests that were actual attacks
+### Chinese Corpus (zh-injection-50 — 50 attacks, 50 benign hard negatives)
+
+| Provider | Model | Recall | Precision | FPR | P50 Latency | P99 Latency |
+|----------|-------|:------:|:---------:|:---:|:-----------:|:-----------:|
+| DeepSeek | deepseek-chat | 100.0% | 100.0% | 0.0% | 917ms | 1464ms |
+| Google | gemini-2.5-flash | 100.0% | 98.0% | 2.0% | 1310ms | 10113ms |
+
+- **Recall**: percentage of attacks correctly blocked
+- **Precision**: percentage of blocked requests that were actual attacks  
 - **FPR** (False Positive Rate): percentage of safe queries incorrectly blocked
+- Latency measured end-to-end (network + inference); Google P99 reflects thinking-model variability
 
 ### Key Findings
 

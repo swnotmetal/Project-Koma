@@ -96,6 +96,6 @@ Evaluated against [deepset/prompt-injections](https://huggingface.co/datasets/de
 ## Design
 
 - English-first source and prompts.
-- Low token budget (~500 tokens per classification).
+- Low token budget (~500 input tokens per classification).
 - Fail-open by default for availability.
 - Swap between local and hosted LLMs via the adapter config.
