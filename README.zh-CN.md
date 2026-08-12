@@ -1,8 +1,8 @@
 # Koma（狛犬）
 
 ### Node.js 的提示注入防火墙。
-
-在恶意 prompt 到达你的 LLM、工具或 RAG 管道之前拦住它。
+狛犬立，百邪散。
+在恶意 prompt 到达你的 LLM、工具或 RAG 管道之前阻止它。
 
 ```bash
 npm install koma-gate
@@ -47,7 +47,7 @@ npm install koma-gate
 
 ### 实测数据
 
-我们用 **1,769 条真实提示注入攻击** 在 fail-closed 模式下测试了 Koma Gate，使用真实商用模型——非 mock 适配器。
+我用 **1,769 条真实提示注入攻击** 在 fail-closed 模式下测试了 Koma Gate，使用真实商用模型——非 mock 适配器。
 
 | 供应商 | 召回率 | 精确率 | 误拦 |
 |----------|:------:|:------:|:---:|
@@ -56,7 +56,7 @@ npm install koma-gate
 
 **中文攻击集**：8 个类别，100% 召回 · 100% 精确 · 0% 误拦。
 
-> **你能绕过吗？** [提交 issue](https://github.com/swnotmetal/Project-Koma/issues) 告诉我们 Koma 漏了什么。→ [完整方法学](./BENCHMARKS.md)
+> **你能绕过吗？** [提交 issue](https://github.com/swnotmetal/Project-Koma/issues) 告诉我 Koma 漏了什么。→ [完整方法学](./BENCHMARKS.md)
 
 ---
 
@@ -132,6 +132,6 @@ flowchart LR
 
 ---
 
-Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自独立。模式提炼自生产环境，而非论文。
+Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自独立。模式提炼自生产环境，而非纸上谈兵。
 
 [English](./README.md) · [License](./LICENSE)
