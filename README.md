@@ -9,6 +9,10 @@ npm install koma-gate
 ```
 
 <p align="center">
+  <img src="logo/logobanner.png" alt="Koma" width="600" />
+</p>
+
+<p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
   <img alt="CI" src="https://github.com/swnotmetal/Project-Koma/actions/workflows/ci.yml/badge.svg" />
   <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
@@ -24,7 +28,7 @@ npm install koma-gate
 </p>
 
 <p align="center">
-  <img src="koma-demo.gif" alt="Koma demo" width="100%" />
+  <img src="show-koma.gif" alt="Koma demo" width="100%" />
 </p>
 
 > *Security primitives distilled from a real AI application.* — [How Koma was built](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1)
