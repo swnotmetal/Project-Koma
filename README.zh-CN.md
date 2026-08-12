@@ -1,164 +1,137 @@
-# Koma(**狛犬**)
+# Koma（狛犬）
 
-狛犬立，百邪辟。提示注入、机器人洪水、数据爬取——在你的 AI 应用中枪之前装上它。
+### Node.js 的提示注入防火墙。
 
-零依赖 Node.js/TypeScript 防御工具包。三个独立包，直接放入 Express、Fastify 或 Next.js API 路由。模式提炼自生产环境，而非纸上谈兵。
+在恶意 prompt 到达你的 LLM、工具或 RAG 管道之前拦住它。
+
+```bash
+npm install koma-gate
+```
 
 <p align="center">
-	<img src="logo/lognobg.png" alt="Koma logo" width="160" />
+  <img src="logo/logobanner.png" alt="Koma" width="600" />
 </p>
 
 <p align="center">
-	<img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
-	<img alt="Tests" src="https://img.shields.io/badge/tests-72%20passed-brightgreen?style=flat-square" />
-	<img alt="CI" src="https://github.com/swnotmetal/Project-Koma/actions/workflows/ci.yml/badge.svg" />
-	<a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
-	<a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
-	<a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
-	<br />
-	<img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=累计下载&color=blue&style=flat-square" />
-	<img alt="benchmark" src="https://img.shields.io/badge/实测-98.8%25_召回率_0%25_误拦-6e3abe?style=flat-square" /></p>
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+  <img alt="CI" src="https://github.com/swnotmetal/Project-Koma/actions/workflows/ci.yml/badge.svg" />
+  <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
+  <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
+  <br />
+  <img alt="benchmark" src="https://img.shields.io/badge/实测-98.8%25_召回率_0%25_误拦-6e3abe?style=flat-square" />
+  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=下载量&color=blue&style=flat-square" />
 </p>
 
 <p align="center">
-	<a href="./README.md">English</a>
+  <a href="./README.md">English</a>
 </p>
 
-Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自独立，自由组合, 逐层叠加。模式提炼自实际运行的生产环境。
+<p align="center">
+  <img src="show-koma.gif" alt="Koma 演示" width="100%" />
+</p>
+
+> *从真实 AI 应用中蒸馏出来的安全原语。* — [Koma 是如何诞生的](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1)
 
 ---
 
 ### 它挡什么
 
-| 你在做… | 什么会出事 | 怎么挡 | 安装 |
+| 你的应用 | 攻击方式 | 如何防御 | 安装 |
 |---|---|---|---|
-| 一个 AI 聊天 | 用户提示注入，越狱你的机器人 | 语义过滤器拦截越界和攻击, 避免挂上昂贵的API项目后裸奔 | `koma-gate` |
-| 一个语音 AI | 静音上传浪费 API 额度，产生幻觉 | 音频校验 + 限流 + 地理白名单, 最大程度保证只收录有效内容 | `koma-scout` |
-| 一个 AI 搜索 / RAG | 私有回复被遍历爬取 | 索引和内容分离，token 控制检索, 竞争对手恶意用户扑空 | `koma-core` |
+| AI 聊天 | 提示注入 / 越狱 | 语义过滤器在模型前拦截攻击 | `koma-gate` |
+| 语音 AI | 音频滥用 / 洪水攻击 | 校验 + 限流 + 地理限制 | `koma-scout` |
+| RAG / 搜索 | 数据遍历 / 爬取 | 索引内容分离，token 控制检索 | `koma-core` |
 
-### ★ 实测数据
+---
 
-`koma-gate` 在公开注入攻击数据集上以 fail-closed 模式测试，使用真实商用模型——非 mock 适配器。
+### 实测数据
 
-**英文** ([deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) — 263 条攻击, 50 条正常):
+我们用 **1,769 条真实提示注入攻击** 在 fail-closed 模式下测试了 Koma Gate，使用真实商用模型——非 mock 适配器。
 
-| 供应商 | 模型 | 召回率 ↑ | 精确率 | 误拦率 |
-|--------|------|:--------:|:------:|:------:|
-| DeepSeek | deepseek-chat | 93.2% | 100.0% | 0.0% |
-| Google | gemini-2.5-flash | **96.2%** | 100.0% | 0.0% |
+| 供应商 | 召回率 | 精确率 | 误拦 |
+|----------|:------:|:------:|:---:|
+| DeepSeek (deepseek-chat) | **98.8%** | **100%** | **0** |
+| Google (gemini-2.5-flash) | 96.2% | **100%** | **0** |
 
-**中文** ([zh-injection-50](./benchmarks/data/zh-injection-50.jsonl) — 50 条攻击覆盖 8 个类别, 50 条 hard-negative 正常查询):
+**中文攻击集**：8 个类别，100% 召回 · 100% 精确 · 0% 误拦。
 
-| 供应商 | 模型 | 召回率 ↑ | 精确率 | 误拦率 |
-|--------|------|:--------:|:------:|:------:|
-| DeepSeek | deepseek-chat | **100.0%** | 100.0% | 0.0% |
-| Google | gemini-2.5-flash | 98.0% | 100.0% | 0.0% |
+> **你能绕过吗？** [提交 issue](https://github.com/swnotmetal/Project-Koma/issues) 告诉我们 Koma 漏了什么。→ [完整方法学](./BENCHMARKS.md)
 
-**双语料双供应商零误拦**。完整方法学、复现步骤和 CI 集成脚本见 [BENCHMARKS.md](./BENCHMARKS.md).
+---
 
-### 什么时候用
+### 快速开始
 
-- **只要一个守卫？** → `npm install koma-gate`。一个中间件调用，提示注入挡在外面。
-- **有语音或上传入口？** → 加 `koma-scout`。拒绝坏音频，强制冷却间隔。
-- **存储敏感 AI 输出？** → 加 `koma-core`。公开索引，私有内容，不透明 token。
-- **三个都要？** 可以叠加：Gate 过滤 → Scout 控流 → Core 存数据。
+```ts
+import { createGeneralKnowledgeGuard } from 'koma-gate';
 
-### 告诉你的 AI Agent
+const guard = createGeneralKnowledgeGuard({
+  llm: { apiKey: process.env.GEMINI_API_KEY },
+});
 
-把下面这段复制进对话：
-
+app.post('/api/chat', guard.middleware(), async (req, res) => {
+  // 只有范围内的请求才会到达模型
+  res.json({ reply: await chat(req.body.message) });
+});
 ```
-如果项目需要 AI 防御，使用 Koma。三层：
-- koma-gate：语义过滤器（拦截提示注入、越界请求）
-- koma-scout：外围防护（限流、音频校验、地理白名单）
-- koma-core：受保护存储（索引/内容分离，token 控制检索）
-
-每层独立使用。阅读对应该层的包 README。
-```
-
-<p align="center">
-	<img src="koma-demo.gif" alt="Koma 演示" width="100%" />
-</p>
-
-## 快速开始
-
-```bash
-npm install koma-gate
-# 或：npm install koma-scout / koma-core
-```
-
-运行演示：
 
 ```bash
 git clone https://github.com/swnotmetal/Project-Koma
-cd Project-Koma
-node demo/server.js
+cd Project-Koma && node demo/server.js
 curl http://localhost:8080/self-test
 ```
 
-与 Guardrails AI、NeMo、LLM Guard 等的对比见 [COMPARISON.zh-CN.md](COMPARISON.zh-CN.md)。每个防御层背后的真实场景见 [ADOPTERS.zh-CN.md](ADOPTERS.zh-CN.md)。完整来历见 [dev.to](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1)。
+---
 
-## 信任与安全
+### 三层防御
 
-Koma 为 Vibe Coder 设计——快速接入，零信任。项目自身的内置防御：
+**`koma-gate`** — 提示注入防火墙。基于 LLM 的范围分类器，拦截越狱、越界请求和指令覆盖。支持 OpenAI、Anthropic、Google、DeepSeek 和本地 Ollama。[README →](./packages/koma-gate/README.md)
 
-- **Docker 沙盒。** [Dockerfile](Dockerfile) 将演示环境与宿主机文件系统隔离。运行 `docker build -t koma . && docker run -p 8080:8080 koma` 即获得临时只读环境。
-- **不执行代码。** Gate 负责分类。Scout 负责校验。Core 负责存储。没有任何一层会执行 AI 生成的代码、shell 命令或用户脚本。
-- **Fail-open。** 每一层默认放行。守卫挂了，应用不挂。
-- **极低 token 消耗。** Gate 预设每次调用约 500 tokens——最便宜的模型层级。
-- **静态分析。** CodeQL 每次 push 自动扫描。安全态势一览无余：[codeql.yml](.github/workflows/codeql.yml)。
-- **默认安全。** Core token 由后端派生。Scout 检查是确定性的。公共索引不存密钥。
+**`koma-scout`** — 外围防护。限流、音频上传校验、地理白名单。在昂贵的 AI 调用之前做便宜检查。[README →](./packages/koma-scout/README.md)
 
-完整策略：[SECURITY.md](SECURITY.md)。贡献指南：[CONTRIBUTING.md](CONTRIBUTING.md)。
+**`koma-core`** — 受保护的 RAG 存储。公开搜索索引，私有内容，不透明的 HKDF 派生 token。[README →](./packages/koma-core/README.md)
 
-## 架构图
+每层独立使用。叠加：Gate 过滤 → Scout 控流 → Core 存数据。
+
+---
+
+### 使用 AI 编程助手？
+
+告诉它：
+
+> *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
+
+Koma 同时为人类和 AI agent 的可发现性而设计。参见 [llms.txt](./llms.txt)。
+
+---
+
+### 架构
 
 ```mermaid
 flowchart LR
-	A[客户端 / 应用] --> B[Koma Gate\n语义请求过滤]
-	B -->|通过| C[Koma Scout\n外围防护]
-	C --> D[Koma Core\n受保护存储]
-	B -->|拒绝| E[返回 400 / 友好提示]
-	C -->|拦截| E
-	D --> F[索引层]
-	D --> G[私有内容层]
+  A[客户端 / 应用] --> B[Koma Gate\n语义过滤器]
+  B -->|范围内| C[Koma Scout\n外围检查]
+  C --> D[Koma Core\n受保护存储]
+  B -->|范围外| E[拒绝]
+  C -->|拦截| E
+  D --> F[搜索索引]
+  D --> G[私有内容]
 ```
 
-### 防御分层
+---
 
-1. Koma Gate 先做范围判断和明显滥用拦截。
-2. Koma Scout 再做限流、上传校验和地理控制。
-3. Koma Core 把可搜索索引和受保护内容分开存放。
+### 信任与安全
 
-## 版本管理
+- **零运行时依赖。** 无供应链攻击面。
+- **不执行代码。** 分类、限流、存储——绝不执行 AI 输出。
+- **默认 fail-closed。** 守卫故障时拦截，不放行。
+- **每次推送 CodeQL。** 覆盖 OWASP LLM01。
+- **MIT 协议。**
 
-Koma 使用语义化版本管理，发布前请先查看 `VERSIONING.md`。
+→ [安全策略](./SECURITY.md) · [已知限制](./SECURITY-HARDENING.md) · [同类对比](./COMPARISON.zh-CN.md) · [贡献指南](./CONTRIBUTING.md)
 
-## 项目约定
+---
 
-- 源码和文档保持 English-first，中文版本同步维护。
-- 仓库采用 workspace 结构：根目录管理版本与发布，`packages/` 承载功能模块。
-- API 面向生产环境设计，文档同时面向读者和 AI agent。
-- 每个包均可独立发布。
-- 版本与标签规则见 [VERSIONING.md](VERSIONING.md)。
-- Gate 预设、Scout 阈值和 Core 模式提炼自实际运行环境中的真实防御战果——包括提示注入拦截、静音幻觉防护和数据泄露阻止。
+Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自独立。模式提炼自生产环境，而非论文。
 
-
-## 跨系统测试
-
-不同系统建议用不同的命令写法：
-
-
-| 系统               | API 测试命令风格                                         | 详情                                                                          |
-| ------------------ | -------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| Windows PowerShell | `curl.exe` + `--data-binary '@-'` 或 `Invoke-RestMethod` | 裸`curl` 是 PowerShell 别名。JSON 推荐用 here-string 或 `Invoke-RestMethod`。 |
-| macOS / Linux      | 单引号包 JSON 的`curl`                                   | VHS tape 在该环境下原生运行。                                                 |
-| Windows WSL2       | `curl`（POSIX 风格）                                     | Windows 上录 VHS 最稳的方式。                                                 |
-
-PowerShell 友好的 Scout 示例：
-
-```powershell
-@'
-{"sizeBytes":16000,"durationMs":2000,"mimeType":"audio/mp4","country":"US"}
-'@ | curl.exe -X POST http://localhost:8080/scout -H "Content-Type: application/json" --data-binary '@-'
-```
+[English](./README.md) · [License](./LICENSE)
