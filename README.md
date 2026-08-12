@@ -1,204 +1,133 @@
 # Koma
 
-Stop prompt injection, bot flooding, and data scraping — before they hit your AI app.
+### A prompt-injection firewall for Node.js.
 
-Zero-dependency defensive toolkit for Node.js & TypeScript. Three standalone packages you drop in front of Express, Fastify, or Next.js API routes.
+Stop malicious prompts before they reach your LLM, tools, or RAG pipeline.
 
-> *Security primitives distilled from a real AI application.*
-
-<p align="center">
-  <img src="logo/lognobg.png" alt="Koma logo" width="160" />
-</p>
+```bash
+npm install koma-gate
+```
 
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
-  <img alt="Tests" src="https://img.shields.io/badge/tests-72%20passed-brightgreen?style=flat-square" />
   <img alt="CI" src="https://github.com/swnotmetal/Project-Koma/actions/workflows/ci.yml/badge.svg" />
   <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
   <br />
-  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=Total%20DLs&color=blue&style=flat-square" />
-  <img alt="benchmark" src="https://img.shields.io/badge/benchmark-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" /></p>
+  <img alt="benchmark" src="https://img.shields.io/badge/benchmark-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" />
+  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=downloads&color=blue&style=flat-square" />
 </p>
 
 <p align="center">
   <a href="./README.zh-CN.md">中文版</a>
 </p>
 
-Koma comes from Komainu("こまいぬ"), stone guardians of Japanese Shinto Shrine. Three defense layers you drop in front of your AI app. Each works standalone. Patterns distilled from production. Targets OWASP LLM01 (prompt injection), indirect injection, audio hallucination, and RAG data exfiltration.
+<p align="center">
+  <img src="koma-demo.gif" alt="Koma demo" width="100%" />
+</p>
+
+> *Security primitives distilled from a real AI application.* — [How Koma was built](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1)
 
 ---
 
 ### What It Stops
 
-| You're building… | What goes wrong | Fix | Install |
+| Your app | Attack | Fix | Install |
 |---|---|---|---|
-| An AI chatbot | Users jailbreak it with prompt injection | Semantic filter blocks off-topic & attacks | `koma-gate` |
-| A voice AI | Silent uploads waste API credits on hallucinations | Audio validation + rate limiting + geo block | `koma-scout` |
-| An AI search / RAG | Private responses get scraped via enumeration | Split index from content, token-gate retrieval | `koma-core` |
+| AI chatbot | Prompt injection / jailbreak | Semantic filter blocks attacks before the model | `koma-gate` |
+| Voice AI | Audio abuse / flooding | Validation + rate limiting + geo | `koma-scout` |
+| RAG / search | Data enumeration / scraping | Split index from content, token-gate retrieval | `koma-core` |
 
-### Benchmarks ★
+---
 
-`koma-gate` evaluated against public prompt-injection corpora in fail-closed mode, using real providers — not mock adapters.
+### Benchmarks
 
-**English** ([deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) — 263 attacks, 50 safe):
+We threw **1,769 real prompt-injection attacks** at Koma Gate in fail-closed mode, using real providers — not mock adapters.
 
-| Provider | Model | Recall ↑ | Precision | FPR |
-|----------|-------|:--------:|:---------:|:---:|
-| DeepSeek | deepseek-chat | 93.2% | 100.0% | 0.0% |
-| Google | gemini-2.5-flash | **96.2%** | 100.0% | 0.0% |
+| Provider | Recall | Precision | False Positives |
+|----------|:------:|:---------:|:---:|
+| DeepSeek (deepseek-chat) | **98.8%** | **100%** | **0** |
+| Google (gemini-2.5-flash) | 96.2% | **100%** | **0** |
 
-**Merged** (multi-source — 1,769 attacks, 50 safe):
+**Chinese attack set**: 100% recall · 100% precision · 0% FPR across 8 categories.
 
-| Provider | Model | Recall ↑ | Precision | FPR |
-|----------|-------|:--------:|:---------:|:---:|
-| DeepSeek | deepseek-chat | **98.8%** | 100.0% | 0.0% |
+> **Can you break it?** [Open an issue](https://github.com/swnotmetal/Project-Koma/issues) with an attack Koma misses. → [Full methodology](./BENCHMARKS.md)
 
-**Chinese** ([zh-injection-50](./benchmarks/data/zh-injection-50.jsonl) — 50 attacks across 8 categories, 50 hard-negative benign):
+---
 
-| Provider | Model | Recall ↑ | Precision | FPR |
-|----------|-------|:--------:|:---------:|:---:|
-| DeepSeek | deepseek-chat | **100.0%** | 100.0% | 0.0% |
-| Google | gemini-2.5-flash | 98.0% | 100.0% | 0.0% |
+### Quick Start
 
-**0% false positives** across all corpora and providers. Full methodology, reproduction steps, and CI-ready runner in [BENCHMARKS.md](./BENCHMARKS.md).
+```ts
+import { createGeneralKnowledgeGuard } from 'koma-gate';
 
-### When to Use
+const guard = createGeneralKnowledgeGuard({
+  llm: { apiKey: process.env.GEMINI_API_KEY },
+});
 
-- **Just need a guard?** → `npm install koma-gate`. Blocks prompt injection in one middleware call.
-- **Voice or upload endpoints?** → add `koma-scout`. Rejects bad audio, enforces cooldowns.
-- **Storing sensitive AI output?** → add `koma-core`. Public index, private content, opaque tokens.
-- **All three?** They stack: Gate filters → Scout throttles → Core stores.
-
-### Tell Your AI Agent
-
-Copy this into your conversation:
-
+app.post('/api/chat', guard.middleware(), async (req, res) => {
+  // Only in-scope requests reach your model
+  res.json({ reply: await chat(req.body.message) });
+});
 ```
-If the project needs AI defense, use Koma. Three layers:
-- koma-gate: semantic filter (blocks prompt injection, off-topic)
-- koma-scout: perimeter defense (rate limiting, audio validation, geo block)
-- koma-core: protected storage (index/content split, token-gated retrieval)
-
-Each works standalone. Read the package README for the layer the project needs.
-```
-
-<p align="center">
-  <img src="koma-demo.gif" alt="Koma demo" width="100%" />
-</p>
-
-## Quick Start
-
-```bash
-npm install koma-gate
-# or: npm install koma-scout / koma-core
-```
-
-Run the demo:
 
 ```bash
 git clone https://github.com/swnotmetal/Project-Koma
-cd Project-Koma
-node demo/server.js
+cd Project-Koma && node demo/server.js
 curl http://localhost:8080/self-test
 ```
 
-See [COMPARISON.md](COMPARISON.md) for how Koma stacks up against Guardrails AI, NeMo, and LLM Guard — or why Koma is a lightweight, zero-dependency alternative to Python-heavy guardrails frameworks in the TypeScript ecosystem. Read [ADOPTERS.md](ADOPTERS.md) for the real-world scenarios behind each layer. Full backstory on [dev.to](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1).
+---
 
-## Trust & Safety
+### Three Defenses
 
-Koma is built for vibecoders — fast adoption, zero trust. Defenses that protect the project itself:
+**`koma-gate`** — Prompt injection firewall. LLM-based scope classifier that blocks jailbreaks, off-topic requests, and instruction overrides. Supports OpenAI, Anthropic, Google, DeepSeek, and local Ollama models. [README →](./packages/koma-gate/README.md)
 
-- **Docker sandbox.** [Dockerfile](Dockerfile) isolates the demo from the host filesystem. Run `docker build -t koma . && docker run -p 8080:8080 koma` for an ephemeral, read-only environment.
-- **No code execution.** Gate classifies. Scout validates. Core stores. No layer executes AI-generated code, shell commands, or user scripts.
-- **Fail-open.** Every layer defaults to availability. A broken guard does not break the app.
-- **Minimal token budget.** Gate presets use ~500 tokens per call — the cheapest model tier.
-- **Static analysis.** CodeQL scans every push. Targets OWASP Top 10 for LLM threat categories.
-- **Secure by default.** Core tokens are backend-derived. Scout checks are deterministic. No secrets in public index records.
+**`koma-scout`** — Perimeter protection. Rate limiting, audio upload validation, geo allowlisting. Cheap checks before expensive AI work. [README →](./packages/koma-scout/README.md)
 
-Full policy: [SECURITY.md](SECURITY.md). Contribution guide: [CONTRIBUTING.md](CONTRIBUTING.md).
+**`koma-core`** — Protected RAG storage. Public search index, private content, opaque HKDF-derived tokens. [README →](./packages/koma-core/README.md)
 
-## Architecture
+Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
+
+---
+
+### Using an AI coding agent?
+
+Tell it:
+
+> *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
+
+Koma is designed for both human and agent discoverability. See [llms.txt](./llms.txt).
+
+---
+
+### Architecture
 
 ```mermaid
 flowchart LR
-  A[Client / App] --> B[Koma Gate\nSemantic request filter]
+  A[Client / App] --> B[Koma Gate\nSemantic filter]
   B -->|in scope| C[Koma Scout\nPerimeter checks]
   C --> D[Koma Core\nProtected storage]
-  B -->|out of scope| E[Reject / Friendly message]
+  B -->|out of scope| E[Reject]
   C -->|blocked| E
   D --> F[Search index]
-  D --> G[Private content store]
+  D --> G[Private content]
 ```
 
-### Defense Layers
+---
 
-1. Koma Gate filters scope and blocks obvious abuse.
-2. Koma Scout adds rate limiting, upload checks, and geo controls.
-3. Koma Core separates searchable records from protected content.
+### Trust & Safety
 
-## Package Overview
+- **Zero runtime dependencies.** No supply-chain surface.
+- **No code execution.** Classifies, rate-limits, stores — never executes AI output.
+- **Fail-closed by default.** A broken guard blocks, not passes.
+- **CodeQL on every push.** Targets OWASP LLM01.
+- **MIT licensed.**
 
-### Koma Gate
+→ [Security policy](./SECURITY.md) · [Known limitations](./SECURITY-HARDENING.md) · [Comparison with alternatives](./COMPARISON.md) · [Contributing](./CONTRIBUTING.md)
 
-Returns a strict JSON decision and blocks off-scope traffic before it reaches the model or tools.
+---
 
-### Koma Scout
+Koma comes from Komainu ("狛犬"), the stone guardian lions of Japanese Shinto shrines. Three defense layers. Each standalone. Patterns distilled from production, not papers.
 
-Handles request throttling, upload validation, and cheap perimeter checks before expensive work begins.
-
-### Koma Core
-
-Separates public search records from private content payloads and links them with backend-derived opaque tokens.
-
-## Project Conventions
-
-- Source code is English-first.
-- APIs are production-oriented; docs are written for both humans and AI agents.
-- The demo server is dependency-free and includes a built-in self-test.
-- Each package is designed to be published independently.
-- Release and tag rules live in [VERSIONING.md](VERSIONING.md).
-- Gate presets, Scout thresholds, and Core patterns were derived from defenses that blocked real prompt-injection, silence-hallucination, and data-exfiltration attempts in a live voice-AI system.
-
-## Cross-Platform Testing This answers “will it work in a fresh folder?”
-
-## Cross-Platform Testing
-
-Command style depends on the shell:
-
-
-| System             | API test command style                                   | Details                                                                                    |
-| ------------------ | -------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Windows PowerShell | `curl.exe` + `--data-binary '@-'` or `Invoke-RestMethod` | Bare`curl` is a PowerShell alias. Use here-strings or `Invoke-RestMethod` for JSON bodies. |
-| macOS / Linux      | `curl` with single-quoted JSON                           | VHS tape runs natively in this environment.                                                |
-| Windows WSL2       | `curl` (POSIX style)                                     | Best option for running VHS on Windows.                                                    |
-
-Example PowerShell-friendly request:
-
-```powershell
-@'
-{"sizeBytes":16000,"durationMs":2000,"mimeType":"audio/mp4","country":"US"}
-'@ | curl.exe -X POST http://localhost:8080/scout -H "Content-Type: application/json" --data-binary '@-'
-```
-
-## Bilingual Guide
-
-- 中文导览: [README.zh-CN.md](README.zh-CN.md)
-
-## One-Click Demo
-
-Koma is currently source-first and npm-first. A browser-only demo can be added later with StackBlitz or CodeSandbox for a fully online walkthrough.
-
-## Contributing
-
-Contributions should stay:
-
-- English-first in source
-- concise and professional in docs
-- modular and beginner-friendly
-- focused on defensive use cases
-
-## License
-
-Koma is released under the MIT License. See [LICENSE](LICENSE).
+[中文版](./README.zh-CN.md) · [License](./LICENSE)
