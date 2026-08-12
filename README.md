@@ -2,7 +2,9 @@
 
 Stop prompt injection, bot flooding, and data scraping — before they hit your AI app.
 
-Zero-dependency defensive toolkit for Node.js & TypeScript. Three standalone packages you drop in front of Express, Fastify, or Next.js API routes. Patterns distilled from production, not from papers.
+Zero-dependency defensive toolkit for Node.js & TypeScript. Three standalone packages you drop in front of Express, Fastify, or Next.js API routes.
+
+> *Security primitives distilled from a real AI application.*
 
 <p align="center">
   <img src="logo/lognobg.png" alt="Koma logo" width="160" />

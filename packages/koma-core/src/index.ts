@@ -766,8 +766,12 @@ export class DualCollectionReader {
   }
 
   private canAccess(userTier: string, requiredTier: string): boolean {
-    const tiers = { public: 0, premium: 1, enterprise: 2 };
-    return (tiers[userTier as keyof typeof tiers] || 0) >= (tiers[requiredTier as keyof typeof tiers] || 0);
+    const tiers: Record<string, number> = { public: 0, premium: 1, enterprise: 2 };
+    const userLevel = tiers[userTier];
+    const requiredLevel = tiers[requiredTier];
+    // Unknown tiers: deny access rather than silently downgrading to public
+    if (userLevel === undefined || requiredLevel === undefined) return false;
+    return userLevel >= requiredLevel;
   }
 
   private async updateAccessStats(contentToken: string): Promise<void> {

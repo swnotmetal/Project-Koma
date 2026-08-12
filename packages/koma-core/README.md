@@ -8,6 +8,26 @@ This package separates searchable index records from private content records and
 
 Koma Core provides the storage pattern (index/content separation), but the integrating application is responsible for deriving a trustworthy `userTier` from authenticated identity. Core does not authenticate users or authorize access tiers — it enforces the tier the application passes in. Always verify identity before calling storage methods.
 
+### What Core Guarantees
+
+| Guarantee | Mechanism |
+|-----------|-----------|
+| Token opacity | HKDF-derived tokens cannot be reversed to sourceId |
+| Storage separation | Index (searchable) and content (private) are different stores |
+| Retrieval throttling | Per-token and per-IP rate limiting |
+| Deterministic tokens | Same sourceId always produces the same token |
+| Deterministic hashing | Same payload always produces the same content hash |
+
+### What Core Does NOT Guarantee
+
+| Non-guarantee | Responsibility |
+|---------------|---------------|
+| User authentication | Application must verify identity before calling Core |
+| Authorization identity | Application must derive `userTier` from authenticated session, not from request body |
+| Database encryption | Use your database's encryption-at-rest |
+| Cross-store atomicity | Writes are best-effort with rollback; for strict transactional consistency, use a transactional backend |
+| Tenant isolation | Separate Core instances per tenant, not a single shared instance |
+
 ## AI Agent Quick Read
 
 - Read order: this README, then `src/index.ts`, then [../../demo/server.js](../../demo/server.js).
