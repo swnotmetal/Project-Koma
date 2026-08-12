@@ -25,6 +25,8 @@
   "devDependencies": {
     "@types/express": "^5.0.0",
     "@types/node": "^22.13.4",
+    "gif-encoder-2": "^1.0.5",
+    "sharp": "^0.35.3",
     "typescript": "^5.8.3",
     "vitest": "^4.1.10"
   }
