@@ -47,7 +47,7 @@ npm install koma-gate
 
 ### Benchmarks
 
-We threw **1,769 real prompt-injection attacks** at Koma Gate in fail-closed mode, using real providers — not mock adapters.
+I threw **1,769 real prompt-injection attacks** at Koma Gate in fail-closed mode, using real providers — not mock adapters.
 
 | Provider | Recall | Precision | False Positives |
 |----------|:------:|:---------:|:---:|
@@ -134,4 +134,4 @@ flowchart LR
 
 Koma comes from Komainu ("狛犬"), the stone guardian lions of Japanese Shinto shrines. Three defense layers. Each standalone. Patterns distilled from production, not papers.
 
-[中文版](./README.zh-CN.md) · [License](./LICENSE)
+[License](./LICENSE)
