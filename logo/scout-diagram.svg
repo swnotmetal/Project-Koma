@@ -1,39 +1,46 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400">
-  <rect width="640" height="400" fill="#0d1117"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="396" viewBox="0 0 640 396">
+  <rect width="640" height="396" fill="#0d1117"/>
+
+  <!-- Golden rectangle canvas: 640 / 1.618 ≈ 396 -->
 
   <!-- Title -->
-  <text x="320" y="36" fill="#8b949e" font-family="Arial,Helvetica,sans-serif" font-size="13" text-anchor="middle" letter-spacing="2">KOMA SCOUT</text>
+  <text x="320" y="34" fill="#8b949e" font-family="Arial,Helvetica,sans-serif" font-size="13" text-anchor="middle" letter-spacing="2">KOMA SCOUT</text>
 
-  <!-- Request arrow in -->
-  <text x="140" y="110" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13" text-anchor="middle">REQUEST</text>
-  <line x1="200" y1="106" x2="250" y2="106" stroke="#8b949e" stroke-width="2"/>
-  <polygon points="244,101 254,106 244,111" fill="#8b949e"/>
+  <!-- REQUEST (left) -->
+  <text x="78" y="200" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="14" text-anchor="middle">REQUEST</text>
 
-  <!-- Check list box -->
-  <rect x="270" y="60" width="200" height="180" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+  <!-- Arrow left → box -->
+  <line x1="128" y1="196" x2="188" y2="196" stroke="#8b949e" stroke-width="2"/>
+  <polygon points="182,191 192,196 182,201" fill="#8b949e"/>
 
-  <!-- Rate -->
-  <circle cx="300" cy="92" r="7" fill="#3fb950"/>
-  <text x="318" y="96" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">RATE</text>
+  <!-- Checklist box: centered, width 240, height 200 -->
+  <rect x="210" y="98" width="240" height="200" rx="12" fill="#161b22" stroke="#30363d" stroke-width="1"/>
 
-  <!-- Geo -->
-  <circle cx="300" cy="132" r="7" fill="#3fb950"/>
-  <text x="318" y="136" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">GEO</text>
+  <!-- 4 checks, spaced with golden ratio rhythm -->
+  <!-- item 1 -->
+  <circle cx="248" cy="136" r="6" fill="#3fb950"/>
+  <text x="266" y="140" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">RATE</text>
 
-  <!-- Media -->
-  <circle cx="300" cy="172" r="7" fill="#3fb950"/>
-  <text x="318" y="176" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">MEDIA</text>
+  <!-- item 2 -->
+  <circle cx="248" cy="178" r="6" fill="#3fb950"/>
+  <text x="266" y="182" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">GEO</text>
 
-  <!-- Cooldown -->
-  <circle cx="300" cy="212" r="7" fill="#3fb950"/>
-  <text x="318" y="216" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">COOLDOWN</text>
+  <!-- item 3 -->
+  <circle cx="248" cy="220" r="6" fill="#3fb950"/>
+  <text x="266" y="224" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">MEDIA</text>
 
-  <!-- Output -->
-  <line x1="470" y1="106" x2="520" y2="106" stroke="#3fb950" stroke-width="2"/>
-  <polygon points="514,101 524,106 514,111" fill="#3fb950"/>
-  <text x="560" y="110" fill="#3fb950" font-family="Arial,Helvetica,sans-serif" font-size="13" text-anchor="middle" font-weight="bold">ALLOW / BLOCK</text>
+  <!-- item 4 -->
+  <circle cx="248" cy="262" r="6" fill="#3fb950"/>
+  <text x="266" y="266" fill="#c9d1d9" font-family="Arial,Helvetica,sans-serif" font-size="13">COOLDOWN</text>
 
-  <!-- Bottom label -->
-  <text x="320" y="310" fill="#e6edf3" font-family="Arial,Helvetica,sans-serif" font-size="16" text-anchor="middle" font-weight="bold">Cheap checks before expensive AI work</text>
-  <text x="320" y="338" fill="#8b949e" font-family="Arial,Helvetica,sans-serif" font-size="12" text-anchor="middle">Deterministic · no LLM call · zero dependencies</text>
+  <!-- Arrow box → result -->
+  <line x1="450" y1="196" x2="510" y2="196" stroke="#3fb950" stroke-width="2"/>
+  <polygon points="504,191 514,196 504,201" fill="#3fb950"/>
+
+  <!-- Result (right) -->
+  <text x="566" y="200" fill="#3fb950" font-family="Arial,Helvetica,sans-serif" font-size="14" text-anchor="middle" font-weight="bold">ALLOW /<tspan x="566" dy="18">BLOCK</tspan></text>
+
+  <!-- Bottom caption -->
+  <text x="320" y="348" fill="#e6edf3" font-family="Arial,Helvetica,sans-serif" font-size="16" text-anchor="middle" font-weight="bold">Cheap checks before expensive AI work</text>
+  <text x="320" y="374" fill="#8b949e" font-family="Arial,Helvetica,sans-serif" font-size="12" text-anchor="middle">Deterministic · no LLM call · zero dependencies</text>
 </svg>
