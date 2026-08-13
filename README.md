@@ -43,6 +43,16 @@ npm install koma-gate
 | Voice AI | Audio abuse / flooding | Validation + rate limiting + geo | `koma-scout` |
 | RAG / search | Data enumeration / scraping | Split index from content, token-gate retrieval | `koma-core` |
 
+Different attacks cross different boundaries. Koma provides a small primitive for each one.
+
+---
+
+### What Koma Is — and Isn't
+
+**Is**: composable security primitives · defense-in-depth · usable independently · sits outside the model's authority
+
+**Isn't**: a model · an agent framework · a replacement for authorization · a magic prompt-injection detector · a complete security boundary by itself
+
 ---
 
 ### Benchmarks
@@ -89,7 +99,7 @@ curl http://localhost:8080/self-test
 
 **`koma-scout`** — Perimeter protection. Rate limiting, audio upload validation, geo allowlisting. Cheap checks before expensive AI work. [README →](./packages/koma-scout/README.md)
 
-**`koma-core`** — Protected RAG storage. Public search index, private content, opaque HKDF-derived tokens. [README →](./packages/koma-core/README.md)
+**`koma-core`** — Protected RAG storage. Public search index, private content, opaque HKDF-derived tokens. *Discovery is not authorization.* [README →](./packages/koma-core/README.md)
 
 Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
 
