@@ -21,6 +21,7 @@ npm install koma-gate
   <br />
   <img alt="benchmark" src="https://img.shields.io/badge/benchmark-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" />
   <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=downloads&color=blue&style=flat-square" />
+  <img alt="visitors" src="https://hits.dwyl.com/swnotmetal/Project-Koma.svg?style=flat-square" />
 </p>
 
 <p align="center">

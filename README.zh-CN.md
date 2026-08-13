@@ -21,6 +21,7 @@ npm install koma-gate
   <br />
   <img alt="benchmark" src="https://img.shields.io/badge/实测-98.8%25_召回率_0%25_误拦-6e3abe?style=flat-square" />
   <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=下载量&color=blue&style=flat-square" />
+  <img alt="visitors" src="https://hits.dwyl.com/swnotmetal/Project-Koma.svg?style=flat-square" />
 </p>
 
 <p align="center">
