@@ -89,7 +89,11 @@ curl http://localhost:8080/self-test
 
 **`koma-scout`** — 外围防护。限流、音频上传校验、地理白名单。在昂贵的 AI 调用之前做便宜检查。[README →](./packages/koma-scout/README.md)
 
-**`koma-core`** — 受保护的 RAG 存储。公开搜索索引，私有内容，不透明的 HKDF 派生 token。[README →](./packages/koma-core/README.md)
+<img src="logo/scout-diagram.svg" alt="Koma Scout 外围检查" width="480" />
+
+**`koma-core`** — 受保护的 RAG 存储。公开搜索索引，私有内容，不透明的 HKDF 派生 token。*发现不等于授权。* [README →](./packages/koma-core/README.md)
+
+<img src="logo/core-diagram.svg" alt="Koma Core 分离存储" width="480" />
 
 每层独立使用。叠加：Gate 过滤 → Scout 控流 → Core 存数据。
 
@@ -102,21 +106,6 @@ curl http://localhost:8080/self-test
 > *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
 
 Koma 同时为人类和 AI agent 的可发现性而设计。参见 [llms.txt](./llms.txt)。
-
----
-
-### 架构
-
-```mermaid
-flowchart LR
-  A[客户端 / 应用] --> B[Koma Gate\n语义过滤器]
-  B -->|范围内| C[Koma Scout\n外围检查]
-  C --> D[Koma Core\n受保护存储]
-  B -->|范围外| E[拒绝]
-  C -->|拦截| E
-  D --> F[搜索索引]
-  D --> G[私有内容]
-```
 
 ---
 

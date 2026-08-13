@@ -99,7 +99,11 @@ curl http://localhost:8080/self-test
 
 **`koma-scout`** — Perimeter protection. Rate limiting, audio upload validation, geo allowlisting. Cheap checks before expensive AI work. [README →](./packages/koma-scout/README.md)
 
+<img src="logo/scout-diagram.svg" alt="Koma Scout perimeter checks" width="480" />
+
 **`koma-core`** — Protected RAG storage. Public search index, private content, opaque HKDF-derived tokens. *Discovery is not authorization.* [README →](./packages/koma-core/README.md)
+
+<img src="logo/core-diagram.svg" alt="Koma Core split-store" width="480" />
 
 Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
 
@@ -112,21 +116,6 @@ Tell it:
 > *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
 
 Koma is designed for both human and agent discoverability. See [llms.txt](./llms.txt).
-
----
-
-### Architecture
-
-```mermaid
-flowchart LR
-  A[Client / App] --> B[Koma Gate\nSemantic filter]
-  B -->|in scope| C[Koma Scout\nPerimeter checks]
-  C --> D[Koma Core\nProtected storage]
-  B -->|out of scope| E[Reject]
-  C -->|blocked| E
-  D --> F[Search index]
-  D --> G[Private content]
-```
 
 ---
 
