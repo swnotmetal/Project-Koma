@@ -1,6 +1,6 @@
 # Koma
 
-### A prompt-injection firewall for Node.js.
+### A Lightweight, agent-friendly AI security toolkit for Node.js & TypeScript.
 
 Stop malicious prompts before they reach your LLM, tools, or RAG pipeline.
 
