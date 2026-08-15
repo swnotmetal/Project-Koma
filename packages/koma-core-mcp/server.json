@@ -1,0 +1,31 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.swnotmetal/koma-core-mcp",
+  "title": "Koma Core MCP",
+  "description": "Protected RAG storage — agents discover public metadata, content only by access token.",
+  "version": "0.1.1",
+  "websiteUrl": "https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-core-mcp/README.md",
+  "repository": {
+    "url": "https://github.com/swnotmetal/Project-Koma",
+    "source": "github",
+    "subfolder": "packages/koma-core-mcp"
+  },
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "koma-core-mcp",
+      "version": "0.1.1",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "KOMA_MASTER_KEY",
+          "description": "HKDF master key for content tokens (demo key fallback if unset)",
+          "isRequired": false,
+          "isSecret": true
+        }
+      ]
+    }
+  ]
+}

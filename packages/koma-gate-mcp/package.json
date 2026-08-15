@@ -1,7 +1,8 @@
 {
   "name": "koma-gate-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server exposing Koma Gate prompt-injection classification as a tool for AI agents.",
+  "mcpName": "io.github.swnotmetal/koma-gate-mcp",
   "author": "Shuang Wu",
   "type": "module",
   "main": "./dist/index.js",

@@ -1,7 +1,8 @@
 {
   "name": "koma-core-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "MCP server exposing Koma Core protected RAG retrieval — discovery without authorization, content only by token.",
+  "mcpName": "io.github.swnotmetal/koma-core-mcp",
   "author": "Shuang Wu",
   "type": "module",
   "main": "./dist/index.js",
