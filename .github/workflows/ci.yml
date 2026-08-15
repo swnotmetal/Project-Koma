@@ -23,11 +23,13 @@ jobs:
 
       - run: npm ci
 
-      - name: Typecheck all packages
-        run: npm run typecheck
-
+      # Build before typecheck: koma-*-mcp packages import koma-core / koma-gate
+      # through their `types` entry (dist/index.d.ts), which only exists after build.
       - name: Build all packages
         run: npm run build
+
+      - name: Typecheck all packages
+        run: npm run typecheck
 
       - name: Smoke test (pack + clean install + import)
         run: npm run smoke:npm

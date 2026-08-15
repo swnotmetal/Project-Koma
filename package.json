@@ -9,8 +9,8 @@
   ],
   "scripts": {
     "demo": "node demo/server.js",
-    "build": "npm run build -ws --if-present",
-    "check": "npm run typecheck -ws --if-present",
+    "build": "npm run build -w koma-core -w koma-gate -w koma-scout && npm run build -w koma-core-mcp -w koma-gate-mcp",
+    "check": "npm run build && npm run typecheck -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
     "smoke:npm": "node scripts/smoke-npm.mjs",
     "test": "vitest run",
