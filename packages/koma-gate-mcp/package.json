@@ -1,0 +1,46 @@
+{
+  "name": "koma-gate-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing Koma Gate prompt-injection classification as a tool for AI agents.",
+  "author": "Shuang Wu",
+  "type": "module",
+  "main": "./dist/index.js",
+  "bin": {
+    "koma-gate-mcp": "./dist/index.js"
+  },
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "prompt-injection",
+    "guardrail",
+    "llm-security",
+    "ai-agent",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swnotmetal/Project-Koma"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "koma-gate": "0.2.2",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.8.3"
+  }
+}
