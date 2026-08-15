@@ -108,6 +108,16 @@ curl http://localhost:8080/self-test
 
 Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
 
+**`koma-gate-mcp`** — MCP server exposing Gate's `classify_input` as a tool AI agents can call directly. [README →](./packages/koma-gate-mcp/README.md)
+
+```json
+{
+  "mcpServers": {
+    "koma-gate": { "command": "npx", "args": ["-y", "koma-gate-mcp"] }
+  }
+}
+```
+
 ---
 
 ### Using an AI coding agent?
@@ -116,7 +126,7 @@ Tell it:
 
 > *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
 
-Koma is designed for both human and agent discoverability. See [llms.txt](./llms.txt).
+Koma is designed for both human and agent discoverability — including an [MCP server](./packages/koma-gate-mcp/README.md). See [llms.txt](./llms.txt).
 
 ---
 
