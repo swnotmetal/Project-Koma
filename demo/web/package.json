@@ -10,7 +10,7 @@
     "dev:cf": "wrangler dev"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   },
   "dependencies": {
     "koma-gate": "^0.2.2",
