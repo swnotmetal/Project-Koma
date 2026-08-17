@@ -38,6 +38,25 @@ GEMINI_API_KEY=your-key node demo/web/server.mjs
 
 ## Deploy
 
+### Cloudflare Workers (recommended for cost safety)
+
+Cloudflare is the best fit here because it gives you a **globally consistent,
+atomic** rate limiter (Durable Objects) — Vercel's in-memory limiter resets per
+instance, so it cannot enforce a hard daily budget.
+
+1. `cd demo/web && npm install`
+2. Set your key as a secret: `npx wrangler secret put GEMINI_API_KEY`
+3. (Optional kill switch) Create a KV namespace, uncomment the `kv_namespaces`
+   block in `wrangler.toml`, and paste the id.
+4. `npx wrangler deploy`
+
+`wrangler.toml` is already configured with:
+
+- Static assets served from `public/`
+- `nodejs_compat` (enabled by default on compatibility date ≥ 2026-08-04, needed
+  by `koma-gate`'s `crypto.createHash`)
+- A Durable Object rate limiter: **30 req/min per IP + 500 req/day global hard cap**
+
 ### Vercel
 
 1. Create a new project pointing at this repo.
@@ -45,6 +64,9 @@ GEMINI_API_KEY=your-key node demo/web/server.mjs
 3. Add `GEMINI_API_KEY` (and optionally `KOMA_PROVIDER`) as environment variables.
 4. Deploy. Vercel serves `public/` as static files and `api/classify.mjs` as a
    serverless function.
+
+> ⚠️ Vercel's rate limiter is per-instance only — it blunts casual abuse but
+> cannot enforce a global budget. Pair it with the provider-side budget below.
 
 ### Railway / Zeabur
 
@@ -54,11 +76,25 @@ GEMINI_API_KEY=your-key node demo/web/server.mjs
 4. Add `GEMINI_API_KEY` as an environment variable.
 5. Deploy.
 
-## Cost & abuse notes
+## Cost & abuse protection — three layers
 
-- Every request makes one small LLM classification call. A cheap/fast model
-  (`gemini-2.5-flash`) is the default on purpose.
-- A per-IP rate limit (30 req/min) is built in; on serverless platforms this is
-  per-instance, so add a platform-level rate limit for a public launch.
-- The classifier is fail-closed: if the LLM call errors, input is blocked rather
-  than passed through.
+Every request makes one small LLM classification call (~500 tokens ≈ a fraction
+of a cent on `gemini-2.5-flash`), but don't rely on that alone. Protection is
+layered:
+
+1. **Edge rate limiting** — per-IP (30/min) plus a hard **global daily cap**
+   (500/day, atomically enforced by a Durable Object on Cloudflare).
+2. **Kill switch** — flip a KV key (`disabled=true`) to stop all traffic
+   instantly, no redeploy.
+3. **Provider-side budget (the real backstop)** — the only thing that physically
+   cannot be exceeded, regardless of any bug in your code:
+   - **Google (Gemini)**: create a dedicated API key in Google AI Studio, or use a
+     GCP project with a **billing budget + hard cap**. Gemini also has a free tier.
+   - **OpenAI**: set a **hard monthly usage limit** on the account/API key.
+   - **Anthropic**: set a spend limit on the workspace.
+
+If you do nothing else, do layer 3: even a broken rate limiter can never spend
+more than the provider's own quota.
+
+The classifier is fail-closed: if the LLM call errors, input is blocked rather
+than passed through.

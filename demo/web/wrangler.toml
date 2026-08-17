@@ -1,0 +1,27 @@
+name = "koma-demo"
+main = "src/index.js"
+# compatibility_date >= 2026-08-04 enables Node.js compatibility by default
+# (needed for koma-gate's `crypto.createHash`).
+compatibility_date = "2026-08-17"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = [ "/api/*" ]
+
+# Global, atomic rate limiter + daily budget counter.
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = [ "RateLimiter" ]
+
+# --- Optional kill switch (instant off-switch) ---
+# 1. Create a KV namespace in the Cloudflare dashboard.
+# 2. Uncomment the block below and paste the namespace id.
+# 3. To disable the demo instantly: set the KV key `disabled` to `true`.
+# [[kv_namespaces]]
+# binding = "KILLSWITCH"
+# id = "YOUR_KV_NAMESPACE_ID"
