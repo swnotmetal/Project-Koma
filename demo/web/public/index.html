@@ -5,74 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Koma — Live Prompt-Injection Firewall (three defenses, one demo)</title>
   <meta name="description" content="Try the three Koma defenses live: Gate classifies prompts with a real LLM, Scout drops abusive traffic, Core gates content by access tier." />
-  <meta name="theme-color" content="#0b0e14" />
+  <meta name="theme-color" content="#FAFAFA" />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Koma — Live Prompt-Injection Firewall" />
   <meta property="og:description" content="Type a prompt or a jailbreak attempt and watch Koma Gate block it with a real LLM. Plus Scout and Core, live." />
   <meta name="twitter:card" content="summary_large_image" />
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236c8cff'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' text-anchor='middle' fill='%230b0e14'%3EK%3C/text%3E%3C/svg%3E" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C25E38'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EK%3C/text%3E%3C/svg%3E" />
   <style>
     :root {
-      --bg: #0b0e14;
-      --panel: #12161f;
-      --panel-2: #171c28;
-      --border: #232a3a;
-      --text: #eef1f7;
-      --muted: #9aa3b8;
-      --accent: #6c8cff;
-      --accent-strong: #4f6df5;
-      --green: #2dd4a7;
-      --red: #ff5d6c;
-      --amber: #ffb454;
-      --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 40px;
-      --r-sm: 8px; --r-md: 12px; --r-lg: 16px;
-      --fs-xs: 12px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 18px; --fs-xl: 28px;
-      --t: 150ms ease;
+      --bg: #FAFAFA;
+      --panel: #FFFFFF;
+      --panel-2: #F4F2EF;
+      --border: #E8E4DE;
+      --text: #18181B;
+      --muted: #6B6B70;
+      --accent: #C25E38;
+      --accent-strong: #A34C2B;
+      --accent-deep: #8C3A21;
+      --green: #187A52;
+      --red: #C93A3A;
+      --amber: #9C6414;
+      --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Segoe UI", Roboto, Arial, sans-serif;
+      /* Golden-ratio spacing (Fibonacci) */
+      --sp-1: 8px; --sp-2: 13px; --sp-3: 21px; --sp-4: 34px; --sp-5: 55px; --sp-6: 89px;
+      --r-sm: 8px; --r-md: 13px; --r-lg: 21px;
+      /* Apple-like type scale */
+      --fs-xs: 12px; --fs-sm: 14px; --fs-md: 17px; --fs-lg: 21px; --fs-xl: 34px;
+      --t: 200ms ease;
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body {
-      background:
-        radial-gradient(1200px 600px at 15% -10%, rgba(108, 140, 255, 0.10), transparent 60%),
-        radial-gradient(900px 500px at 100% 0%, rgba(45, 212, 167, 0.07), transparent 55%),
-        var(--bg);
+      background: var(--bg);
       color: var(--text);
       font-family: var(--sans);
       font-size: var(--fs-md);
       line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .wrap { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+    .wrap { width: 100%; max-width: 1040px; margin: 0 auto; padding: 0 var(--sp-3); }
 
-    header { padding: 28px 0 var(--sp-4); border-bottom: 1px solid var(--border); }
+    header { padding: var(--sp-4) 0; border-bottom: 1px solid var(--border); }
     .brand { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
     .logo {
       width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--accent), var(--green));
-      display: grid; place-items: center; font-weight: 800; color: #0b0e14;
+      background: var(--accent);
+      display: grid; place-items: center; font-weight: 800; color: #FFFFFF;
       font-size: 20px;
     }
-    h1 { font-size: var(--fs-xl); margin: 0; letter-spacing: -0.02em; line-height: 1.15; }
+    h1 { font-size: var(--fs-xl); margin: 0; letter-spacing: -0.025em; line-height: 1.1; font-weight: 600; }
     .sub { color: var(--muted); font-size: var(--fs-sm); margin-top: var(--sp-1); max-width: 62ch; }
     .sub strong { color: var(--text); font-weight: 600; }
     .gh-link {
       margin-left: auto; color: var(--muted); text-decoration: none; font-size: var(--fs-sm);
-      border: 1px solid var(--border); padding: 7px 14px; border-radius: var(--r-sm);
+      border: 1px solid var(--border); padding: var(--sp-1) var(--sp-2); border-radius: var(--r-sm);
       transition: color var(--t), border-color var(--t);
     }
     .gh-link:hover { color: var(--text); border-color: var(--accent); }
 
-    main { flex: 1; padding: var(--sp-5) 0 var(--sp-6); }
+    main { flex: 1; padding: var(--sp-4) 0 var(--sp-6); }
 
-    .tabs { display: flex; gap: var(--sp-1); margin-bottom: var(--sp-5); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .tabs { display: flex; gap: var(--sp-1); margin-bottom: var(--sp-4); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .tab {
       background: transparent; border: none; color: var(--muted); cursor: pointer;
-      padding: 10px 18px; font-size: var(--fs-sm); font-weight: 600;
+      padding: var(--sp-2) var(--sp-3); font-size: var(--fs-sm); font-weight: 600;
       border-bottom: 2px solid transparent; margin-bottom: -1px;
       border-radius: var(--r-sm) var(--r-sm) 0 0;
       transition: color var(--t), border-color var(--t);
@@ -87,36 +89,36 @@
 
     .panel {
       background: var(--panel); border: 1px solid var(--border); border-radius: var(--r-lg);
-      padding: var(--sp-5); display: flex; flex-direction: column;
+      padding: var(--sp-4); display: flex; flex-direction: column;
     }
     .result-panel { min-height: 360px; }
-    .panel h2 { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 var(--sp-4); font-weight: 700; }
+    .panel h2 { font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin: 0 0 var(--sp-3); font-weight: 600; }
 
-    .field-label { display: block; font-size: var(--fs-xs); color: var(--muted); margin-bottom: var(--sp-2); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-    .field { margin-bottom: var(--sp-4); }
+    .field-label { display: block; font-size: var(--fs-xs); color: var(--muted); margin-bottom: var(--sp-2); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+    .field { margin-bottom: var(--sp-3); }
     textarea, input, select {
       width: 100%; background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r-sm);
-      color: var(--text); font-family: var(--mono); font-size: var(--fs-sm); padding: 11px 13px;
+      color: var(--text); font-family: var(--mono); font-size: var(--fs-sm); padding: var(--sp-2);
       transition: border-color var(--t), box-shadow var(--t);
     }
-    textarea { min-height: 150px; resize: vertical; line-height: 1.55; }
-    textarea:focus, input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,140,255,0.15); outline: none; }
+    textarea { min-height: 180px; resize: vertical; line-height: 1.55; }
+    textarea:focus, input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(194,94,56,0.18); outline: none; }
 
     .examples { margin: var(--sp-3) 0; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
     .chip {
       background: transparent; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 999px; padding: 6px 12px; font-size: var(--fs-xs); cursor: pointer;
+      border-radius: 999px; padding: var(--sp-1) var(--sp-2); font-size: var(--fs-sm); cursor: pointer;
       font-family: var(--mono); transition: color var(--t), border-color var(--t);
     }
     .chip:hover { border-color: var(--accent); color: var(--text); }
     .chip.bad:hover { border-color: var(--red); color: var(--red); }
 
     button.run {
-      width: 100%; padding: 13px; border: none; border-radius: var(--r-sm); cursor: pointer;
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #fff;
-      font-size: var(--fs-md); font-weight: 600; transition: filter var(--t), opacity var(--t);
+      width: 100%; padding: var(--sp-2); border: none; border-radius: var(--r-sm); cursor: pointer;
+      background: var(--accent-strong); color: #fff;
+      font-size: var(--fs-md); font-weight: 600; transition: background var(--t), opacity var(--t);
     }
-    button.run:hover { filter: brightness(1.08); }
+    button.run:hover { background: var(--accent-deep); }
     button.run:disabled { opacity: 0.55; cursor: not-allowed; filter: none; }
 
     .hint { color: var(--muted); font-size: var(--fs-xs); margin-top: var(--sp-3); text-align: center; line-height: 1.5; }
@@ -127,11 +129,11 @@
     .verdict { display: flex; align-items: flex-start; gap: var(--sp-4); margin-bottom: var(--sp-4); }
     .badge {
       font-family: var(--mono); font-weight: 800; font-size: var(--fs-lg); letter-spacing: 0.04em;
-      padding: 10px 18px; border-radius: var(--r-sm); white-space: nowrap;
+      padding: var(--sp-2) var(--sp-3); border-radius: var(--r-sm); white-space: nowrap;
     }
-    .badge.allowed { background: rgba(45,212,167,0.14); color: var(--green); border: 1px solid rgba(45,212,167,0.4); }
-    .badge.blocked { background: rgba(255,93,108,0.14); color: var(--red); border: 1px solid rgba(255,93,108,0.4); }
-    .badge.error { background: rgba(255,180,84,0.14); color: var(--amber); border: 1px solid rgba(255,180,84,0.4); }
+    .badge.allowed { background: rgba(24,122,82,0.10); color: var(--green); border: 1px solid rgba(24,122,82,0.25); }
+    .badge.blocked { background: rgba(201,58,58,0.10); color: var(--red); border: 1px solid rgba(201,58,58,0.25); }
+    .badge.error { background: rgba(156,100,20,0.12); color: var(--amber); border: 1px solid rgba(156,100,20,0.3); }
     .verdict p { margin: 0; color: var(--muted); font-size: var(--fs-sm); line-height: 1.55; }
 
     .details, .checks { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
@@ -156,14 +158,14 @@
       transition: border-color var(--t), box-shadow var(--t);
     }
     .doc:hover { border-color: var(--accent); }
-    .doc[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108,140,255,0.15); }
+    .doc[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(194,94,56,0.18); }
     .doc .name { font-weight: 600; font-size: var(--fs-sm); }
     .doc .meta { color: var(--muted); font-size: var(--fs-xs); margin-top: var(--sp-1); }
     .tier-tag { font-family: var(--mono); font-size: 10.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); margin-left: var(--sp-2); color: var(--muted); }
     pre.out { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-family: var(--mono); font-size: var(--fs-xs); overflow: auto; white-space: pre-wrap; word-break: break-all; margin: 0; }
 
     footer { border-top: 1px solid var(--border); padding: var(--sp-5) 0; color: var(--muted); font-size: var(--fs-sm); }
-    footer a { color: var(--accent); text-decoration: none; }
+    footer a { color: var(--accent-strong); text-decoration: none; }
   </style>
 </head>
 <body>
