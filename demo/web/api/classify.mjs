@@ -4,7 +4,7 @@
  * POST /api/classify  { "text": "..." }
  */
 
-import { classifyText, isConfigured } from '../lib/classify.mjs';
+import { getClassifier } from '../lib/classify.mjs';
 
 const WINDOW_MS = 60_000;
 const MAX_PER_WINDOW = 30;
@@ -81,12 +81,6 @@ export default async function handler(req, res) {
     return sendJson(res, 429, { error: 'Rate limit exceeded — try again in a minute.' });
   }
 
-  if (!isConfigured()) {
-    return sendJson(res, 503, {
-      error: 'Demo is not configured: missing LLM API key on the server.',
-    });
-  }
-
   let body;
   try {
     body = await readBody(req, MAX_BODY_BYTES);
@@ -95,12 +89,20 @@ export default async function handler(req, res) {
   }
 
   const input = String(body?.text ?? '').slice(0, MAX_INPUT_LENGTH).trim();
+  const domain = String(body?.domain || 'general');
   if (!input) {
     return sendJson(res, 400, { error: 'Field "text" is required.' });
   }
 
+  const classifier = getClassifier(domain);
+  if (!classifier.isConfigured()) {
+    return sendJson(res, 503, {
+      error: 'Demo is not configured: missing LLM API key on the server.',
+    });
+  }
+
   try {
-    const result = await classifyText(input);
+    const result = await classifier.classifyText(input);
     sendJson(res, 200, result);
   } catch (err) {
     sendJson(res, 500, {
