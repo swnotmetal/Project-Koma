@@ -6,22 +6,12 @@
  *   and the real koma-gate classifier.
  */
 
-import { createClassifier, resolveConfig } from '../lib/classify.mjs';
+import { getClassifier } from '../lib/classify.mjs';
+import { runScoutChecks } from '../lib/scout.mjs';
 import { RateLimiter } from './RateLimiter.js';
 
 // Required by wrangler so the Durable Object class is discoverable.
 export { RateLimiter };
-
-let classifier = null;
-
-function getClassifier(env) {
-  // The guard keeps an internal LRU cache, so reusing a single instance both
-  // cuts latency and reduces LLM cost for repeated inputs.
-  if (!classifier) {
-    classifier = createClassifier(resolveConfig(env));
-  }
-  return classifier;
-}
 
 function cors() {
   return {
@@ -85,8 +75,9 @@ async function handleClassify(request, env) {
     return json({ error: 'Field "text" is required.' }, 400);
   }
 
-  // 4) Classify with the real koma-gate LLM firewall.
-  const c = getClassifier(env);
+  // Domain-aware: each scene maps to its own koma-gate guard (cached per domain).
+  const domain = String(body?.domain || 'general');
+  const c = getClassifier(domain, env);
   if (!c.isConfigured()) {
     return json({ error: 'Demo is not configured: missing LLM API key.' }, 503);
   }
@@ -102,11 +93,62 @@ async function handleClassify(request, env) {
   }
 }
 
+// Scout is the LLM-free deterministic guard — pure JS, so it runs on Workers.
+async function handleScout(request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors() });
+  }
+  if (request.method !== 'POST') {
+    return json({ error: 'POST /api/scout only' }, 405);
+  }
+
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: 'Invalid JSON body.' }, 400);
+  }
+
+  const sizeBytes = Number(body?.sizeBytes);
+  const durationMs = Number(body?.durationMs);
+  const mimeType = String(body?.mimeType || '');
+  const country = String(body?.country || 'UNKNOWN').toUpperCase();
+  const clientId = String(body?.clientId || 'anonymous');
+
+  if (!Number.isFinite(sizeBytes) || !Number.isFinite(durationMs)) {
+    return json({ error: 'sizeBytes and durationMs (numbers) are required.' }, 400);
+  }
+
+  return json(runScoutChecks({ sizeBytes, durationMs, mimeType, country, clientId }), 200);
+}
+
+// koma-core depends on Node's crypto.hkdfSync, which Workers do not expose.
+// Return an honest, actionable message instead of a 404.
+function handleCore(request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors() });
+  }
+  return json(
+    {
+      error: 'The Core demo needs a Node server — koma-core uses Node crypto.hkdfSync, which Cloudflare Workers does not expose.',
+      hint: 'Run the full 3-tab demo locally with "npm run demo", or deploy the Node server to Railway/Zeabur.',
+      nodeOnly: true,
+    },
+    501,
+  );
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/api/classify') {
       return handleClassify(request, env);
+    }
+    if (url.pathname === '/api/scout') {
+      return handleScout(request);
+    }
+    if (url.pathname === '/api/core') {
+      return handleCore(request);
     }
     return env.ASSETS.fetch(request);
   },

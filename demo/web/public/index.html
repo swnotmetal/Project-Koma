@@ -641,6 +641,11 @@
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (data.nodeOnly) {
+          coreIndexEl.innerHTML = '<div class="hint"><strong>Core needs a Node server.</strong><br>koma-core uses Node\'s <code>crypto.hkdfSync</code>, which Cloudflare Workers does not expose. Run the full 3-tab demo locally with <code>npm run demo</code>.</div>';
+          runScraperBtn.disabled = true;
+          return;
+        }
         coreIndexEl.innerHTML = '<div class="hint">' + (data.error || 'error') + '</div>';
         return;
       }
