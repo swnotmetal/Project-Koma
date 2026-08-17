@@ -1,0 +1,17 @@
+{
+  "name": "koma-demo-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Interactive online demo for Koma Gate — a live prompt-injection firewall.",
+  "scripts": {
+    "start": "node server.mjs",
+    "dev": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "koma-gate": "^0.2.2"
+  }
+}
