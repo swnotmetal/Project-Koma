@@ -48,6 +48,16 @@ Different attacks cross different boundaries. Koma provides a small primitive fo
 
 ---
 
+### Try It Live
+
+**[koma-demo.swbuilds.workers.dev](https://koma-demo.swbuilds.workers.dev)** — an interactive, no-signup demo:
+
+- **Gate** — pick a domain (general · code · support · reference · legal) and watch the firewall pass in-scope input and block injections in real time.
+- **Scout** — replay six abuse scenarios (oversized uploads, bad formats, geo, flooding) through the deterministic checks.
+- **Core** — scrape the public index and see why discovery ≠ authorization. Core runs on Node; try it locally with `npm run demo:web`.
+
+---
+
 ### What Koma Is — and Isn't
 
 **Is**: composable security primitives · defense-in-depth · usable independently · sits outside the model's authority
