@@ -22,6 +22,7 @@ npm install koma-gate
   <img alt="benchmark" src="https://img.shields.io/badge/实测-98.8%25_召回率_0%25_误拦-6e3abe?style=flat-square" />
   <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=下载量&color=blue&style=flat-square" />
   <img alt="visitors" src="https://hits.dwyl.com/swnotmetal/Project-Koma.svg?style=flat-square" />
+  <a href="https://koma-demo.swbuilds.workers.dev"><img alt="live demo" src="https://img.shields.io/badge/live_demo-try_it_now-C25E38?style=flat-square" /></a>
 </p>
 
 <p align="center">
@@ -29,10 +30,8 @@ npm install koma-gate
 </p>
 
 <p align="center">
-  <img src="show-koma.gif" alt="Koma 演示" width="100%" />
+  <strong>▶ <a href="https://koma-demo.swbuilds.workers.dev">在线体验 Demo</a></strong> —— Gate、Scout、Core 三合一页面，无需注册。
 </p>
-
-> *从真实 AI 应用中蒸馏出来的安全原语。* — [Koma 是如何诞生的](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1)
 
 ---
 
@@ -87,6 +86,8 @@ curl http://localhost:8080/self-test
 ### 三层防御
 
 **`koma-gate`** — 提示注入防火墙。基于 LLM 的范围分类器，拦截越狱、越界请求和指令覆盖。支持 OpenAI、Anthropic、Google、DeepSeek 和本地 Ollama。[README →](./packages/koma-gate/README.md)
+
+<img src="show-koma.gif" alt="Koma Gate 实时拦截提示注入" width="100%" />
 
 **`koma-scout`** — 外围防护。限流、音频上传校验、地理白名单。在昂贵的 AI 调用之前做便宜检查。[README →](./packages/koma-scout/README.md)
 

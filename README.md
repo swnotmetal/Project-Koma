@@ -22,6 +22,7 @@ npm install koma-gate
   <img alt="benchmark" src="https://img.shields.io/badge/benchmark-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" />
   <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=downloads&color=blue&style=flat-square" />
   <img alt="visitors" src="https://hits.dwyl.com/swnotmetal/Project-Koma.svg?style=flat-square" />
+  <a href="https://koma-demo.swbuilds.workers.dev"><img alt="live demo" src="https://img.shields.io/badge/live_demo-try_it_now-C25E38?style=flat-square" /></a>
 </p>
 
 <p align="center">
@@ -29,10 +30,8 @@ npm install koma-gate
 </p>
 
 <p align="center">
-  <img src="show-koma.gif" alt="Koma demo" width="100%" />
+  <strong>▶ <a href="https://koma-demo.swbuilds.workers.dev">Try the live demo</a></strong> — Gate, Scout &amp; Core in one page, no signup.
 </p>
-
-> *Security primitives distilled from a real AI application.* — [How Koma was built](https://dev.to/swnotmetal/the-3-production-failures-every-ai-app-hits-and-the-fix-i-extracted-5cl1)
 
 ---
 
@@ -45,16 +44,6 @@ npm install koma-gate
 | RAG / search | Data enumeration / scraping | Split index from content, token-gate retrieval | `koma-core` |
 
 Different attacks cross different boundaries. Koma provides a small primitive for each one.
-
----
-
-### Try It Live
-
-**[koma-demo.swbuilds.workers.dev](https://koma-demo.swbuilds.workers.dev)** — an interactive, no-signup demo:
-
-- **Gate** — pick a domain (general · code · support · reference · legal) and watch the firewall pass in-scope input and block injections in real time.
-- **Scout** — replay six abuse scenarios (oversized uploads, bad formats, geo, flooding) through the deterministic checks.
-- **Core** — scrape the public index and see why discovery ≠ authorization. Core runs on Node; try it locally with `npm run demo:web`.
 
 ---
 
@@ -107,6 +96,8 @@ curl http://localhost:8080/self-test
 ### Three Defenses
 
 **`koma-gate`** — Prompt injection firewall. LLM-based scope classifier that blocks jailbreaks, off-topic requests, and instruction overrides. Supports OpenAI, Anthropic, Google, DeepSeek, and local Ollama models. [README →](./packages/koma-gate/README.md)
+
+<img src="show-koma.gif" alt="Koma Gate blocking a prompt injection in real time" width="100%" />
 
 **`koma-scout`** — Perimeter protection. Rate limiting, audio upload validation, geo allowlisting. Cheap checks before expensive AI work. [README →](./packages/koma-scout/README.md)
 
