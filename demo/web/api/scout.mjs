@@ -58,10 +58,11 @@ export default async function handler(req, res) {
   const durationMs = Number(body?.durationMs);
   const mimeType = String(body?.mimeType || '');
   const country = String(body?.country || 'UNKNOWN').toUpperCase();
+  const clientId = String(body?.clientId || 'anonymous');
 
   if (!Number.isFinite(sizeBytes) || !Number.isFinite(durationMs)) {
     return sendJson(res, 400, { error: 'sizeBytes and durationMs (numbers) are required.' });
   }
 
-  return sendJson(res, 200, runScoutChecks({ sizeBytes, durationMs, mimeType, country }));
+  return sendJson(res, 200, runScoutChecks({ sizeBytes, durationMs, mimeType, country, clientId }));
 }

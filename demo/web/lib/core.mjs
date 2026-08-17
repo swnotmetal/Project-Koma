@@ -155,3 +155,18 @@ export async function retrieveDoc(displayName, userTier) {
     payload: result.payload,
   };
 }
+
+/**
+ * What happens when a scraper treats a scraped indexId as if it were the
+ * content key. koma-core keys content by an opaque HKDF-derived token, so the
+ * lookup fails — the indexId is NOT the content address.
+ */
+export async function attemptFetch(guessedId) {
+  const result = await storage.reader.fetchContent(guessedId, { userTier: 'public' });
+  return {
+    success: result.success,
+    error: result.error,
+    errorCode: result.errorCode,
+    attempted: guessedId,
+  };
+}

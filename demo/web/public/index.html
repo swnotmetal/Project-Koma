@@ -54,10 +54,8 @@
     header { padding: var(--sp-4) 0; border-bottom: 1px solid var(--border); }
     .brand { display: flex; align-items: center; gap: var(--sp-4); flex-wrap: wrap; }
     .logo {
-      width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-      background: var(--accent);
-      display: grid; place-items: center; font-weight: 800; color: #FFFFFF;
-      font-size: 20px;
+      height: 44px; width: auto; flex-shrink: 0;
+      display: block;
     }
     h1 { font-size: var(--fs-xl); margin: 0; letter-spacing: -0.025em; line-height: 1.1; font-weight: 600; }
     .sub { color: var(--muted); font-size: var(--fs-sm); margin-top: var(--sp-1); max-width: 62ch; }
@@ -69,7 +67,7 @@
     }
     .gh-link:hover { color: var(--text); border-color: var(--accent); }
 
-    main { flex: 1; padding: var(--sp-4) 0 var(--sp-6); }
+    main { flex: 1; padding: var(--sp-5) 0 var(--sp-6); }
 
     .tabs { display: flex; gap: var(--sp-1); margin-bottom: var(--sp-4); border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .tab {
@@ -164,6 +162,41 @@
     .tier-tag { font-family: var(--mono); font-size: 10.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); margin-left: var(--sp-2); color: var(--muted); }
     pre.out { background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r-md); padding: var(--sp-3) var(--sp-4); font-family: var(--mono); font-size: var(--fs-xs); overflow: auto; white-space: pre-wrap; word-break: break-all; margin: 0; }
 
+    .lead { color: var(--muted); font-size: var(--fs-sm); line-height: 1.55; margin: 0 0 var(--sp-4); max-width: 60ch; }
+
+    /* Scout: attack-stream */
+    .scout-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-4); }
+    .scout-header > div:first-child { flex: 1; min-width: 260px; }
+    .scout-header .lead { margin-bottom: 0; }
+    .scout-metrics { display: flex; gap: var(--sp-4); }
+    .metric { text-align: right; }
+    .metric-num { display: block; font-family: var(--mono); font-size: var(--fs-lg); font-weight: 800; color: var(--text); line-height: 1; }
+    .metric-label { font-size: var(--fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .stream { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
+    .req {
+      display: flex; align-items: center; gap: var(--sp-3);
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: var(--sp-2) var(--sp-3); background: var(--panel-2);
+      animation: fadein 0.25s ease;
+    }
+    @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .req-label { flex: 1; font-family: var(--mono); font-size: var(--fs-sm); color: var(--text); }
+    .req-reason { font-size: var(--fs-xs); color: var(--muted); }
+    .req-reason.fail { color: var(--red); }
+    .req-badge { font-family: var(--mono); font-weight: 800; font-size: var(--fs-xs); letter-spacing: 0.04em; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
+    .req-badge.pass { background: rgba(24,122,82,0.12); color: var(--green); }
+    .req-badge.block { background: rgba(201,58,58,0.12); color: var(--red); }
+
+    /* Core: scraper view */
+    .doc-id { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); word-break: break-all; margin-top: var(--sp-1); }
+    .doc-id b { color: var(--accent-strong); font-weight: 700; }
+    .attempt { font-family: var(--mono); font-size: var(--fs-xs); padding: var(--sp-2) 0; border-bottom: 1px solid var(--border); line-height: 1.5; word-break: break-all; }
+    .attempt:last-child { border-bottom: none; }
+    .attempt .ok { color: var(--green); }
+    .attempt .fail { color: var(--red); }
+    .core-why { margin-top: var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--muted); line-height: 1.6; }
+    .core-why strong { color: var(--text); }
+
     footer { border-top: 1px solid var(--border); padding: var(--sp-5) 0; color: var(--muted); font-size: var(--fs-sm); }
     footer a { color: var(--accent-strong); text-decoration: none; }
   </style>
@@ -171,7 +204,7 @@
 <body>
   <header class="wrap">
     <div class="brand">
-      <div class="logo">K</div>
+      <img class="logo" src="/lognobg.png" alt="Koma logo" />
       <div>
         <h1>Koma</h1>
         <div class="sub">Three defenses, live: <strong>Gate</strong> classifies prompts with a real LLM · <strong>Scout</strong> drops abusive traffic · <strong>Core</strong> gates content by tier.</div>
@@ -250,82 +283,55 @@
 
     <!-- SCOUT -->
     <div class="tabpanel" id="tab-scout" role="tabpanel" aria-labelledby="tab-btn-scout">
-      <div class="grid">
-        <section class="panel">
-          <h2>Request profile</h2>
-          <div class="field"><label class="field-label" for="s-size">Size (bytes)</label><input type="number" id="s-size" value="176000" min="0" /></div>
-          <div class="field"><label class="field-label" for="s-duration">Duration (ms)</label><input type="number" id="s-duration" value="2000" min="0" /></div>
-          <div class="field"><label class="field-label" for="s-mime">MIME type</label>
-            <select id="s-mime">
-              <option value="audio/wav">audio/wav</option>
-              <option value="audio/mp4">audio/mp4</option>
-              <option value="audio/webm">audio/webm</option>
-              <option value="text/plain">text/plain (invalid)</option>
-            </select>
+      <section class="panel">
+        <div class="scout-header">
+          <div>
+            <h2>Scout — the pre-flight filter</h2>
+            <p class="lead">Before your LLM spends a cent, Scout drops junk traffic in under a millisecond. No model, no cost.</p>
           </div>
-          <div class="field"><label class="field-label" for="s-country">Country</label>
-            <select id="s-country">
-              <option value="US">US</option>
-              <option value="FI">FI</option>
-              <option value="CN">CN (blocked)</option>
-            </select>
+          <div class="scout-metrics" aria-label="Scout results">
+            <div class="metric"><span class="metric-num" id="scout-blocked">0</span><span class="metric-label">blocked</span></div>
+            <div class="metric"><span class="metric-num" id="scout-passed">0</span><span class="metric-label">passed</span></div>
+            <div class="metric"><span class="metric-num" id="scout-saved">0</span><span class="metric-label">tokens saved</span></div>
           </div>
+        </div>
 
-          <div class="examples" aria-label="Example profiles">
-            <button class="chip" data-scout='{"sizeBytes":176000,"durationMs":2000,"mimeType":"audio/wav","country":"US"}'>Legit 2s WAV</button>
-            <button class="chip bad" data-scout='{"sizeBytes":100,"durationMs":100,"mimeType":"audio/wav","country":"US"}'>Tiny blob</button>
-            <button class="chip bad" data-scout='{"sizeBytes":6000000,"durationMs":60000,"mimeType":"audio/mp4","country":"US"}'>Oversized</button>
-            <button class="chip bad" data-scout='{"sizeBytes":176000,"durationMs":2000,"mimeType":"audio/wav","country":"CN"}'>Blocked region</button>
-          </div>
+        <div class="examples" aria-label="Attack scenarios">
+          <button class="chip" data-scenario="legit">正常流量</button>
+          <button class="chip bad" data-scenario="silent">静音上传</button>
+          <button class="chip bad" data-scenario="oversized">超大文件</button>
+          <button class="chip bad" data-scenario="badformat">格式不对</button>
+          <button class="chip bad" data-scenario="region">地区受限</button>
+          <button class="chip bad" data-scenario="flood">洪水攻击</button>
+        </div>
+        <button class="run" id="run-scout">Run the full stream</button>
 
-          <button class="run" id="run-scout">Run Scout checks</button>
-          <div class="hint">Deterministic, LLM-free — mirrors <code>koma-scout</code> thresholds.</div>
-        </section>
-
-        <section class="panel result-panel">
-          <h2>Result</h2>
-          <div class="state" id="scout-idle"><div><div class="big">Waiting</div><div>Pick a profile and run the checks.</div></div></div>
-          <div class="hidden" id="scout-result" aria-live="polite">
-            <div class="verdict"><span class="badge" id="scout-badge">…</span><p id="scout-summary"></p></div>
-            <table class="checks">
-              <tr><td>Size (8KB – 5MB)</td><td id="scout-size">—</td></tr>
-              <tr><td>Duration (1.5s – 12s)</td><td id="scout-duration">—</td></tr>
-              <tr><td>MIME type allowed</td><td id="scout-mime">—</td></tr>
-              <tr><td>Country allowlisted</td><td id="scout-country">—</td></tr>
-            </table>
-          </div>
-        </section>
-      </div>
+        <div class="stream" id="scout-stream" aria-live="polite"></div>
+      </section>
     </div>
 
     <!-- CORE -->
     <div class="tabpanel" id="tab-core" role="tabpanel" aria-labelledby="tab-btn-core">
       <div class="grid">
         <section class="panel">
-          <h2>1 · Search the public index</h2>
-          <div id="core-docs"></div>
-          <div class="hint">Search returns metadata only — no content, no tokens.</div>
-
-          <h2 style="margin-top: var(--sp-5)">2 · Retrieve content as…</h2>
-          <div class="field">
-            <label class="field-label" for="core-tier">Your access tier</label>
-            <select id="core-tier">
-              <option value="public">public</option>
-              <option value="premium">premium</option>
-              <option value="enterprise">enterprise</option>
-            </select>
-          </div>
-          <button class="run" id="run-core" disabled>Select a document first</button>
+          <h2>What a scraper sees — the public index</h2>
+          <p class="lead">Everything below is fully scrapable. Notice what's missing: the content.</p>
+          <div id="core-index"></div>
+          <button class="run" id="run-scraper">Run the scraper</button>
         </section>
 
         <section class="panel result-panel">
-          <h2>Retrieval result</h2>
-          <div class="state" id="core-idle"><div><div class="big">Select a document</div><div>Then pick a tier and retrieve.</div></div></div>
-          <div class="hidden" id="core-result" aria-live="polite">
-            <div class="verdict"><span class="badge" id="core-badge">…</span><p id="core-summary"></p></div>
-            <pre class="out" id="core-payload"></pre>
+          <h2>What the scraper actually gets</h2>
+          <div id="core-attempts" class="stream">
+            <div class="state"><div><div class="big">Run the scraper</div><div>See why a scraped index is worthless to an attacker.</div></div></div>
           </div>
         </section>
+      </div>
+      <div class="core-why">
+        <strong>Why it works:</strong> content is keyed by an opaque token derived from
+        <code>HKDF(masterKey, sourceId)</code>. The index never returns that token, and each
+        <code>indexId</code> carries a random suffix — so a scraped ID is not a content address,
+        and IDs can't be enumerated.
       </div>
     </div>
   </main>
@@ -346,7 +352,7 @@
         document.getElementById(t.getAttribute('aria-controls')).classList.toggle('active', selected);
       });
       if (focus) tabs[index].focus();
-      if (tabs[index].getAttribute('aria-controls') === 'tab-core') loadCoreDocs();
+      if (tabs[index].getAttribute('aria-controls') === 'tab-core') loadCoreIndex();
     }
 
     tabs.forEach((tab, i) => {
@@ -440,74 +446,116 @@
     // ---- Scout ----
     (function scout() {
       const runBtn = document.getElementById('run-scout');
+      const stream = document.getElementById('scout-stream');
+      const blockedEl = document.getElementById('scout-blocked');
+      const passedEl = document.getElementById('scout-passed');
+      const savedEl = document.getElementById('scout-saved');
+      const TOKENS_PER_BLOCK = 500;
 
-      async function runScout() {
-        const payload = {
-          sizeBytes: Number(document.getElementById('s-size').value),
-          durationMs: Number(document.getElementById('s-duration').value),
-          mimeType: document.getElementById('s-mime').value,
-          country: document.getElementById('s-country').value,
-        };
-        document.getElementById('scout-idle').classList.add('hidden');
-        runBtn.disabled = true;
-        try {
-          const res = await fetch('/api/scout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          });
-          const data = await res.json().catch(() => ({}));
-          const badge = document.getElementById('scout-badge');
-          if (!res.ok) {
-            document.getElementById('scout-summary').textContent = data.error || ('HTTP ' + res.status);
-            badge.textContent = 'ERROR';
-            badge.className = 'badge error';
-            document.getElementById('scout-result').classList.remove('hidden');
-            return;
+      const REASON = {
+        size: 'size out of range',
+        duration: 'duration out of range',
+        mime: 'unsupported format',
+        country: 'region not allowed',
+        rate: 'rate limited (flood)',
+      };
+
+      const SCENARIOS = {
+        legit: { label: 'audio/wav · 9 KB · 2.1s · US', items: [{ sizeBytes: 9000, durationMs: 2100, mimeType: 'audio/wav', country: 'US', clientId: 'user-legit' }] },
+        silent: { label: 'audio/wav · 12 B · 0.1s · US', items: [{ sizeBytes: 12, durationMs: 100, mimeType: 'audio/wav', country: 'US', clientId: 'user-silent' }] },
+        oversized: { label: 'audio/mp4 · 6 MB · 60s · US', items: [{ sizeBytes: 6000000, durationMs: 60000, mimeType: 'audio/mp4', country: 'US', clientId: 'user-big' }] },
+        badformat: { label: 'text/plain · 9 KB · 2.1s · US', items: [{ sizeBytes: 9000, durationMs: 2100, mimeType: 'text/plain', country: 'US', clientId: 'user-txt' }] },
+        region: { label: 'audio/wav · 9 KB · 2.1s · RU', items: [{ sizeBytes: 9000, durationMs: 2100, mimeType: 'audio/wav', country: 'RU', clientId: 'user-ru' }] },
+        flood: { label: 'audio/wav · 9 KB · 2.1s · US ×6 (rapid fire)', items: Array.from({ length: 6 }, () => ({ sizeBytes: 9000, durationMs: 2100, mimeType: 'audio/wav', country: 'US', clientId: 'flood-bot' })) },
+      };
+
+      let blocked = 0;
+      let passed = 0;
+
+      function addRow(label, ok, reason) {
+        const row = document.createElement('div');
+        row.className = 'req';
+        const badge = document.createElement('span');
+        badge.className = 'req-badge ' + (ok ? 'pass' : 'block');
+        badge.textContent = ok ? 'PASS' : 'BLOCK';
+        const lbl = document.createElement('span');
+        lbl.className = 'req-label';
+        lbl.textContent = label;
+        row.appendChild(badge);
+        row.appendChild(lbl);
+        if (reason) {
+          const r = document.createElement('span');
+          r.className = 'req-reason fail';
+          r.textContent = reason;
+          row.appendChild(r);
+        }
+        stream.appendChild(row);
+      }
+
+      function updateMetrics() {
+        blockedEl.textContent = String(blocked);
+        passedEl.textContent = String(passed);
+        savedEl.textContent = (blocked * TOKENS_PER_BLOCK).toLocaleString();
+      }
+
+      async function runScenario(key) {
+        const scenario = SCENARIOS[key];
+        for (const item of scenario.items) {
+          let data;
+          try {
+            const res = await fetch('/api/scout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(item),
+            });
+            data = await res.json().catch(() => ({}));
+          } catch {
+            data = { passed: false, failed: ['network'] };
           }
-          badge.textContent = data.passed ? 'PASSED' : 'BLOCKED';
-          badge.className = 'badge ' + (data.passed ? 'allowed' : 'blocked');
-          document.getElementById('scout-summary').textContent = data.summary;
-          const set = (id, ok) => {
-            const el = document.getElementById(id);
-            el.textContent = ok ? '✓ pass' : '✗ fail';
-            el.className = ok ? 'ok' : 'fail';
-          };
-          set('scout-size', data.checks.size);
-          set('scout-duration', data.checks.duration);
-          set('scout-mime', data.checks.mime);
-          set('scout-country', data.checks.country);
-          document.getElementById('scout-result').classList.remove('hidden');
-        } finally {
-          runBtn.disabled = false;
+          const ok = !!data.passed;
+          if (ok) passed++; else blocked++;
+          const reason = ok ? '' : (data.failed || []).map((f) => REASON[f] || f).join(' · ');
+          addRow(scenario.label, ok, reason);
+          updateMetrics();
         }
       }
 
-      runBtn.addEventListener('click', runScout);
-      document.querySelectorAll('[data-scout]').forEach((chip) => {
+      async function runAll() {
+        stream.innerHTML = '';
+        blocked = 0;
+        passed = 0;
+        updateMetrics();
+        for (const key of Object.keys(SCENARIOS)) {
+          await runScenario(key);
+          await new Promise((r) => setTimeout(r, 140));
+        }
+      }
+
+      runBtn.addEventListener('click', () => {
+        runBtn.disabled = true;
+        runAll().finally(() => { runBtn.disabled = false; });
+      });
+
+      document.querySelectorAll('[data-scenario]').forEach((chip) => {
         chip.addEventListener('click', () => {
-          const p = JSON.parse(chip.dataset.scout);
-          document.getElementById('s-size').value = p.sizeBytes;
-          document.getElementById('s-duration').value = p.durationMs;
-          document.getElementById('s-mime').value = p.mimeType;
-          document.getElementById('s-country').value = p.country;
-          runScout();
+          stream.innerHTML = '';
+          blocked = 0;
+          passed = 0;
+          updateMetrics();
+          runBtn.disabled = true;
+          runScenario(chip.dataset.scenario).finally(() => { runBtn.disabled = false; });
         });
       });
     })();
 
     // ---- Core ----
-    let selectedDisplayName = null;
-    const runCore = document.getElementById('run-core');
+    let coreDocs = [];
+    const coreIndexEl = document.getElementById('core-index');
+    const coreAttemptsEl = document.getElementById('core-attempts');
+    const runScraperBtn = document.getElementById('run-scraper');
 
-    function updateCoreButton() {
-      runCore.disabled = !selectedDisplayName;
-      runCore.textContent = selectedDisplayName ? 'Retrieve selected doc' : 'Select a document first';
-    }
-
-    async function loadCoreDocs() {
-      const docsEl = document.getElementById('core-docs');
-      docsEl.innerHTML = '<div class="state"><div><div class="spinner"></div></div></div>';
+    async function loadCoreIndex() {
+      coreIndexEl.innerHTML = '<div class="state"><div><div class="spinner"></div></div></div>';
       let res;
       try {
         res = await fetch('/api/core', {
@@ -516,66 +564,68 @@
           body: JSON.stringify({ action: 'search' }),
         });
       } catch {
-        docsEl.innerHTML = '<div class="hint">Network error — is the server running?</div>';
+        coreIndexEl.innerHTML = '<div class="hint">Network error — is the server running?</div>';
         return;
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        docsEl.innerHTML = '<div class="hint">' + (data.error || 'error') + '</div>';
+        coreIndexEl.innerHTML = '<div class="hint">' + (data.error || 'error') + '</div>';
         return;
       }
-      docsEl.innerHTML = '';
-      data.results.forEach((d) => {
+      coreDocs = data.results;
+      coreIndexEl.innerHTML = '';
+      coreDocs.forEach((d) => {
         const div = document.createElement('div');
         div.className = 'doc';
-        div.setAttribute('role', 'button');
-        div.setAttribute('tabindex', '0');
-        div.setAttribute('aria-pressed', String(d.displayName === selectedDisplayName));
+        const suffix = d.indexId.match(/-[0-9a-f]{8}$/)?.[0] || '';
+        const base = suffix ? d.indexId.slice(0, -suffix.length) : d.indexId;
         div.innerHTML =
           '<div class="name">' + d.displayName + '<span class="tier-tag">' + d.accessTier + '</span></div>' +
           '<div class="meta">' + d.category + ' · ' + (d.tags || []).join(', ') + '</div>' +
+          '<div class="doc-id">indexId: ' + base + '<b>' + suffix + '</b></div>' +
           '<div class="meta">content: <strong>hidden</strong> (not in index)</div>';
-        const select = () => {
-          selectedDisplayName = d.displayName;
-          loadCoreDocs();
-        };
-        div.addEventListener('click', select);
-        div.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(); }
-        });
-        docsEl.appendChild(div);
+        coreIndexEl.appendChild(div);
       });
-      updateCoreButton();
     }
 
-    runCore.addEventListener('click', async () => {
-      if (!selectedDisplayName) return;
-      const tier = document.getElementById('core-tier').value;
-      runCore.disabled = true;
-      let res;
-      try {
-        res = await fetch('/api/core', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'retrieve', displayName: selectedDisplayName, userTier: tier }),
-        });
-      } catch {
-        updateCoreButton();
-        return;
+    function addAttempt(status, text) {
+      const line = document.createElement('div');
+      line.className = 'attempt';
+      line.innerHTML = '<span class="' + (status === 404 ? 'fail' : 'ok') + '">[' + status + ']</span> ' + text;
+      coreAttemptsEl.appendChild(line);
+    }
+
+    async function runScraper() {
+      coreAttemptsEl.innerHTML = '';
+      let extracted = 0;
+      for (const d of coreDocs) {
+        let res;
+        try {
+          res = await fetch('/api/core', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'attempt', id: d.indexId }),
+          });
+        } catch {
+          continue;
+        }
+        const data = await res.json().catch(() => ({}));
+        if (data.success) extracted++;
+        addAttempt(404, 'GET /content/' + d.indexId + ' — ' + (data.errorCode === 'NOT_FOUND' ? 'not found: the indexId is not a content address' : (data.error || 'blocked')));
       }
-      const data = await res.json().catch(() => ({}));
-      document.getElementById('core-idle').classList.add('hidden');
-      const badge = document.getElementById('core-badge');
-      badge.textContent = data.success ? 'GRANTED' : 'DENIED';
-      badge.className = 'badge ' + (data.success ? 'allowed' : 'blocked');
-      document.getElementById('core-summary').textContent = data.success
-        ? 'Content retrieved for tier "' + data.accessTier + '".'
-        : (data.errorCode || 'ACCESS_DENIED') + ': ' + (data.error || 'Access denied');
-      document.getElementById('core-payload').textContent = data.success
-        ? JSON.stringify(data.payload, null, 2)
-        : '—';
-      document.getElementById('core-result').classList.remove('hidden');
-      updateCoreButton();
+      if (coreDocs.length) {
+        const guess = coreDocs[0].indexId.replace(/([0-9a-f])$/, (c) => (parseInt(c, 16) + 1).toString(16));
+        addAttempt(404, 'GET /content/' + guess + ' — guessing the next ID fails (IDs are not sequential)');
+      }
+      const summary = document.createElement('div');
+      summary.className = 'attempt';
+      summary.innerHTML = '<strong>Result: ' + extracted + ' / ' + coreDocs.length + ' contents extracted.</strong> The index is fully scrapable — and it does not matter.';
+      coreAttemptsEl.appendChild(summary);
+    }
+
+    runScraperBtn.addEventListener('click', () => {
+      runScraperBtn.disabled = true;
+      runScraper().finally(() => { runScraperBtn.disabled = false; });
     });
   </script>
 </body>

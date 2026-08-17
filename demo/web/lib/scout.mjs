@@ -20,19 +20,35 @@ const ALLOWED_MIME = new Set([
 ]);
 const ALLOWED_COUNTRIES = new Set(['US', 'FI']);
 
-export function runScoutChecks({ sizeBytes, durationMs, mimeType, country }) {
+// Simple in-memory burst limiter (mirrors koma-scout's cooldown concept).
+const BURST_WINDOW_MS = 1500;
+const BURST_MAX = 3;
+const recentHits = new Map();
+
+export function runScoutChecks({ sizeBytes, durationMs, mimeType, country, clientId = 'anonymous' }) {
+  const now = Date.now();
+  const hits = (recentHits.get(clientId) || []).filter((t) => now - t < BURST_WINDOW_MS);
+
   const checks = {
     size: sizeBytes >= MIN_SIZE && sizeBytes <= MAX_SIZE,
     duration: durationMs >= MIN_DURATION && durationMs <= MAX_DURATION,
     mime: ALLOWED_MIME.has(mimeType),
     country: country === 'LOCAL' || ALLOWED_COUNTRIES.has(country),
+    rate: hits.length < BURST_MAX,
   };
+
+  hits.push(now);
+  recentHits.set(clientId, hits);
+
   const passed = Object.values(checks).every(Boolean);
+  const failed = Object.keys(checks).filter((k) => !checks[k]);
+
   return {
     passed,
     checks,
+    failed,
     summary: passed
-      ? 'Scout passed: the request meets every early-stage check.'
-      : 'Scout blocked early: the request fails one or more checks.',
+      ? 'Scout passed: every pre-flight check succeeded.'
+      : `Scout blocked early: ${failed.join(', ')}.`,
   };
 }

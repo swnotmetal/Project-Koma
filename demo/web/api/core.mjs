@@ -3,7 +3,7 @@
  * POST /api/core  { "action": "search" } | { "action": "retrieve", "sourceId": "...", "userTier": "premium" }
  */
 
-import { ensureSeeded, searchDocs, retrieveDoc } from '../lib/core.mjs';
+import { ensureSeeded, searchDocs, retrieveDoc, attemptFetch } from '../lib/core.mjs';
 
 function readBody(req, maxBytes = 16384) {
   return new Promise((resolve, reject) => {
@@ -78,5 +78,14 @@ export default async function handler(req, res) {
     return sendJson(res, 200, result);
   }
 
-  return sendJson(res, 400, { error: 'action must be "search" or "retrieve".' });
+  if (action === 'attempt') {
+    const id = String(body?.id || '');
+    if (!id) {
+      return sendJson(res, 400, { error: 'id is required.' });
+    }
+    const result = await attemptFetch(id);
+    return sendJson(res, 200, result);
+  }
+
+  return sendJson(res, 400, { error: 'action must be "search", "retrieve", or "attempt".' });
 }
