@@ -79,12 +79,21 @@ export function createClassifier(config) {
 }
 
 // Node / Vercel default instance, configured from process.env.
-const defaultClassifier = createClassifier(resolveConfig(globalThis.process?.env ?? {}));
+// Lazy so that a local .env loaded by server.mjs is picked up on first use
+// (ES module imports are hoisted, so an eager singleton would miss it).
+let defaultClassifier = null;
+
+function getDefaultClassifier() {
+  if (!defaultClassifier) {
+    defaultClassifier = createClassifier(resolveConfig(globalThis.process?.env ?? {}));
+  }
+  return defaultClassifier;
+}
 
 export function isConfigured() {
-  return defaultClassifier.isConfigured();
+  return getDefaultClassifier().isConfigured();
 }
 
 export async function classifyText(input) {
-  return defaultClassifier.classifyText(input);
+  return getDefaultClassifier().classifyText(input);
 }

@@ -1,8 +1,10 @@
-# Koma Gate — Online Demo
+# Koma — Online Demo
 
-A zero-friction, interactive demo of **Koma Gate**, the semantic prompt-injection
-firewall. Type any prompt on the left — a legit question or a jailbreak attempt —
-and watch it get classified by a real LLM in real time.
+A zero-friction, interactive demo of the three Koma defenses:
+
+- **Gate** — semantic prompt-injection firewall (real LLM classifier)
+- **Scout** — deterministic early-stage checks (size / duration / MIME / country)
+- **Core** — split-store retrieval (search shows metadata only; content needs the right tier)
 
 This demo runs the actual `koma-gate` npm package (LLM classifier), **not** a
 keyword list. The API key stays server-side and is never sent to the browser.
@@ -12,7 +14,9 @@ keyword list. The API key stays server-side and is never sent to the browser.
 ```bash
 # from the demo/web directory
 npm install
-GEMINI_API_KEY=your-key node server.mjs
+# put your key in .env (auto-loaded on start) or export it
+echo 'GEMINI_API_KEY=your-key' > .env
+node server.mjs
 # open http://localhost:8080
 ```
 
@@ -56,6 +60,10 @@ instance, so it cannot enforce a hard daily budget.
 - `nodejs_compat` (enabled by default on compatibility date ≥ 2026-08-04, needed
   by `koma-gate`'s `crypto.createHash`)
 - A Durable Object rate limiter: **30 req/min per IP + 500 req/day global hard cap**
+
+> ⚠️ The Cloudflare Worker currently serves the **Gate** tab only. Scout (pure
+> logic) and Core (needs Node's `crypto.hkdfSync`) run on the Node server path —
+> deploy to Railway/Zeabur or run locally for all three tabs.
 
 ### Vercel
 

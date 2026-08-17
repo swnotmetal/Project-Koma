@@ -115,6 +115,40 @@
     .how .card h3 span { color: var(--accent); margin-right: 6px; }
     .how .card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
 
+    /* Tabs */
+    .tabs { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+    .tab {
+      background: transparent; border: none; color: var(--muted); cursor: pointer;
+      padding: 10px 16px; font-size: 14px; font-weight: 600;
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+    }
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--text); border-bottom-color: var(--accent); }
+    .tabpanel { display: none; }
+    .tabpanel.active { display: block; }
+
+    /* Scout + Core */
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .field input, .field select {
+      width: 100%; padding: 9px 11px; background: var(--panel-2); border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text); font-family: var(--mono); font-size: 13.5px; outline: none;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .checks { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 4px; }
+    .checks td { padding: 9px 0; border-bottom: 1px solid var(--border); }
+    .checks td:first-child { color: var(--muted); width: 55%; }
+    .checks td:last-child { text-align: right; font-family: var(--mono); }
+    .ok { color: var(--green); }
+    .fail { color: var(--red); }
+    .doc { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 10px; cursor: pointer; background: var(--panel-2); }
+    .doc:hover { border-color: var(--accent); }
+    .doc.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(108, 140, 255, 0.15); }
+    .doc .name { font-weight: 600; font-size: 14px; }
+    .doc .meta { color: var(--muted); font-size: 12.5px; margin-top: 4px; }
+    .tier-tag { font-family: var(--mono); font-size: 10.5px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--border); margin-left: 6px; }
+    pre.out { background: var(--panel-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; font-family: var(--mono); font-size: 12.5px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+
     footer { border-top: 1px solid var(--border); padding: 20px 0; color: var(--muted); font-size: 13px; }
     footer a { color: var(--accent); text-decoration: none; }
   </style>
@@ -132,6 +166,14 @@
   </header>
 
   <main class="wrap">
+    <nav class="tabs">
+      <button class="tab active" data-tab="gate">Gate</button>
+      <button class="tab" data-tab="scout">Scout</button>
+      <button class="tab" data-tab="core">Core</button>
+    </nav>
+
+    <!-- GATE -->
+    <div class="tabpanel active" id="tab-gate">
     <div class="grid">
       <section class="panel">
         <h2>User input</h2>
@@ -189,6 +231,84 @@
         </div>
       </section>
     </div>
+    </div>
+
+    <!-- SCOUT -->
+    <div class="tabpanel" id="tab-scout">
+    <div class="grid">
+      <section class="panel">
+        <h2>Request profile</h2>
+        <div class="field"><label>Size (bytes)</label><input type="number" id="s-size" value="176000" /></div>
+        <div class="field"><label>Duration (ms)</label><input type="number" id="s-duration" value="2000" /></div>
+        <div class="field"><label>MIME type</label>
+          <select id="s-mime">
+            <option value="audio/wav">audio/wav</option>
+            <option value="audio/mp4">audio/mp4</option>
+            <option value="audio/webm">audio/webm</option>
+            <option value="text/plain">text/plain (invalid)</option>
+          </select>
+        </div>
+        <div class="field"><label>Country</label>
+          <select id="s-country">
+            <option value="US">US</option>
+            <option value="FI">FI</option>
+            <option value="CN">CN (blocked)</option>
+          </select>
+        </div>
+        <div class="examples">
+          <button class="chip" data-scout='{"sizeBytes":176000,"durationMs":2000,"mimeType":"audio/wav","country":"US"}'>Legit 2s WAV</button>
+          <button class="chip bad" data-scout='{"sizeBytes":100,"durationMs":100,"mimeType":"audio/wav","country":"US"}'>Tiny blob</button>
+          <button class="chip bad" data-scout='{"sizeBytes":6000000,"durationMs":60000,"mimeType":"audio/mp4","country":"US"}'>Oversized</button>
+          <button class="chip bad" data-scout='{"sizeBytes":176000,"durationMs":2000,"mimeType":"audio/wav","country":"CN"}'>Blocked region</button>
+        </div>
+        <button class="run" id="run-scout">Run Scout checks</button>
+        <div class="hint">Deterministic, LLM-free — mirrors <code>koma-scout</code> thresholds.</div>
+      </section>
+
+      <section class="panel result-panel">
+        <h2>Result</h2>
+        <div class="state" id="scout-idle"><div><div class="big">Waiting</div><div>Pick a profile and run the checks.</div></div></div>
+        <div class="hidden" id="scout-result">
+          <div class="verdict"><span class="badge" id="scout-badge">…</span><p id="scout-summary"></p></div>
+          <table class="checks">
+            <tr><td>Size (8KB – 5MB)</td><td id="scout-size">—</td></tr>
+            <tr><td>Duration (1.5s – 12s)</td><td id="scout-duration">—</td></tr>
+            <tr><td>MIME type allowed</td><td id="scout-mime">—</td></tr>
+            <tr><td>Country allowlisted</td><td id="scout-country">—</td></tr>
+          </table>
+        </div>
+      </section>
+    </div>
+    </div>
+
+    <!-- CORE -->
+    <div class="tabpanel" id="tab-core">
+    <div class="grid">
+      <section class="panel">
+        <h2>1 · Search the public index</h2>
+        <div id="core-docs"></div>
+        <div class="hint">Search returns metadata only — no content, no tokens.</div>
+        <h2 style="margin-top:20px">2 · Retrieve content as…</h2>
+        <div class="field">
+          <select id="core-tier">
+            <option value="public">public</option>
+            <option value="premium">premium</option>
+            <option value="enterprise">enterprise</option>
+          </select>
+        </div>
+        <button class="run" id="run-core">Retrieve selected doc</button>
+      </section>
+
+      <section class="panel result-panel">
+        <h2>Retrieval result</h2>
+        <div class="state" id="core-idle"><div><div class="big">Select a document</div><div>Then pick a tier and retrieve.</div></div></div>
+        <div class="hidden" id="core-result">
+          <div class="verdict"><span class="badge" id="core-badge">…</span><p id="core-summary"></p></div>
+          <pre class="out" id="core-payload"></pre>
+        </div>
+      </section>
+    </div>
+    </div>
 
     <section class="how">
       <div class="card">
@@ -211,78 +331,201 @@
   </footer>
 
   <script>
-    const inputEl = document.getElementById('input');
-    const runBtn = document.getElementById('run');
-    const idle = document.getElementById('idle');
-    const loading = document.getElementById('loading');
-    const errorBox = document.getElementById('error');
-    const errorText = document.getElementById('error-text');
-    const resultBox = document.getElementById('result');
+    // ---- Tabs ----
+    document.querySelectorAll('.tab').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tabpanel').forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+        if (btn.dataset.tab === 'core') loadCoreDocs();
+      });
+    });
 
-    function show(id) {
-      [idle, loading, errorBox, resultBox].forEach((el) => el.classList.add('hidden'));
-      document.getElementById(id).classList.remove('hidden');
-    }
+    // ---- Gate ----
+    (function gate() {
+      const inputEl = document.getElementById('input');
+      const runBtn = document.getElementById('run');
+      const idle = document.getElementById('idle');
+      const loading = document.getElementById('loading');
+      const errorBox = document.getElementById('error');
+      const errorText = document.getElementById('error-text');
+      const resultBox = document.getElementById('result');
 
-    function renderResult(data) {
-      const allowed = data.allowed;
-      const badge = document.getElementById('badge');
-      badge.textContent = allowed ? 'ALLOWED' : 'BLOCKED';
-      badge.className = 'badge ' + (allowed ? 'allowed' : 'blocked');
-      document.getElementById('verdict-text').textContent = allowed
-        ? 'This input is in scope and would pass through to the application.'
-        : 'Koma Gate blocked this input before it reached the application.';
-      document.getElementById('d-in-scope').textContent = 'in_scope: ' + String(data.inScope);
-      document.getElementById('d-model').textContent = data.provider + ' / ' + data.model;
-      document.getElementById('d-latency').textContent = data.latencyMs + ' ms' + (data.cached ? ' (from cache)' : '');
-      document.getElementById('d-confidence').textContent = data.confidence == null ? '—' : String(data.confidence);
-      document.getElementById('d-cached').textContent = String(data.cached);
-      document.getElementById('d-reason').textContent = data.rejectReason || (allowed ? '—' : 'Out of scope / prompt injection');
-      show('result');
-    }
+      function show(id) {
+        [idle, loading, errorBox, resultBox].forEach((el) => el.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+      }
 
-    async function run(text) {
-      show('loading');
-      runBtn.disabled = true;
-      try {
-        const res = await fetch('/api/classify', {
+      function renderResult(data) {
+        const allowed = data.allowed;
+        const badge = document.getElementById('badge');
+        badge.textContent = allowed ? 'ALLOWED' : 'BLOCKED';
+        badge.className = 'badge ' + (allowed ? 'allowed' : 'blocked');
+        document.getElementById('verdict-text').textContent = allowed
+          ? 'This input is in scope and would pass through to the application.'
+          : 'Koma Gate blocked this input before it reached the application.';
+        document.getElementById('d-in-scope').textContent = 'in_scope: ' + String(data.inScope);
+        document.getElementById('d-model').textContent = data.provider + ' / ' + data.model;
+        document.getElementById('d-latency').textContent = data.latencyMs + ' ms' + (data.cached ? ' (from cache)' : '');
+        document.getElementById('d-confidence').textContent = data.confidence == null ? '—' : String(data.confidence);
+        document.getElementById('d-cached').textContent = String(data.cached);
+        document.getElementById('d-reason').textContent = data.rejectReason || (allowed ? '—' : 'Out of scope / prompt injection');
+        show('result');
+      }
+
+      async function run(text) {
+        show('loading');
+        runBtn.disabled = true;
+        try {
+          const res = await fetch('/api/classify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            errorText.textContent = data.error || ('HTTP ' + res.status);
+            show('error');
+            return;
+          }
+          renderResult(data);
+        } catch (e) {
+          errorText.textContent = 'Network error — is the server running?';
+          show('error');
+        } finally {
+          runBtn.disabled = false;
+        }
+      }
+
+      runBtn.addEventListener('click', () => {
+        const text = inputEl.value.trim();
+        if (text) run(text);
+      });
+
+      inputEl.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          e.preventDefault();
+          const text = inputEl.value.trim();
+          if (text) run(text);
+        }
+      });
+
+      document.querySelectorAll('[data-text]').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          inputEl.value = chip.dataset.text;
+          run(chip.dataset.text);
+        });
+      });
+    })();
+
+    // ---- Scout ----
+    (function scout() {
+      const runBtn = document.getElementById('run-scout');
+
+      async function runScout() {
+        const payload = {
+          sizeBytes: Number(document.getElementById('s-size').value),
+          durationMs: Number(document.getElementById('s-duration').value),
+          mimeType: document.getElementById('s-mime').value,
+          country: document.getElementById('s-country').value,
+        };
+        document.getElementById('scout-idle').classList.add('hidden');
+        const res = await fetch('/api/scout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify(payload),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          errorText.textContent = data.error || ('HTTP ' + res.status);
-          show('error');
+          document.getElementById('scout-summary').textContent = data.error || ('HTTP ' + res.status);
+          document.getElementById('scout-badge').textContent = 'ERROR';
+          document.getElementById('scout-badge').className = 'badge blocked';
+          document.getElementById('scout-result').classList.remove('hidden');
           return;
         }
-        renderResult(data);
-      } catch (e) {
-        errorText.textContent = 'Network error — is the server running?';
-        show('error');
-      } finally {
-        runBtn.disabled = false;
+        const badge = document.getElementById('scout-badge');
+        badge.textContent = data.passed ? 'PASSED' : 'BLOCKED';
+        badge.className = 'badge ' + (data.passed ? 'allowed' : 'blocked');
+        document.getElementById('scout-summary').textContent = data.summary;
+        const set = (id, ok) => {
+          const el = document.getElementById(id);
+          el.textContent = ok ? '✓ pass' : '✗ fail';
+          el.className = ok ? 'ok' : 'fail';
+        };
+        set('scout-size', data.checks.size);
+        set('scout-duration', data.checks.duration);
+        set('scout-mime', data.checks.mime);
+        set('scout-country', data.checks.country);
+        document.getElementById('scout-result').classList.remove('hidden');
       }
+
+      runBtn.addEventListener('click', runScout);
+      document.querySelectorAll('[data-scout]').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const p = JSON.parse(chip.dataset.scout);
+          document.getElementById('s-size').value = p.sizeBytes;
+          document.getElementById('s-duration').value = p.durationMs;
+          document.getElementById('s-mime').value = p.mimeType;
+          document.getElementById('s-country').value = p.country;
+          runScout();
+        });
+      });
+    })();
+
+    // ---- Core ----
+    let selectedDisplayName = null;
+
+    async function loadCoreDocs() {
+      const docsEl = document.getElementById('core-docs');
+      docsEl.innerHTML = '<div class="state"><div><div class="spinner"></div></div></div>';
+      const res = await fetch('/api/core', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'search' }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        docsEl.innerHTML = '<div class="hint">' + (data.error || 'error') + '</div>';
+        return;
+      }
+      docsEl.innerHTML = '';
+      data.results.forEach((d) => {
+        const div = document.createElement('div');
+        div.className = 'doc' + (d.displayName === selectedDisplayName ? ' selected' : '');
+        div.innerHTML =
+          '<div class="name">' + d.displayName + '<span class="tier-tag">' + d.accessTier + '</span></div>' +
+          '<div class="meta">' + d.category + ' · ' + (d.tags || []).join(', ') + '</div>' +
+          '<div class="meta">preview: ' + JSON.stringify(d.preview) + '</div>' +
+          '<div class="meta">content: <strong>hidden</strong> (not in index)</div>';
+        div.addEventListener('click', () => {
+          selectedDisplayName = d.displayName;
+          loadCoreDocs();
+        });
+        docsEl.appendChild(div);
+      });
     }
 
-    runBtn.addEventListener('click', () => {
-      const text = inputEl.value.trim();
-      if (text) run(text);
-    });
-
-    inputEl.addEventListener('keydown', (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        const text = inputEl.value.trim();
-        if (text) run(text);
-      }
-    });
-
-    document.querySelectorAll('.chip').forEach((chip) => {
-      chip.addEventListener('click', () => {
-        inputEl.value = chip.dataset.text;
-        run(chip.dataset.text);
+    document.getElementById('run-core').addEventListener('click', async () => {
+      if (!selectedDisplayName) return;
+      const tier = document.getElementById('core-tier').value;
+      const res = await fetch('/api/core', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'retrieve', displayName: selectedDisplayName, userTier: tier }),
       });
+      const data = await res.json().catch(() => ({}));
+      document.getElementById('core-idle').classList.add('hidden');
+      const badge = document.getElementById('core-badge');
+      badge.textContent = data.success ? 'GRANTED' : 'DENIED';
+      badge.className = 'badge ' + (data.success ? 'allowed' : 'blocked');
+      document.getElementById('core-summary').textContent = data.success
+        ? 'Content retrieved for tier "' + data.accessTier + '".'
+        : (data.errorCode || 'ACCESS_DENIED') + ': ' + (data.error || 'Access denied');
+      document.getElementById('core-payload').textContent = data.success
+        ? JSON.stringify(data.payload, null, 2)
+        : '—';
+      document.getElementById('core-result').classList.remove('hidden');
     });
   </script>
 </body>

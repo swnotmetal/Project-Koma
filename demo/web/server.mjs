@@ -1,17 +1,34 @@
 /**
  * Standalone server for local development, Railway, and Zeabur.
  *
- * Serves the static UI from ./public and the classifier endpoint at
- * POST /api/classify (reusing the same handler as the Vercel function).
+ * Serves the static UI from ./public and three demo endpoints:
+ *   POST /api/classify — Koma Gate  (LLM prompt-injection firewall)
+ *   POST /api/scout    — Koma Scout (deterministic early-stage checks)
+ *   POST /api/core     — Koma Core  (split-store retrieval)
  */
 
 import http from 'node:http';
+import { readFileSync, existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import classifyHandler from './api/classify.mjs';
+import scoutHandler from './api/scout.mjs';
+import coreHandler from './api/core.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Minimal .env loader (Node 18 has no --env-file). Never overrides an existing var.
+const ENV_PATH = path.join(__dirname, '.env');
+if (existsSync(ENV_PATH)) {
+  for (const line of readFileSync(ENV_PATH, 'utf8').split('\n')) {
+    const m = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (m && process.env[m[1]] === undefined) {
+      process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+    }
+  }
+}
+
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const PORT = Number(process.env.PORT || 8080);
 
@@ -25,11 +42,18 @@ const MIME = {
   '.json': 'application/json; charset=utf-8',
 };
 
+const API_ROUTES = {
+  '/api/classify': classifyHandler,
+  '/api/scout': scoutHandler,
+  '/api/core': coreHandler,
+};
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
 
-  if (url.pathname === '/api/classify' && req.method === 'POST') {
-    return classifyHandler(req, res);
+  const route = API_ROUTES[url.pathname];
+  if (route && req.method === 'POST') {
+    return route(req, res);
   }
 
   let filePath = url.pathname === '/' ? '/index.html' : url.pathname;
