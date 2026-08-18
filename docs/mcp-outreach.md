@@ -52,12 +52,15 @@ the Anthropic/Claude ecosystem) — no separate "Anthropic directory" PR is need
 ## 2. `punkpeye/awesome-mcp-servers` (92k+ stars)
 
 Insert both entries under the **`### 🔒 Security`** section. Follow
-`CONTRIBUTING.md` (one bullet per server, alphabetical order, install command last).
+`CONTRIBUTING.md`: one bullet per server, alphabetical order, install command last.
+
+> **Fast-track tip** (from `CONTRIBUTING.md`): add `🤖🤖🤖` to the **end** of the
+> PR title to opt into the streamlined agent-PR process. Your PR gets fast-tracked.
 
 ### PR title
 
 ```
-Add Koma Gate & Koma Core — LLM security MCP servers
+Add Koma Gate & Koma Core — LLM security MCP servers 🤖🤖🤖
 ```
 
 ### PR body
@@ -74,7 +77,8 @@ prompt-injection firewall for Node.js:
   split-store: the search index is public, content is gated by HKDF-derived tokens.
 
 MIT-licensed, TypeScript, zero runtime dependencies beyond the MCP SDK and the
-underlying `koma-gate` / `koma-core` packages. Both published on npm.
+underlying `koma-gate` / `koma-core` packages. Both published on npm and listed on
+the official MCP Registry.
 
 ## Install
 
@@ -85,17 +89,32 @@ npx -y koma-core-mcp
 
 ## Checklist
 
-- [ ] Entries placed in the `🔒 Security` section
+- [ ] Entries placed in the `🔒 Security` section, alphabetical order
 - [ ] Install commands verified (`npx -y <pkg>`)
 - [ ] Links point to the package subfolders
 ````
 
-### Entries to insert
+### Entries to insert (exact list format)
+
+Legend: `📇` TypeScript · `🏠` local/stdio · `🍎 🪟 🐧` cross-platform.
 
 ```markdown
-- [swnotmetal/Project-Koma](https://github.com/swnotmetal/Project-Koma/tree/main/packages/koma-gate-mcp) 📇 🏠 🍎 🪟 🐧 - Prompt-injection firewall for AI agents. `classify_input` checks untrusted user text for jailbreaks and out-of-scope input before the agent acts. Supports OpenAI, Anthropic, Google, DeepSeek, and local Ollama. Install: `npx -y koma-gate-mcp`.
-- [swnotmetal/Project-Koma](https://github.com/swnotmetal/Project-Koma/tree/main/packages/koma-core-mcp) 📇 🏠 🍎 🪟 🐧 - Protected RAG storage for agents. `search_docs` returns public index metadata only; `retrieve_doc` fetches content only at the right access tier. Discovery ≠ authorization. Install: `npx -y koma-core-mcp`.
+- [swnotmetal/Project-Koma](https://github.com/swnotmetal/Project-Koma/tree/main/packages/koma-gate-mcp) 📇 🏠 🍎 🪟 🐧 - Prompt-injection firewall for AI agents. `classify_input` checks untrusted user text for jailbreaks, prompt injection, and out-of-scope requests before the agent acts. Supports OpenAI, Anthropic, Google, DeepSeek, and local Ollama. Install: `npx -y koma-gate-mcp`.
+- [swnotmetal/Project-Koma](https://github.com/swnotmetal/Project-Koma/tree/main/packages/koma-core-mcp) 📇 🏠 🍎 🪟 🐧 - Protected RAG storage for AI agents. `search_docs` returns public index metadata only; `retrieve_doc` fetches content only at the correct access tier via HKDF-derived tokens. Discovery ≠ authorization. Install: `npx -y koma-core-mcp`.
 ```
+
+### About the Glama badge
+
+Many newer entries carry a Glama score badge + link (e.g.
+`[![repo MCP server](https://glama.ai/mcp/servers/<owner>/<repo>/badges/score.svg)](...)`).
+That badge 404s until the server is indexed by Glama. Two options:
+
+1. **Submit without the badge** — the repo's `check-glama.yml` workflow syncs from
+   Glama and will attach the badge once Glama picks the server up.
+2. **List on Glama first** — use the "Add Server" flow at `glama.ai/mcp/servers`,
+   then include the badge in the PR.
+
+Either is accepted; option 1 is simpler and won't block the merge.
 
 ---
 
