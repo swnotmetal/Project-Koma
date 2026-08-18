@@ -129,6 +129,87 @@ server.registerTool(
   },
 );
 
+server.registerTool(
+  'list_presets',
+  {
+    description:
+      'List the available guard presets (domains) and their default models. ' +
+      'Use this to discover which classification domain best matches your use case.',
+    inputSchema: z.object({}),
+  },
+  async () => {
+    const payload = Object.entries(PRESET_DEFAULTS).map(([preset, defaults]) => ({
+      preset,
+      default_provider: defaults.provider,
+      default_model: defaults.model,
+      active_provider: configuredProvider,
+      active_model: configuredModel || defaults.model,
+    }));
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify(payload) }],
+    };
+  },
+);
+
+server.registerTool(
+  'batch_classify',
+  {
+    description:
+      'Classify multiple untrusted inputs in a single call. Returns per-input safety decisions. ' +
+      'Useful for bulk-screening a queue of user messages before processing them.',
+    inputSchema: z.object({
+      texts: z
+        .array(z.string())
+        .max(50)
+        .describe('Up to 50 untrusted inputs to classify'),
+      preset: z
+        .enum(['general', 'code', 'support', 'reference'])
+        .optional()
+        .describe('Which guard domain to use. Default: general knowledge assistant'),
+    }),
+  },
+  async ({ texts, preset }) => {
+    const chosen = (preset as Preset) || 'general';
+    const guard = guardFor(chosen);
+    const results = await Promise.all(
+      texts.map(async (text) => {
+        const result = await guard.classify(text);
+        return {
+          text,
+          allowed: result.allowed,
+          in_scope: result.decision.inScope,
+          reason: result.rejectReason || (result.allowed ? 'in scope' : 'out of scope'),
+        };
+      }),
+    );
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify({ preset: chosen, results }) }],
+    };
+  },
+);
+
+server.registerTool(
+  'get_stats',
+  {
+    description:
+      'Return runtime statistics for the active guard instance: total classifications, allowed, rejected, cached, and error counts.',
+    inputSchema: z.object({
+      preset: z
+        .enum(['general', 'code', 'support', 'reference'])
+        .optional()
+        .describe('Which guard domain stats to fetch. Default: general knowledge assistant'),
+    }),
+  },
+  async ({ preset }) => {
+    const chosen = (preset as Preset) || 'general';
+    const guard = guardFor(chosen);
+    const stats = guard.getStats();
+    return {
+      content: [{ type: 'text' as const, text: JSON.stringify({ preset: chosen, stats }) }],
+    };
+  },
+);
+
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
