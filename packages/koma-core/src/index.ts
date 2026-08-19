@@ -548,7 +548,8 @@ export class DualCollectionWriter {
     const slug = displayName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '')
       .substring(0, 80);
     const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     return `${slug}-${catSlug}-${randomBytes(4).toString('hex')}`;

@@ -215,7 +215,11 @@ function buildFewShotExamples(config: DomainConfig): string {
 }
 
 function escapeForPrompt(text: string): string {
-  return text.replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+  return text
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .replace(/\n/g, '\\n')
+    .replace(/\r/g, '\\r');
 }
 
 // ============================================================================

@@ -137,10 +137,8 @@ async function handleClassify(request, env) {
     const result = await c.classifyText(input);
     return json(result, 200);
   } catch (err) {
-    return json(
-      { error: 'Classification failed.', detail: String(err?.message || err) },
-      500,
-    );
+    console.error('[classify] classification failed:', err);
+    return json({ error: 'Classification failed.' }, 500);
   }
 }
 

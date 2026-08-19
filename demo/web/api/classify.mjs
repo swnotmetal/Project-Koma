@@ -86,9 +86,7 @@ export default async function handler(req, res) {
     const result = await classifier.classifyText(input);
     sendJson(res, 200, result);
   } catch (err) {
-    sendJson(res, 500, {
-      error: 'Classification failed.',
-      detail: String(err?.message || err),
-    });
+    console.error('[classify] classification failed:', err);
+    sendJson(res, 500, { error: 'Classification failed.' });
   }
 }
