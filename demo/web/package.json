@@ -13,7 +13,7 @@
     "node": ">=22"
   },
   "dependencies": {
-    "koma-gate": "^0.2.2",
+    "koma-gate": "^0.2.3",
     "koma-scout": "^0.2.2",
     "koma-core": "^0.2.2"
   },

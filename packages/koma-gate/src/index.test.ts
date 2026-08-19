@@ -107,13 +107,14 @@ describe('KomaGuard', () => {
     expect(result.allowed).toBe(false);
   });
 
-  it('should truncate long input', async () => {
+  it('should reject input exceeding max length', async () => {
     const guard = new KomaGuard(createMockConfig({
       behavior: { failOpen: true, maxInputLength: 10, logDecisions: false },
     }));
 
     const result = await guard.classify('this is a very long input that exceeds the limit');
-    expect(result.allowed).toBe(true); // mock returns true
+    expect(result.allowed).toBe(false); // length check hard-rejects, never truncates
+    expect(result.rejectReason).toContain('exceeds maximum length');
   });
 
   it('should fail open on adapter error', async () => {
