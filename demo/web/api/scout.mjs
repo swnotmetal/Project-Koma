@@ -4,6 +4,9 @@
  */
 
 import { runScoutChecks } from '../lib/scout.mjs';
+import { getLimiter, getIp } from '../lib/rate-limit.mjs';
+
+const rateLimited = getLimiter('scout', 60, 60_000); // deterministic — generous limit
 
 function readBody(req, maxBytes = 16384) {
   return new Promise((resolve, reject) => {
@@ -45,6 +48,11 @@ export default async function handler(req, res) {
   }
   if (req.method !== 'POST') {
     return sendJson(res, 405, { error: 'POST /api/scout only' });
+  }
+
+  if (rateLimited(getIp(req))) {
+    res.setHeader('Retry-After', '60');
+    return sendJson(res, 429, { error: 'Rate limit exceeded — try again in a minute.' });
   }
 
   let body;

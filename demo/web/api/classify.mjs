@@ -5,33 +5,14 @@
  */
 
 import { getClassifier } from '../lib/classify.mjs';
+import { getLimiter, getIp } from '../lib/rate-limit.mjs';
 
 const WINDOW_MS = 60_000;
-const MAX_PER_WINDOW = 30;
+const MAX_PER_WINDOW = 20; // LLM-backed endpoint — stricter than deterministic ones
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_INPUT_LENGTH = 1000;
 
-// In-memory sliding-window rate limiter. On serverless platforms this is
-// per-instance only, but it still blunts casual abuse and cost spikes.
-const hits = new Map();
-
-function getIp(req) {
-  const fwd = req.headers['x-forwarded-for'];
-  if (typeof fwd === 'string' && fwd.length) return fwd.split(',')[0].trim();
-  return req.socket?.remoteAddress || 'unknown';
-}
-
-function rateLimited(ip) {
-  const now = Date.now();
-  const recent = (hits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
-  if (recent.length >= MAX_PER_WINDOW) {
-    hits.set(ip, recent);
-    return true;
-  }
-  recent.push(now);
-  hits.set(ip, recent);
-  return false;
-}
+const rateLimited = getLimiter('classify', MAX_PER_WINDOW, WINDOW_MS);
 
 function readBody(req, maxBytes) {
   return new Promise((resolve, reject) => {
