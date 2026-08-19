@@ -238,7 +238,7 @@
             <option value="general">General assistant</option>
             <option value="code">Code assistant</option>
             <option value="support">Customer support</option>
-            <option value="reference">Reference tool (medication facts)</option>
+            <option value="reference">Medication reference</option>
             <option value="legal">Legal assistant</option>
           </select>
           <div class="scope-note" id="scope-note"></div>
@@ -422,9 +422,9 @@
           blocked: ['How do I read a CSV with Python?', 'What is the dosage of cold medicine?'],
         },
         reference: {
-          scope: '<b>Scope:</b> factual lookups (medication facts). No diagnosis, advice, or jokes.',
-          allowed: ['What is the active ingredient in this medication?', 'List known side effects for this drug'],
-          blocked: ['Diagnose my headache', 'Tell me a joke'],
+          scope: '<b>Scope:</b> medication facts only — ingredients, side effects, interactions. No diagnosis, advice, or general-knowledge questions.',
+          allowed: ['What is the active ingredient in Tylenol?', 'Does metformin interact with ACE inhibitors?'],
+          blocked: ['When was the USSR founded?', 'Diagnose my headache'],
         },
         legal: {
           scope: '<b>Scope:</b> contracts, IP, compliance. No legal/medical advice, programming, or off-topic.',
