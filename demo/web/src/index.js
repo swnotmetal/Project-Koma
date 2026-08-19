@@ -33,6 +33,57 @@ function json(payload, status, headers = {}) {
   });
 }
 
+// Hard caps for the public endpoints: reject oversized bodies BEFORE JSON.parse,
+// and never let the LLM see more than MAX_INPUT_LENGTH characters.
+const MAX_BODY_BYTES = 64 * 1024;
+const MAX_INPUT_LENGTH = 1000;
+
+async function readJsonBody(request, maxBytes) {
+  // Fast reject via Content-Length when present.
+  const lenHeader = request.headers.get('content-length');
+  if (lenHeader && Number.isFinite(Number(lenHeader)) && Number(lenHeader) > maxBytes) {
+    throw new Error('Request body too large (max 64 KB).');
+  }
+  if (!request.body) return {};
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  let received = 0;
+  let raw = '';
+  let tooLarge = false;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > maxBytes) {
+      tooLarge = true;
+      await reader.cancel().catch(() => {});
+      break;
+    }
+    raw += decoder.decode(value, { stream: true });
+  }
+
+  if (tooLarge) throw new Error('Request body too large (max 64 KB).');
+  raw += decoder.decode();
+
+  if (!raw.trim()) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    throw new Error('Invalid JSON body.');
+  }
+}
+
+// Trim, cap, and strip invisible zero-width junk so whitespace-only or
+// invisible payloads are rejected before they cost an LLM call.
+function sanitizeText(value) {
+  return String(value ?? '')
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .slice(0, MAX_INPUT_LENGTH)
+    .trim();
+}
+
 async function handleClassify(request, env) {
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors() });
@@ -63,14 +114,14 @@ async function handleClassify(request, env) {
     }
   }
 
-  // 3) Parse input.
+  // 3) Parse input — capped read; oversized bodies are rejected before parsing.
   let body;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Invalid JSON body.' }, 400);
+    body = await readJsonBody(request, MAX_BODY_BYTES);
+  } catch (err) {
+    return json({ error: err.message }, 400);
   }
-  const input = String(body?.text ?? '').slice(0, 1000).trim();
+  const input = sanitizeText(body?.text);
   if (!input) {
     return json({ error: 'Field "text" is required.' }, 400);
   }
@@ -94,7 +145,7 @@ async function handleClassify(request, env) {
 }
 
 // Scout is the LLM-free deterministic guard — pure JS, so it runs on Workers.
-async function handleScout(request) {
+async function handleScout(request, env) {
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors() });
   }
@@ -102,11 +153,25 @@ async function handleScout(request) {
     return json({ error: 'POST /api/scout only' }, 405);
   }
 
+  if (env?.RATE_LIMITER) {
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    const stub = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName('global'));
+    const rlRes = await stub.fetch(`https://do/check?ip=${encodeURIComponent(ip)}`);
+    const rl = await rlRes.json();
+    if (!rl.allowed) {
+      const message =
+        rl.reason === 'daily'
+          ? 'Daily demo budget reached — please try again tomorrow.'
+          : 'Rate limit exceeded — try again in a minute.';
+      return json({ error: message }, 429, { 'Retry-After': String(rl.retryAfter || 60) });
+    }
+  }
+
   let body;
   try {
-    body = await request.json();
-  } catch {
-    return json({ error: 'Invalid JSON body.' }, 400);
+    body = await readJsonBody(request, MAX_BODY_BYTES);
+  } catch (err) {
+    return json({ error: err.message }, 400);
   }
 
   const sizeBytes = Number(body?.sizeBytes);
@@ -145,7 +210,7 @@ export default {
       return handleClassify(request, env);
     }
     if (url.pathname === '/api/scout') {
-      return handleScout(request);
+      return handleScout(request, env);
     }
     if (url.pathname === '/api/core') {
       return handleCore(request);

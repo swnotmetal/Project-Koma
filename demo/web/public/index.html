@@ -244,7 +244,8 @@
           <div class="scope-note" id="scope-note"></div>
 
           <label class="field-label" for="input" style="margin-top:var(--sp-3)">Prompt to classify</label>
-          <textarea id="input" placeholder="Write your own prompt — in scope, off-topic, or a jailbreak attempt." spellcheck="false"></textarea>
+          <textarea id="input" maxlength="1000" placeholder="Write your own prompt — in scope, off-topic, or a jailbreak attempt." spellcheck="false"></textarea>
+          <div class="hint" aria-live="polite"><span id="input-count">0</span> / 1000 chars — oversized pastes are rejected before they reach the server.</div>
 
           <div class="chipgroup-label">In scope — should pass</div>
           <div class="examples" id="inscope" aria-label="In-scope examples"></div>
@@ -396,6 +397,8 @@
       const errorBox = document.getElementById('error');
       const errorText = document.getElementById('error-text');
       const resultBox = document.getElementById('result');
+      const countEl = document.getElementById('input-count');
+      function updateCount() { countEl.textContent = String(inputEl.value.length); }
 
       // Always-on injection examples (should block in every scene).
       const INJECTIONS = [
@@ -439,6 +442,7 @@
         b.textContent = text;
         b.addEventListener('click', () => {
           inputEl.value = text;
+          updateCount();
           run(text);
         });
         container.appendChild(b);
@@ -500,6 +504,9 @@
           runBtn.disabled = false;
         }
       }
+
+      inputEl.addEventListener('input', updateCount);
+      updateCount();
 
       runBtn.addEventListener('click', () => {
         const text = inputEl.value.trim();
