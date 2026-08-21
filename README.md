@@ -50,9 +50,9 @@ Different attacks cross different boundaries. Koma provides a small primitive fo
 
 ### What Koma Is — and Isn't
 
-**Is**: composable security primitives · defense-in-depth · usable independently · sits outside the model's authority
+**Is**: composable security primitives · defense-in-depth · usable independently · sits outside the model's authority · An engineering quick solution rooted from real production environment
 
-**Isn't**: a model · an agent framework · a replacement for authorization · a magic prompt-injection detector · a complete security boundary by itself
+**Isn't**: a model · an agent framework · a replacement for authorization · a magic prompt-injection detector · a complete security boundary by itself · "Use one LLM to guard another"
 
 ---
 
