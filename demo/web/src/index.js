@@ -190,8 +190,6 @@ async function handleScout(request, env) {
   return json(runScoutChecks({ sizeBytes, durationMs, mimeType, country, clientId }), 200);
 }
 
-const FEEDBACK_DOMAINS = new Set(['general', 'code', 'support', 'reference', 'legal']);
-const FEEDBACK_VERDICTS = new Set(['allowed', 'blocked']);
 const FEEDBACK_RETENTION_DAYS = 30;
 
 async function handleFeedback(request, env, pathname) {
@@ -248,18 +246,8 @@ async function handleFeedback(request, env, pathname) {
   }
 
   const prompt = sanitizeText(body.prompt);
-  const domain = String(body.domain || '');
-  const returnedVerdict = String(body.returnedVerdict || '');
-  const expectedVerdict = String(body.expectedVerdict || '');
 
   if (!prompt) return json({ error: 'prompt is required.' }, 400);
-  if (!FEEDBACK_DOMAINS.has(domain)) return json({ error: 'Invalid domain.' }, 400);
-  if (!FEEDBACK_VERDICTS.has(returnedVerdict) || !FEEDBACK_VERDICTS.has(expectedVerdict)) {
-    return json({ error: 'Invalid verdict.' }, 400);
-  }
-  if (returnedVerdict === expectedVerdict) {
-    return json({ error: 'Expected verdict must differ from the returned verdict.' }, 400);
-  }
 
   const id = crypto.randomUUID();
   const submittedAt = new Date();
@@ -270,16 +258,12 @@ async function handleFeedback(request, env, pathname) {
   try {
     await env.FEEDBACK_DB.prepare(
       `INSERT INTO gate_feedback
-        (id, prompt, domain, returned_verdict, expected_verdict, submitted_at, expires_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+        (id, prompt, expires_at)
+       VALUES (?1, ?2, ?3)`,
     )
       .bind(
         id,
         prompt,
-        domain,
-        returnedVerdict,
-        expectedVerdict,
-        submittedAt.toISOString(),
         expiresAt.toISOString(),
       )
       .run();

@@ -32,17 +32,12 @@
     <p>When you run Koma Gate, the prompt and selected assistant scene are sent through the Koma Cloudflare Worker to the configured LLM provider so it can produce a verdict. The current provider and model are shown with each result. This processing is necessary to provide the demo response; it does not opt the prompt into Koma's feedback database.</p>
 
     <h2>Optional feedback</h2>
-    <p>If you explicitly share a wrong verdict, Koma stores:</p>
-    <ul>
-      <li>the prompt text;</li>
-      <li>the selected assistant scene;</li>
-      <li>the verdict returned by Gate and the verdict you expected;</li>
-      <li>the submission time, expiry time, and a random submission ID.</li>
-    </ul>
-    <p>The purpose is to reproduce false positives and false negatives and improve Koma's tests. The legal basis for this optional storage is your consent. You can use the classifier without giving that consent.</p>
+    <p>If you explicitly share a wrong verdict, Koma stores <strong>the prompt text only</strong>.</p>
+    <p>It also creates a random deletion ID and an expiry time solely so you can delete the row and the scheduled cleanup can remove it within 30 days. It does <strong>not</strong> save the selected scene, returned verdict, expected correction, submission time, account, or network details with the prompt.</p>
+    <p>The purpose is to reproduce a wrong classification and improve Koma's tests. The legal basis for this optional storage is your consent. You can use the classifier without giving that consent.</p>
 
     <h2>What the feedback database does not store</h2>
-    <p>It does not store an account, email address, cookies, IP address, or user-agent string. Cloudflare still processes network information such as your IP address to deliver and rate-limit the request. The Koma rate limiter converts the address to a keyed HMAC identifier and automatically deletes request-window data after it expires; it does not write the raw address to its storage. The configured LLM provider processes the prompt to classify it under that provider's terms and privacy policy.</p>
+    <p>It does not store the scene, verdict, correction, submission time, account, email address, cookies, IP address, or user-agent string. Cloudflare still processes network information such as your IP address to deliver and rate-limit the request. The Koma rate limiter converts the address to a keyed HMAC identifier and automatically deletes request-window data after it expires; it does not write the raw address to its storage. The configured LLM provider processes the prompt to classify it under that provider's terms and privacy policy.</p>
 
     <h2>Storage and retention</h2>
     <p>Opt-in feedback is stored in a Cloudflare D1 database constrained to the European Union. Each record receives an expiry time 30 days after submission and is removed by a scheduled cleanup. There is no public read endpoint for the database.</p>

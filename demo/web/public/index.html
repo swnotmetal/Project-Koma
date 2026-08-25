@@ -290,7 +290,7 @@
           <label class="field-label" for="input" style="margin-top:var(--sp-3)">Prompt to classify</label>
           <textarea id="input" maxlength="1000" placeholder="Write your own prompt — in scope, off-topic, or a jailbreak attempt." spellcheck="false"></textarea>
           <div class="hint" aria-live="polite"><span id="input-count">0</span> / 1000 chars — oversized pastes are rejected before they reach the server.</div>
-          <div class="privacy-note">Your prompt is sent to the configured classifier provider to produce a verdict. It is <strong>not saved by default</strong>. Only an explicitly shared wrong verdict is stored for up to 30 days. Do not submit personal data or secrets. <a href="/privacy.html" target="_blank" rel="noopener">Privacy details ↗</a></div>
+          <div class="privacy-note">Your prompt is sent to the configured classifier provider to produce a verdict. It is <strong>not saved by default</strong>. If you explicitly share a wrong verdict, Koma stores only the prompt for up to 30 days — not the scene, verdict, account, or network details. Do not submit personal data or secrets. <a href="/privacy.html" target="_blank" rel="noopener">Privacy details ↗</a></div>
 
           <div class="chipgroup-label">In scope — should pass</div>
           <div class="examples" id="inscope" aria-label="In-scope examples"></div>
@@ -345,14 +345,9 @@
                 <button class="feedback-button" id="feedback-wrong" type="button">Wrong verdict</button>
               </div>
               <div class="feedback-form hidden" id="feedback-form">
-                <label class="field-label" for="feedback-expected">What should the verdict be?</label>
-                <select id="feedback-expected">
-                  <option value="allowed">ALLOWED</option>
-                  <option value="blocked">BLOCKED</option>
-                </select>
                 <label class="consent-row" for="feedback-consent">
                   <input id="feedback-consent" type="checkbox" />
-                  <span>Share this prompt, scene, returned verdict, correction, and submission time with the Koma maintainer. Delete automatically after 30 days.</span>
+                  <span>Share only this prompt with the Koma maintainer. Koma does not save the scene, verdict, correction, account, or network details. Delete automatically after 30 days.</span>
                 </label>
                 <button class="run" id="feedback-submit" type="button" disabled>Share wrong verdict</button>
               </div>
@@ -518,7 +513,6 @@
       const feedbackForm = document.getElementById('feedback-form');
       const feedbackCorrect = document.getElementById('feedback-correct');
       const feedbackWrong = document.getElementById('feedback-wrong');
-      const feedbackExpected = document.getElementById('feedback-expected');
       const feedbackConsent = document.getElementById('feedback-consent');
       const feedbackSubmit = document.getElementById('feedback-submit');
       const feedbackDelete = document.getElementById('feedback-delete');
@@ -619,13 +613,7 @@
         document.getElementById('d-reason').textContent = data.rejectReason || (allowed ? '—' : 'Out of scope / prompt injection');
         lastResult = {
           prompt,
-          domain: domainEl.value,
-          returnedVerdict: allowed ? 'allowed' : 'blocked',
         };
-        Array.from(feedbackExpected.options).forEach((option) => {
-          option.disabled = option.value === lastResult.returnedVerdict;
-        });
-        feedbackExpected.value = allowed ? 'blocked' : 'allowed';
         feedbackCard.classList.remove('hidden');
         show('result');
       }
@@ -694,8 +682,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              ...lastResult,
-              expectedVerdict: feedbackExpected.value,
+              prompt: lastResult.prompt,
               consent: true,
             }),
           });

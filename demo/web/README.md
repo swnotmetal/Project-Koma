@@ -61,9 +61,9 @@ instance, so it cannot enforce a hard daily budget.
 - `nodejs_compat` (enabled by default on compatibility date ≥ 2026-08-04, needed
   by `koma-gate`'s `crypto.createHash`)
 - A Durable Object rate limiter: **30 req/min per IP + 500 req/day global hard cap**
-- An EU-region D1 database for explicitly opted-in wrong-verdict feedback; prompts
-  are not stored during normal classification, users can delete by submission ID,
-  and feedback rows expire after 30 days
+- An EU-region D1 database for explicitly opted-in wrong-verdict prompts; it stores
+  no scene or verdict metadata, users can delete by random submission ID, and rows
+  expire after 30 days
 
 The Cloudflare Worker serves all three tabs. Gate runs the real `koma-gate`
 classifier, Scout runs deterministic pre-flight checks, and Core runs the real
