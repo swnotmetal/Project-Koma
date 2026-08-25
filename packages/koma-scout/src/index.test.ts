@@ -73,10 +73,28 @@ describe('AudioValidator', () => {
 
   it('should reject audio that is too long (duration)', () => {
     // ~2MB raw ≈ 23s → above max 12s
+    const durationValidator = new AudioValidator({
+      maxSizeBytes: 5 * 1024 * 1024,
+      minSizeBytes: 8_000,
+      maxDurationMs: 12_000,
+      minDurationMs: 1_500,
+      allowedMimeTypes: ['audio/mp4'],
+      cooldownMs: 0,
+    });
     const longBase64 = 'A'.repeat(Math.ceil(2 * 1024 * 1024 / 0.75));
-    const result = validator.validateBase64Audio(longBase64, 'audio/mp4', 'client-1');
+    const result = durationValidator.validateBase64Audio(longBase64, 'audio/mp4', 'client-1');
     expect(result.valid).toBe(false);
     expect(result.errorCode).toBe('TOO_LONG');
+  });
+
+  it('should accept roughly two seconds of PCM audio with default thresholds', () => {
+    const defaultValidator = new AudioValidator();
+    const twoSecondRawSize = 176_400;
+    const audio = 'A'.repeat(Math.ceil(twoSecondRawSize / 0.75));
+    const result = defaultValidator.validateBase64Audio(audio, 'audio/wav', 'client-default');
+
+    expect(result.valid).toBe(true);
+    expect(result.metadata!.durationMs).toBeCloseTo(2_000, -1);
   });
 
   it('should enforce cooldown between requests from same client', () => {
@@ -103,6 +121,8 @@ describe('AudioValidator', () => {
     const custom = new AudioValidator({
       maxSizeBytes: 1000,
       minSizeBytes: 10,
+      maxDurationMs: 10_000,
+      minDurationMs: 0,
       allowedMimeTypes: ['audio/ogg'],
       cooldownMs: 0,
     });
@@ -236,7 +256,7 @@ describe('GeoAllowlist', () => {
   });
 
   it('should fail open on lookup failure by default', async () => {
-    const geo = new GeoAllowlist({ allowedCountries: ['US'], failOpen: true });
+    const geo = new GeoAllowlist({ allowedCountries: ['US'] });
     // An invalid IP format should trigger a lookup failure
     const result = await geo.check('invalid-ip-format');
     expect(result.allowed).toBe(true);

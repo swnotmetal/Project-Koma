@@ -5,8 +5,8 @@
  * only (never content, never the content token); retrieving content requires the
  * correct access tier.
  *
- * NOTE: koma-core uses Node's `crypto.hkdfSync`, so this runs on Node (local,
- * Railway, Zeabur, Vercel) but not on Cloudflare Workers.
+ * Modern Cloudflare Workers compatibility dates expose the Node crypto APIs
+ * used by koma-core, so this module is shared by Worker and Node deployments.
  */
 
 import { createKomaStorage } from 'koma-core';

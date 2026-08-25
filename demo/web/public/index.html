@@ -118,6 +118,23 @@
     .scope-note b { color: var(--text); font-weight: 600; }
     .report-link { display: block; text-align: center; margin-top: var(--sp-2); font-size: var(--fs-xs); color: var(--accent-strong); text-decoration: none; }
     .report-link:hover { text-decoration: underline; }
+    .privacy-note {
+      margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border-left: 3px solid var(--accent);
+      background: var(--panel-2); color: var(--muted); font-size: var(--fs-xs); line-height: 1.55;
+    }
+    .privacy-note a { color: var(--accent-strong); }
+    .feedback-card { margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px solid var(--border); }
+    .feedback-question { font-size: var(--fs-sm); font-weight: 600; margin-bottom: var(--sp-2); }
+    .feedback-actions { display: flex; gap: var(--sp-2); }
+    .feedback-button {
+      flex: 1; border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
+      border-radius: var(--r-sm); padding: var(--sp-2); cursor: pointer; font-weight: 600;
+    }
+    .feedback-button:hover { border-color: var(--accent); }
+    .feedback-form { margin-top: var(--sp-3); }
+    .consent-row { display: flex; align-items: flex-start; gap: var(--sp-2); margin: var(--sp-3) 0; color: var(--muted); font-size: var(--fs-xs); line-height: 1.5; }
+    .consent-row input { width: auto; margin-top: 3px; flex: 0 0 auto; }
+    .feedback-status { margin-top: var(--sp-2); color: var(--muted); font-size: var(--fs-xs); word-break: break-word; }
 
     button.run {
       width: 100%; padding: var(--sp-2); border: none; border-radius: var(--r-sm); cursor: pointer;
@@ -194,6 +211,33 @@
     .req-badge { font-family: var(--mono); font-weight: 800; font-size: var(--fs-xs); letter-spacing: 0.04em; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
     .req-badge.pass { background: rgba(24,122,82,0.12); color: var(--green); }
     .req-badge.block { background: rgba(201,58,58,0.12); color: var(--red); }
+    .scout-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--sp-4); }
+    .scout-grid > section { min-width: 0; }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+    .field-grid .field { margin-bottom: 0; }
+    .policy-box {
+      margin: var(--sp-3) 0; padding: var(--sp-3); border: 1px solid var(--border);
+      border-radius: var(--r-md); background: var(--panel-2); font-size: var(--fs-xs);
+      color: var(--muted); font-family: var(--mono); line-height: 1.7;
+    }
+    .policy-box strong { color: var(--text); }
+    .trace-verdict { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
+    .trace-verdict .req-reason { margin-left: auto; }
+    .check-row {
+      display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; align-items: center;
+      gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: 1px solid var(--border);
+      font-size: var(--fs-sm);
+    }
+    .check-row:last-child { border-bottom: none; }
+    .check-name { font-family: var(--mono); color: var(--text); }
+    .check-detail { color: var(--muted); font-size: var(--fs-xs); }
+    .simulator-note { margin-top: var(--sp-3); color: var(--muted); font-size: var(--fs-xs); line-height: 1.55; }
+    @media (max-width: 820px) {
+      .scout-grid { grid-template-columns: 1fr; }
+      .field-grid { grid-template-columns: 1fr; }
+      .scout-metrics { width: 100%; justify-content: space-between; }
+      .metric { text-align: left; }
+    }
 
     /* Core: scraper view */
     .doc-id { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); word-break: break-all; margin-top: var(--sp-1); }
@@ -246,6 +290,7 @@
           <label class="field-label" for="input" style="margin-top:var(--sp-3)">Prompt to classify</label>
           <textarea id="input" maxlength="1000" placeholder="Write your own prompt — in scope, off-topic, or a jailbreak attempt." spellcheck="false"></textarea>
           <div class="hint" aria-live="polite"><span id="input-count">0</span> / 1000 chars — oversized pastes are rejected before they reach the server.</div>
+          <div class="privacy-note">Your prompt is sent to the configured classifier provider to produce a verdict. It is <strong>not saved by default</strong>. Only an explicitly shared wrong verdict is stored for up to 30 days. Do not submit personal data or secrets. <a href="/privacy.html" target="_blank" rel="noopener">Privacy details ↗</a></div>
 
           <div class="chipgroup-label">In scope — should pass</div>
           <div class="examples" id="inscope" aria-label="In-scope examples"></div>
@@ -293,6 +338,27 @@
               <tr><td>cached</td><td id="d-cached">—</td></tr>
               <tr><td>reason</td><td id="d-reason">—</td></tr>
             </table>
+            <div class="feedback-card hidden" id="feedback-card">
+              <div class="feedback-question">Was this verdict correct?</div>
+              <div class="feedback-actions">
+                <button class="feedback-button" id="feedback-correct" type="button">Correct — save nothing</button>
+                <button class="feedback-button" id="feedback-wrong" type="button">Wrong verdict</button>
+              </div>
+              <div class="feedback-form hidden" id="feedback-form">
+                <label class="field-label" for="feedback-expected">What should the verdict be?</label>
+                <select id="feedback-expected">
+                  <option value="allowed">ALLOWED</option>
+                  <option value="blocked">BLOCKED</option>
+                </select>
+                <label class="consent-row" for="feedback-consent">
+                  <input id="feedback-consent" type="checkbox" />
+                  <span>Share this prompt, scene, returned verdict, correction, and submission time with the Koma maintainer. Delete automatically after 30 days.</span>
+                </label>
+                <button class="run" id="feedback-submit" type="button" disabled>Share wrong verdict</button>
+              </div>
+              <button class="feedback-button hidden" id="feedback-delete" type="button">Delete my saved feedback</button>
+              <div class="feedback-status" id="feedback-status" aria-live="polite"></div>
+            </div>
           </div>
         </section>
       </div>
@@ -300,31 +366,81 @@
 
     <!-- SCOUT -->
     <div class="tabpanel" id="tab-scout" role="tabpanel" aria-labelledby="tab-btn-scout">
-      <section class="panel">
-        <div class="scout-header">
-          <div>
-            <h2>Scout — the pre-flight filter</h2>
-            <p class="lead">Before your LLM spends a cent, Scout drops junk traffic in under a millisecond. No model, no cost.</p>
-          </div>
-          <div class="scout-metrics" aria-label="Scout results">
-            <div class="metric"><span class="metric-num" id="scout-blocked">0</span><span class="metric-label">blocked</span></div>
-            <div class="metric"><span class="metric-num" id="scout-passed">0</span><span class="metric-label">passed</span></div>
-            <div class="metric"><span class="metric-num" id="scout-saved">0</span><span class="metric-label">tokens saved</span></div>
-          </div>
+      <div class="scout-header">
+        <div>
+          <h2>Scout — request metadata simulator</h2>
+          <p class="lead">Explore the cheap pre-flight boundary before an upload reaches transcription or an LLM. No model call is made here.</p>
         </div>
-
-        <div class="examples" aria-label="Attack scenarios">
-          <button class="chip" data-scenario="legit">Legit traffic</button>
-          <button class="chip bad" data-scenario="silent">Silent upload</button>
-          <button class="chip bad" data-scenario="oversized">Oversized file</button>
-          <button class="chip bad" data-scenario="badformat">Wrong format</button>
-          <button class="chip bad" data-scenario="region">Blocked region</button>
-          <button class="chip bad" data-scenario="flood">Flood attack</button>
+        <div class="scout-metrics" aria-label="Scout results">
+          <div class="metric"><span class="metric-num" id="scout-blocked">0</span><span class="metric-label">blocked</span></div>
+          <div class="metric"><span class="metric-num" id="scout-passed">0</span><span class="metric-label">passed</span></div>
+          <div class="metric"><span class="metric-num" id="scout-saved">0</span><span class="metric-label">downstream calls avoided</span></div>
         </div>
-        <button class="run" id="run-scout">Run the full stream</button>
+      </div>
 
-        <div class="stream" id="scout-stream" aria-live="polite"></div>
-      </section>
+      <div class="scout-grid">
+        <section class="panel">
+          <h2>Build an incoming request</h2>
+          <div class="field-grid">
+            <div class="field">
+              <label class="field-label" for="scout-size">Upload size (bytes)</label>
+              <input id="scout-size" type="number" min="0" max="10000000" step="1" value="176400" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="scout-duration">Declared duration (ms)</label>
+              <input id="scout-duration" type="number" min="0" max="120000" step="100" value="2000" />
+            </div>
+            <div class="field">
+              <label class="field-label" for="scout-mime">MIME type</label>
+              <select id="scout-mime">
+                <option value="audio/wav">audio/wav</option>
+                <option value="audio/mp4">audio/mp4</option>
+                <option value="audio/webm">audio/webm</option>
+                <option value="audio/mp3">audio/mp3</option>
+                <option value="text/plain">text/plain</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="scout-country">Request country</label>
+              <select id="scout-country">
+                <option value="US">US</option>
+                <option value="FI">FI</option>
+                <option value="DE">DE</option>
+                <option value="LOCAL">LOCAL</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="scout-burst">Requests in this burst</label>
+              <input id="scout-burst" type="number" min="1" max="10" step="1" value="1" />
+            </div>
+          </div>
+
+          <div class="policy-box">
+            <strong>Active policy</strong><br>
+            MIME: audio/* allowlist · size: 8,000–5,242,880 B · duration: 1,500–12,000 ms<br>
+            country: US / FI / LOCAL · burst: first 3 requests per 1.5 s
+          </div>
+
+          <div class="examples" aria-label="Request presets">
+            <button class="chip" data-scenario="legit">Legit</button>
+            <button class="chip bad" data-scenario="undersized">Undersized</button>
+            <button class="chip bad" data-scenario="oversized">Oversized</button>
+            <button class="chip bad" data-scenario="badformat">Wrong format</button>
+            <button class="chip bad" data-scenario="region">Outside allowlist</button>
+            <button class="chip bad" data-scenario="flood">Flood ×6</button>
+          </div>
+          <button class="run" id="run-scout">Run request</button>
+          <div class="simulator-note">This demo sends simulated request metadata, not audio content. Scout's package-level audio validator uses file size, MIME, and a documented PCM duration heuristic; it does not detect acoustic silence.</div>
+        </section>
+
+        <section class="panel result-panel">
+          <h2>Pre-flight trace</h2>
+          <div id="scout-trace" aria-live="polite">
+            <div class="state"><div><div class="big">Ready to inspect</div><div>Edit the request or choose a preset.</div></div></div>
+          </div>
+          <div class="stream" id="scout-stream" aria-live="polite"></div>
+        </section>
+      </div>
     </div>
 
     <!-- CORE -->
@@ -398,6 +514,17 @@
       const errorText = document.getElementById('error-text');
       const resultBox = document.getElementById('result');
       const countEl = document.getElementById('input-count');
+      const feedbackCard = document.getElementById('feedback-card');
+      const feedbackForm = document.getElementById('feedback-form');
+      const feedbackCorrect = document.getElementById('feedback-correct');
+      const feedbackWrong = document.getElementById('feedback-wrong');
+      const feedbackExpected = document.getElementById('feedback-expected');
+      const feedbackConsent = document.getElementById('feedback-consent');
+      const feedbackSubmit = document.getElementById('feedback-submit');
+      const feedbackDelete = document.getElementById('feedback-delete');
+      const feedbackStatus = document.getElementById('feedback-status');
+      let lastResult = null;
+      let lastSubmissionId = null;
       function updateCount() { countEl.textContent = String(inputEl.value.length); }
 
       // Always-on injection examples (should block in every scene).
@@ -465,7 +592,19 @@
         document.getElementById(id).classList.remove('hidden');
       }
 
-      function renderResult(data) {
+      function resetFeedback() {
+        lastResult = null;
+        feedbackCard.classList.add('hidden');
+        feedbackForm.classList.add('hidden');
+        feedbackConsent.checked = false;
+        feedbackSubmit.disabled = true;
+        feedbackDelete.classList.add('hidden');
+        feedbackDelete.disabled = false;
+        feedbackStatus.textContent = '';
+        lastSubmissionId = null;
+      }
+
+      function renderResult(data, prompt) {
         const allowed = data.allowed;
         const badge = document.getElementById('badge');
         badge.textContent = allowed ? 'ALLOWED' : 'BLOCKED';
@@ -478,10 +617,21 @@
         document.getElementById('d-latency').textContent = data.latencyMs + ' ms' + (data.cached ? ' (cached)' : '');
         document.getElementById('d-cached').textContent = String(data.cached);
         document.getElementById('d-reason').textContent = data.rejectReason || (allowed ? '—' : 'Out of scope / prompt injection');
+        lastResult = {
+          prompt,
+          domain: domainEl.value,
+          returnedVerdict: allowed ? 'allowed' : 'blocked',
+        };
+        Array.from(feedbackExpected.options).forEach((option) => {
+          option.disabled = option.value === lastResult.returnedVerdict;
+        });
+        feedbackExpected.value = allowed ? 'blocked' : 'allowed';
+        feedbackCard.classList.remove('hidden');
         show('result');
       }
 
       async function run(text) {
+        resetFeedback();
         show('loading');
         runBtn.disabled = true;
         try {
@@ -496,7 +646,7 @@
             show('error');
             return;
           }
-          renderResult(data);
+          renderResult(data, text);
         } catch (e) {
           errorText.textContent = 'Network error — is the server running?';
           show('error');
@@ -520,38 +670,131 @@
           if (text) run(text);
         }
       });
+
+      feedbackCorrect.addEventListener('click', () => {
+        feedbackForm.classList.add('hidden');
+        feedbackStatus.textContent = 'Thanks — this prompt was not saved.';
+      });
+
+      feedbackWrong.addEventListener('click', () => {
+        feedbackForm.classList.remove('hidden');
+        feedbackStatus.textContent = 'Nothing is saved until you opt in below and submit.';
+      });
+
+      feedbackConsent.addEventListener('change', () => {
+        feedbackSubmit.disabled = !feedbackConsent.checked;
+      });
+
+      feedbackSubmit.addEventListener('click', async () => {
+        if (!lastResult || !feedbackConsent.checked) return;
+        feedbackSubmit.disabled = true;
+        feedbackStatus.textContent = 'Saving your opt-in feedback…';
+        try {
+          const res = await fetch('/api/feedback', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ...lastResult,
+              expectedVerdict: feedbackExpected.value,
+              consent: true,
+            }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+          feedbackForm.classList.add('hidden');
+          lastSubmissionId = data.submissionId;
+          feedbackDelete.classList.remove('hidden');
+          feedbackStatus.textContent = 'Saved for up to 30 days. Submission ID: ' + data.submissionId;
+        } catch (error) {
+          feedbackStatus.textContent = error.message || 'Feedback could not be stored.';
+          feedbackSubmit.disabled = false;
+        }
+      });
+
+      feedbackDelete.addEventListener('click', async () => {
+        if (!lastSubmissionId) return;
+        feedbackDelete.disabled = true;
+        feedbackStatus.textContent = 'Deleting saved feedback…';
+        try {
+          const res = await fetch('/api/feedback/' + encodeURIComponent(lastSubmissionId), {
+            method: 'DELETE',
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+          lastSubmissionId = null;
+          feedbackDelete.classList.add('hidden');
+          feedbackStatus.textContent = 'Deleted. The saved prompt and verdict correction are gone.';
+        } catch (error) {
+          feedbackStatus.textContent = error.message || 'Feedback could not be deleted.';
+          feedbackDelete.disabled = false;
+        }
+      });
     })();
 
     // ---- Scout ----
     (function scout() {
       const runBtn = document.getElementById('run-scout');
       const stream = document.getElementById('scout-stream');
+      const trace = document.getElementById('scout-trace');
       const blockedEl = document.getElementById('scout-blocked');
       const passedEl = document.getElementById('scout-passed');
       const savedEl = document.getElementById('scout-saved');
-      const TOKENS_PER_BLOCK = 500;
+      const sizeEl = document.getElementById('scout-size');
+      const durationEl = document.getElementById('scout-duration');
+      const mimeEl = document.getElementById('scout-mime');
+      const countryEl = document.getElementById('scout-country');
+      const burstEl = document.getElementById('scout-burst');
 
       const REASON = {
+        mime: 'unsupported format',
         size: 'size out of range',
         duration: 'duration out of range',
-        mime: 'unsupported format',
         country: 'region not allowed',
         rate: 'rate limited (flood)',
       };
 
       const SCENARIOS = {
-        legit: { label: 'audio/wav · 9 KB · 2.1s · US', items: [{ sizeBytes: 9000, durationMs: 2100, mimeType: 'audio/wav', country: 'US', clientId: 'user-legit' }] },
-        silent: { label: 'audio/wav · 12 B · 0.1s · US', items: [{ sizeBytes: 12, durationMs: 100, mimeType: 'audio/wav', country: 'US', clientId: 'user-silent' }] },
-        oversized: { label: 'audio/mp4 · 6 MB · 60s · US', items: [{ sizeBytes: 6000000, durationMs: 60000, mimeType: 'audio/mp4', country: 'US', clientId: 'user-big' }] },
-        badformat: { label: 'text/plain · 9 KB · 2.1s · US', items: [{ sizeBytes: 9000, durationMs: 2100, mimeType: 'text/plain', country: 'US', clientId: 'user-txt' }] },
-        region: { label: 'audio/wav · 9 KB · 2.1s · RU', items: [{ sizeBytes: 9000, durationMs: 2100, mimeType: 'audio/wav', country: 'RU', clientId: 'user-ru' }] },
-        flood: { label: 'audio/wav · 9 KB · 2.1s · US ×6 (rapid fire)', items: Array.from({ length: 6 }, () => ({ sizeBytes: 9000, durationMs: 2100, mimeType: 'audio/wav', country: 'US', clientId: 'flood-bot' })) },
+        legit: { sizeBytes: 176400, durationMs: 2000, mimeType: 'audio/wav', country: 'US', burst: 1 },
+        undersized: { sizeBytes: 12, durationMs: 100, mimeType: 'audio/wav', country: 'US', burst: 1 },
+        oversized: { sizeBytes: 6291456, durationMs: 60000, mimeType: 'audio/mp4', country: 'US', burst: 1 },
+        badformat: { sizeBytes: 176400, durationMs: 2000, mimeType: 'text/plain', country: 'US', burst: 1 },
+        region: { sizeBytes: 176400, durationMs: 2000, mimeType: 'audio/wav', country: 'DE', burst: 1 },
+        flood: { sizeBytes: 176400, durationMs: 2000, mimeType: 'audio/wav', country: 'US', burst: 6 },
       };
 
       let blocked = 0;
       let passed = 0;
 
-      function addRow(label, ok, reason) {
+      function formatBytes(value) {
+        if (value >= 1024 * 1024) return (value / (1024 * 1024)).toFixed(1) + ' MB';
+        if (value >= 1024) return (value / 1024).toFixed(1) + ' KB';
+        return value + ' B';
+      }
+
+      function readRequest() {
+        return {
+          sizeBytes: Math.max(0, Number(sizeEl.value) || 0),
+          durationMs: Math.max(0, Number(durationEl.value) || 0),
+          mimeType: mimeEl.value,
+          country: countryEl.value,
+          burst: Math.min(10, Math.max(1, Math.floor(Number(burstEl.value) || 1))),
+        };
+      }
+
+      function setRequest(value) {
+        sizeEl.value = String(value.sizeBytes);
+        durationEl.value = String(value.durationMs);
+        mimeEl.value = value.mimeType;
+        countryEl.value = value.country;
+        burstEl.value = String(value.burst);
+      }
+
+      function requestLabel(item, ordinal, total) {
+        const prefix = total > 1 ? 'request ' + ordinal + '/' + total + ' · ' : '';
+        return prefix + item.mimeType + ' · ' + formatBytes(item.sizeBytes) + ' · ' + (item.durationMs / 1000).toFixed(1) + 's · ' + item.country;
+      }
+
+      function addRow(label, ok, reason, elapsedMs) {
         const row = document.createElement('div');
         row.className = 'req';
         const badge = document.createElement('span');
@@ -567,6 +810,11 @@
           r.className = 'req-reason fail';
           r.textContent = reason;
           row.appendChild(r);
+        } else if (Number.isFinite(elapsedMs)) {
+          const r = document.createElement('span');
+          r.className = 'req-reason';
+          r.textContent = elapsedMs + ' ms';
+          row.appendChild(r);
         }
         stream.appendChild(row);
       }
@@ -574,12 +822,63 @@
       function updateMetrics() {
         blockedEl.textContent = String(blocked);
         passedEl.textContent = String(passed);
-        savedEl.textContent = (blocked * TOKENS_PER_BLOCK).toLocaleString();
+        savedEl.textContent = String(blocked);
       }
 
-      async function runScenario(key) {
-        const scenario = SCENARIOS[key];
-        for (const item of scenario.items) {
+      function checkDetail(key, item, policy, ordinal) {
+        if (key === 'mime') return item.mimeType + ' · audio allowlist';
+        if (key === 'size') return formatBytes(item.sizeBytes) + ' · expected ' + formatBytes(policy.minSizeBytes) + '–' + formatBytes(policy.maxSizeBytes);
+        if (key === 'duration') return item.durationMs + ' ms · expected ' + policy.minDurationMs + '–' + policy.maxDurationMs + ' ms';
+        if (key === 'country') return item.country + ' · allowlist ' + policy.allowedCountries.join(', ') + ', LOCAL';
+        return 'request ' + ordinal + ' · first ' + policy.burstMax + ' per ' + policy.burstWindowMs + ' ms pass';
+      }
+
+      function renderTrace(data, item, ordinal) {
+        trace.innerHTML = '';
+        const verdict = document.createElement('div');
+        verdict.className = 'trace-verdict';
+        const badge = document.createElement('span');
+        badge.className = 'req-badge ' + (data.passed ? 'pass' : 'block');
+        badge.textContent = data.passed ? 'PASS' : 'BLOCK';
+        const summary = document.createElement('span');
+        summary.className = 'req-label';
+        summary.textContent = data.passed ? 'Request may continue downstream' : 'Stopped before expensive processing';
+        const timing = document.createElement('span');
+        timing.className = 'req-reason';
+        timing.textContent = data.elapsedMs + ' ms';
+        verdict.append(badge, summary, timing);
+        trace.appendChild(verdict);
+
+        Object.entries(data.checks || {}).forEach(([key, ok]) => {
+          const row = document.createElement('div');
+          row.className = 'check-row';
+          const name = document.createElement('span');
+          name.className = 'check-name';
+          name.textContent = key;
+          const detail = document.createElement('span');
+          detail.className = 'check-detail';
+          detail.textContent = checkDetail(key, item, data.policy, ordinal);
+          const status = document.createElement('span');
+          status.className = ok ? 'ok' : 'fail';
+          status.textContent = ok ? 'PASS' : 'BLOCK';
+          row.append(name, detail, status);
+          trace.appendChild(row);
+        });
+      }
+
+      async function runCurrent() {
+        const request = readRequest();
+        const clientId = (globalThis.crypto && crypto.randomUUID)
+          ? crypto.randomUUID()
+          : 'run-' + Date.now() + '-' + Math.random();
+        stream.innerHTML = '';
+        blocked = 0;
+        passed = 0;
+        updateMetrics();
+
+        for (let i = 1; i <= request.burst; i++) {
+          const item = { ...request, clientId };
+          delete item.burst;
           let data;
           try {
             const res = await fetch('/api/scout', {
@@ -588,41 +887,37 @@
               body: JSON.stringify(item),
             });
             data = await res.json().catch(() => ({}));
-          } catch {
-            data = { passed: false, failed: ['network'] };
+            if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+          } catch (error) {
+            trace.innerHTML = '';
+            const state = document.createElement('div');
+            state.className = 'state';
+            state.textContent = error.message || 'Network error';
+            trace.appendChild(state);
+            addRow(requestLabel(item, i, request.burst), false, error.message || 'network error');
+            blocked++;
+            updateMetrics();
+            break;
           }
           const ok = !!data.passed;
           if (ok) passed++; else blocked++;
           const reason = ok ? '' : (data.failed || []).map((f) => REASON[f] || f).join(' · ');
-          addRow(scenario.label, ok, reason);
+          renderTrace(data, item, i);
+          addRow(requestLabel(item, i, request.burst), ok, reason, data.elapsedMs);
           updateMetrics();
-        }
-      }
-
-      async function runAll() {
-        stream.innerHTML = '';
-        blocked = 0;
-        passed = 0;
-        updateMetrics();
-        for (const key of Object.keys(SCENARIOS)) {
-          await runScenario(key);
-          await new Promise((r) => setTimeout(r, 140));
         }
       }
 
       runBtn.addEventListener('click', () => {
         runBtn.disabled = true;
-        runAll().finally(() => { runBtn.disabled = false; });
+        runCurrent().finally(() => { runBtn.disabled = false; });
       });
 
       document.querySelectorAll('[data-scenario]').forEach((chip) => {
         chip.addEventListener('click', () => {
-          stream.innerHTML = '';
-          blocked = 0;
-          passed = 0;
-          updateMetrics();
+          setRequest(SCENARIOS[chip.dataset.scenario]);
           runBtn.disabled = true;
-          runScenario(chip.dataset.scenario).finally(() => { runBtn.disabled = false; });
+          runCurrent().finally(() => { runBtn.disabled = false; });
         });
       });
     })();
@@ -648,11 +943,6 @@
       }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        if (data.nodeOnly) {
-          coreIndexEl.innerHTML = '<div class="hint"><strong>Core needs a Node server.</strong><br>koma-core uses Node\'s <code>crypto.hkdfSync</code>, which Cloudflare Workers does not expose. Run the full 3-tab demo locally with <code>npm run demo</code>.</div>';
-          runScraperBtn.disabled = true;
-          return;
-        }
         coreIndexEl.innerHTML = '<div class="hint">' + (data.error || 'error') + '</div>';
         return;
       }

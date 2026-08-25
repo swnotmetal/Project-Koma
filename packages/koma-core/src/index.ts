@@ -2,7 +2,7 @@
  * Koma Core: anti-scraping dual-store routing architecture.
  *
  * Core design:
- * 1. DB_INDEX (public layer) stores only searchable index fields, display names, category tags, hashes, and opaque tokens
+ * 1. DB_INDEX stores searchable fields plus a backend-internal opaque token; public search results redact that token
  * 2. DB_CONTENT (private layer) stores the full payload, with document IDs derived from HKDF(secret, source_id)
  * 3. Token mapping stays on the backend and is never exposed to the client
  * 4. Enumeration resistance: DB_CONTENT cannot be traversed without the exact token

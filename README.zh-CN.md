@@ -43,6 +43,7 @@ npm install koma-gate
 | AI 聊天 | 提示注入 / 越狱 | 语义过滤器在模型前拦截攻击 | `koma-gate` |
 | 语音 AI | 音频滥用 / 洪水攻击 | 校验 + 限流 + 地理限制 | `koma-scout` |
 | RAG / 搜索 | 数据遍历 / 爬取 | 索引内容分离，token 控制检索 | `koma-core` |
+| AI 编程 agent | Skill 漏调用 / 合规漂移 | 验证准备、动作和完成证据 | `koma-miko` *（源码 alpha）* |
 
 ---
 
@@ -100,6 +101,12 @@ curl http://localhost:8080/self-test
 
 每层独立使用。叠加：Gate 过滤 → Scout 控流 → Core 存数据。
 
+**实验项目：`koma-miko` 源码 alpha** — 验证 agent 是否加载了必需 skill、
+动作是否符合契约，以及测试或 UI 渲染检查等完成证据是否真实存在。当前是
+确定性实现，包含 19 个 alpha 测试，尚未发布到 npm。
+[README →](./packages/koma-miko/README.zh-CN.md) ·
+[研究与设计 →](./docs/design/miko.md)
+
 ---
 
 ### 使用 AI 编程助手？
@@ -114,9 +121,9 @@ Koma 同时为人类和 AI agent 的可发现性而设计。参见 [llms.txt](./
 
 ### 信任与安全
 
-- **零运行时依赖。** 无供应链攻击面。
+- **最小依赖面。** Gate 与 Core 没有第三方运行时依赖；Scout 仅将 Express 声明为 peer dependency。
 - **不执行代码。** 分类、限流、存储——绝不执行 AI 输出。
-- **默认 fail-closed。** 守卫故障时拦截，不放行。
+- **默认 fail-open。** 可选守卫故障时不拖垮应用；安全优先的部署可设置 `failOpen: false`。
 - **每次推送 CodeQL。** 覆盖 OWASP LLM01。
 - **MIT 协议。**
 
@@ -124,6 +131,6 @@ Koma 同时为人类和 AI agent 的可发现性而设计。参见 [llms.txt](./
 
 ---
 
-Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层防御，各自独立。模式提炼自生产环境，而非纸上谈兵。
+Koma 取自神社前的石狮"狛犬"（こまいぬ）。三层已部署防御各自独立，另有实验中的 Miko agent 契约边界。模式提炼自生产环境，而非纸上谈兵。
 
 [English](./README.md) · [License](./LICENSE)

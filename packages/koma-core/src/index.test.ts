@@ -74,7 +74,7 @@ class InMemoryDb implements DatabaseAdapter {
 // ---------------------------------------------------------------------------
 
 describe('TokenDeriver', () => {
-  const masterKey = 'test-master-key-32-bytes!!!!!!'; // 32 bytes
+  const masterKey = Buffer.alloc(32, 0x41);
   const deriver = new TokenDeriver(masterKey, 'koma-test', 32);
 
   it('should derive deterministic tokens', () => {
@@ -119,7 +119,7 @@ describe('TokenDeriver', () => {
   });
 
   it('should accept Buffer masterKey', () => {
-    const d = new TokenDeriver(Buffer.from('another-key-for-testing--!!'));
+    const d = new TokenDeriver(Buffer.alloc(32, 0x42));
     const token = d.derive('test');
     expect(token).toHaveLength(64);
   });
@@ -167,7 +167,7 @@ describe('DualCollectionWriter', () => {
   beforeEach(() => {
     indexDb = new InMemoryDb();
     contentDb = new InMemoryDb();
-    tokenDeriver = new TokenDeriver('test-master-key-for-writer!!');
+    tokenDeriver = new TokenDeriver(Buffer.alloc(32, 0x43));
     writer = new DualCollectionWriter({
       indexDb,
       contentDb,
@@ -293,7 +293,7 @@ describe('DualCollectionReader', () => {
   beforeEach(async () => {
     indexDb = new InMemoryDb();
     contentDb = new InMemoryDb();
-    tokenDeriver = new TokenDeriver('reader-test-master-key!!!');
+    tokenDeriver = new TokenDeriver(Buffer.alloc(32, 0x44));
     writer = new DualCollectionWriter({ indexDb, contentDb, tokenDeriver });
     reader = new DualCollectionReader({ indexDb, contentDb, tokenDeriver });
 
@@ -328,11 +328,18 @@ describe('DualCollectionReader', () => {
     expect(results[0].displayName).toBe('Public Article');
   });
 
-  it('should return index results without payload', async () => {
+  it('should return public index results without payload or content token', async () => {
     const results = await reader.search();
     for (const r of results) {
       expect(r.payload).toBeUndefined();
-      expect(r.contentToken).toBeTruthy();
+      expect((r as any).contentToken).toBeUndefined();
+    }
+  });
+
+  it('should return content tokens only when explicitly requested by a backend caller', async () => {
+    const results = await reader.search({ includeTokens: true });
+    for (const r of results) {
+      expect((r as any).contentToken).toBeTruthy();
     }
   });
 
@@ -420,7 +427,7 @@ describe('createKomaStorage', () => {
     const contentDb = new InMemoryDb();
 
     const storage = createKomaStorage({
-      masterKey: 'factory-test-key-32-bytes!',
+      masterKey: Buffer.alloc(32, 0x45),
       indexDb,
       contentDb,
     });
@@ -436,7 +443,7 @@ describe('createKomaStorage', () => {
     const contentDb = new InMemoryDb();
 
     const storage = createKomaStorage({
-      masterKey: 'e2e-test-master-key-32-bytes',
+      masterKey: Buffer.alloc(32, 0x46),
       indexDb,
       contentDb,
     });

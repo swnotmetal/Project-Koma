@@ -8,6 +8,7 @@
 
 import { getClassifier } from '../lib/classify.mjs';
 import { runScoutChecks } from '../lib/scout.mjs';
+import { ensureSeeded, searchDocs, retrieveDoc, attemptFetch } from '../lib/core.mjs';
 import { RateLimiter } from './RateLimiter.js';
 
 // Required by wrangler so the Durable Object class is discoverable.
@@ -16,7 +17,7 @@ export { RateLimiter };
 function cors() {
   return {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
 }
@@ -103,7 +104,9 @@ async function handleClassify(request, env) {
   if (env.RATE_LIMITER) {
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
     const stub = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName('global'));
-    const rlRes = await stub.fetch(`https://do/check?ip=${encodeURIComponent(ip)}`);
+    const rlRes = await stub.fetch('https://do/check', {
+      headers: { 'X-Koma-Rate-Key': ip },
+    });
     const rl = await rlRes.json();
     if (!rl.allowed) {
       const message =
@@ -154,7 +157,9 @@ async function handleScout(request, env) {
   if (env?.RATE_LIMITER) {
     const ip = request.headers.get('cf-connecting-ip') || 'unknown';
     const stub = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName('global'));
-    const rlRes = await stub.fetch(`https://do/check?ip=${encodeURIComponent(ip)}`);
+    const rlRes = await stub.fetch('https://do/check?daily=0', {
+      headers: { 'X-Koma-Rate-Key': ip },
+    });
     const rl = await rlRes.json();
     if (!rl.allowed) {
       const message =
@@ -185,20 +190,155 @@ async function handleScout(request, env) {
   return json(runScoutChecks({ sizeBytes, durationMs, mimeType, country, clientId }), 200);
 }
 
-// koma-core depends on Node's crypto.hkdfSync, which Workers do not expose.
-// Return an honest, actionable message instead of a 404.
-function handleCore(request) {
+const FEEDBACK_DOMAINS = new Set(['general', 'code', 'support', 'reference', 'legal']);
+const FEEDBACK_VERDICTS = new Set(['allowed', 'blocked']);
+const FEEDBACK_RETENTION_DAYS = 30;
+
+async function handleFeedback(request, env, pathname) {
   if (request.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: cors() });
   }
-  return json(
-    {
-      error: 'The Core demo needs a Node server — koma-core uses Node crypto.hkdfSync, which Cloudflare Workers does not expose.',
-      hint: 'Run the full 3-tab demo locally with "npm run demo", or deploy the Node server to Railway/Zeabur.',
-      nodeOnly: true,
-    },
-    501,
+  if (!env.FEEDBACK_DB) {
+    return json({ error: 'Feedback storage is not configured.' }, 503);
+  }
+  const isCreate = request.method === 'POST' && pathname === '/api/feedback';
+  const isDelete = request.method === 'DELETE' && pathname.startsWith('/api/feedback/');
+  if (!isCreate && !isDelete) {
+    return json({ error: 'POST /api/feedback or DELETE /api/feedback/:submissionId only' }, 405);
+  }
+
+  if (env.RATE_LIMITER) {
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    const stub = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName('global'));
+    const rlRes = await stub.fetch('https://do/check?daily=0', {
+      headers: { 'X-Koma-Rate-Key': ip },
+    });
+    const rl = await rlRes.json();
+    if (!rl.allowed) {
+      return json({ error: 'Feedback rate limit exceeded — try again in a minute.' }, 429, {
+        'Retry-After': String(rl.retryAfter || 60),
+      });
+    }
+  }
+
+  if (isDelete) {
+    const id = decodeURIComponent(pathname.slice('/api/feedback/'.length));
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+      return json({ error: 'Invalid submission ID.' }, 400);
+    }
+    try {
+      await env.FEEDBACK_DB.prepare('DELETE FROM gate_feedback WHERE id = ?1').bind(id).run();
+    } catch {
+      console.error('[feedback] D1 deletion failed');
+      return json({ error: 'Feedback could not be deleted.' }, 500);
+    }
+    // Do not reveal whether an arbitrary ID existed.
+    return json({ deleted: true }, 200);
+  }
+
+  let body;
+  try {
+    body = await readJsonBody(request, MAX_BODY_BYTES);
+  } catch (err) {
+    return json({ error: err.message }, 400);
+  }
+
+  if (body?.consent !== true) {
+    return json({ error: 'Explicit consent is required.' }, 400);
+  }
+
+  const prompt = sanitizeText(body.prompt);
+  const domain = String(body.domain || '');
+  const returnedVerdict = String(body.returnedVerdict || '');
+  const expectedVerdict = String(body.expectedVerdict || '');
+
+  if (!prompt) return json({ error: 'prompt is required.' }, 400);
+  if (!FEEDBACK_DOMAINS.has(domain)) return json({ error: 'Invalid domain.' }, 400);
+  if (!FEEDBACK_VERDICTS.has(returnedVerdict) || !FEEDBACK_VERDICTS.has(expectedVerdict)) {
+    return json({ error: 'Invalid verdict.' }, 400);
+  }
+  if (returnedVerdict === expectedVerdict) {
+    return json({ error: 'Expected verdict must differ from the returned verdict.' }, 400);
+  }
+
+  const id = crypto.randomUUID();
+  const submittedAt = new Date();
+  const expiresAt = new Date(
+    submittedAt.getTime() + FEEDBACK_RETENTION_DAYS * 24 * 60 * 60 * 1000,
   );
+
+  try {
+    await env.FEEDBACK_DB.prepare(
+      `INSERT INTO gate_feedback
+        (id, prompt, domain, returned_verdict, expected_verdict, submitted_at, expires_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+    )
+      .bind(
+        id,
+        prompt,
+        domain,
+        returnedVerdict,
+        expectedVerdict,
+        submittedAt.toISOString(),
+        expiresAt.toISOString(),
+      )
+      .run();
+  } catch {
+    console.error('[feedback] D1 write failed');
+    return json({ error: 'Feedback could not be stored.' }, 500);
+  }
+
+  return json({ stored: true, submissionId: id, expiresAt: expiresAt.toISOString() }, 201);
+}
+
+const CORE_TIERS = new Set(['public', 'premium', 'enterprise']);
+
+// Core runs the real koma-core package with an in-memory adapter. Modern
+// Workers compatibility dates expose node:crypto, including hkdfSync.
+async function handleCore(request) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors() });
+  }
+  if (request.method !== 'POST') {
+    return json({ error: 'POST /api/core only' }, 405);
+  }
+
+  let body;
+  try {
+    body = await readJsonBody(request, MAX_BODY_BYTES);
+  } catch (err) {
+    return json({ error: err.message }, 400);
+  }
+
+  await ensureSeeded();
+
+  if (body?.action === 'search') {
+    const results = await searchDocs({
+      category: body.category,
+      tag: body.tag,
+      limit: body.limit,
+    });
+    return json({ results }, 200);
+  }
+
+  if (body?.action === 'retrieve') {
+    const displayName = String(body.displayName || '');
+    const userTier = CORE_TIERS.has(body.userTier) ? body.userTier : 'public';
+    if (!displayName) {
+      return json({ error: 'displayName is required.' }, 400);
+    }
+    return json(await retrieveDoc(displayName, userTier), 200);
+  }
+
+  if (body?.action === 'attempt') {
+    const id = String(body.id || '');
+    if (!id) {
+      return json({ error: 'id is required.' }, 400);
+    }
+    return json(await attemptFetch(id), 200);
+  }
+
+  return json({ error: 'action must be "search", "retrieve", or "attempt".' }, 400);
 }
 
 export default {
@@ -210,9 +350,20 @@ export default {
     if (url.pathname === '/api/scout') {
       return handleScout(request, env);
     }
+    if (url.pathname === '/api/feedback' || url.pathname.startsWith('/api/feedback/')) {
+      return handleFeedback(request, env, url.pathname);
+    }
     if (url.pathname === '/api/core') {
       return handleCore(request);
     }
     return env.ASSETS.fetch(request);
+  },
+  async scheduled(_event, env, ctx) {
+    if (!env.FEEDBACK_DB) return;
+    ctx.waitUntil(
+      env.FEEDBACK_DB.prepare('DELETE FROM gate_feedback WHERE expires_at <= ?1')
+        .bind(new Date().toISOString())
+        .run(),
+    );
   },
 };

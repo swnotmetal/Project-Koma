@@ -18,6 +18,14 @@ class_name = "RateLimiter"
 tag = "v1"
 new_sqlite_classes = [ "RateLimiter" ]
 
+[[d1_databases]]
+binding = "FEEDBACK_DB"
+database_name = "koma-demo-feedback"
+database_id = "6b0d9d41-1070-4fcd-9538-3fdb82fe1caa"
+
+[triggers]
+crons = [ "17 3 * * *" ]
+
 # --- Optional kill switch (instant off-switch) ---
 # 1. Create a KV namespace in the Cloudflare dashboard.
 # 2. Uncomment the block below and paste the namespace id.

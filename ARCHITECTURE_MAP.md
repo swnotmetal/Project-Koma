@@ -31,7 +31,7 @@
 │                          │  Route to Core  │    │  Return 400/    │ │ Fail-Open│
 │                          │  Business Logic │    │  Friendly Msg   │ │ (Allow)  │
 │                          │  (RAG, Tools,   │    │  "Out of scope" │ │          │
-│                          │   Generation)   │    │  or "Silence"   │ │          │
+│                          │   Generation)   │    │  policy response │ │          │
 │                          └─────────────────┘    └─────────────────┘ └──────────┘
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -60,13 +60,14 @@ KEY DESIGN PRINCIPLES:
 │  ┌─────────────┐    ┌──────────────────┐    ┌────────────────────────────┐  │
 │  │  Raw Data   │───▶│  Validation &    │───▶│  Dual-Collection Writer    │  │
 │  │  (Source)   │    │  Sanitization    │    │  ┌──────────────────────┐  │  │
-│  └─────────────┘    └──────────────────┘    │  │  DB_INDEX (Public)   │  │  │
+│  └─────────────┘    └──────────────────┘    │  │ DB_INDEX (Searchable)│  │  │
 │                                             │  │  ──────────────────  │  │  │
 │                                             │  │  • searchable fields │  │  │
 │                                             │  │  • display_name      │  │  │
 │                                             │  │  • category/tags     │  │  │
 │                                             │  │  • content_hash      │  │  │
 │                                             │  │  • content_token     │  │  │
+│                                             │  │    (backend only)    │  │  │
 │                                             │  │  • NO sensitive data │  │  │
 │                                             │  └──────────┬───────────┘  │  │
 │                                             │             │              │  │
@@ -86,15 +87,15 @@ KEY DESIGN PRINCIPLES:
 │                                                                              │
 │  ┌──────────┐    ┌──────────────┐    ┌──────────────────┐    ┌──────────┐  │
 │  │  Client  │───▶│  Search API  │───▶│  DB_INDEX Lookup │───▶│  Return  │  │
-│  │  Query   │    │  (Gateway)   │    │  (by content_token)│   │  Index   │  │
+│  │  Query   │    │  (Gateway)   │    │  (metadata filters)│   │  Index   │  │
 │  └──────────┘    └──────────────┘    └────────┬─────────┘    └──────────┘  │
 │                                                │                            │
 │                                                ▼                            │
 │                                       ┌──────────────────┐                  │
 │                                       │  Client receives │                  │
 │                                       │  lightweight     │                  │
-│                                       │  results +       │                  │
-│                                       │  content_token   │                  │
+│                                       │  safe metadata   │                  │
+│                                       │  (NO token)      │                  │
 │                                       └────────┬─────────┘                  │
 │                                                │                            │
 │                                                ▼                            │
@@ -102,7 +103,8 @@ KEY DESIGN PRINCIPLES:
 │                                       │  Detail API      │                  │
 │                                       │  (Authenticated) │                  │
 │                                       │  ──────────────  │                  │
-│                                       │  Verify token    │                  │
+│                                       │  Map selection   │                  │
+│                                       │  Derive token    │                  │
 │                                       │  Fetch from      │                  │
 │                                       │  DB_CONTENT      │                  │
 │                                       │  Rate limit      │                  │
@@ -110,11 +112,10 @@ KEY DESIGN PRINCIPLES:
 │                                                                              │
 │  ANTI-SCRAPING MECHANICS                                                    │
 │  ─────────────────────                                                      │
-│  ✓ DB_INDEX: Listable, searchable, NO high-value content                   │
-  ✓ DB_CONTENT: Document ID = HKDF-derived token (unguessable)              │
-│  ✓ Token mapping: Stored ONLY in backend, never exposed to client          │
-│  ✓ Rate limiting: Per-token, per-IP, per-user tiers                        │
-│  ✓ Audio validation: Size check + duration check + format verification     │
+│  ✓ Search response: Listable metadata, NO high-value content or token       │
+│  ✓ DB_CONTENT: Document ID = HKDF-derived token (unguessable)               │
+│  ✓ Token mapping: Stored ONLY in backend, never exposed to client           │
+│  ✓ Rate limiting: Per-token, per-IP, per-user tiers                         │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
 
@@ -127,9 +128,9 @@ TOKEN MAPPING SCHEMA:
 │    "displayName": "Product Name",    // Safe for public         │
 │    "category": "category-tag",       // Filterable              │
 │    "contentHash": "sha256(...)",     // Integrity verification  │
-│    "contentToken": "hkdf(secret,     // Opaque reference to     │
-│                       sourceId)",     // DB_CONTENT (NEVER      │
-│    "metadata": {...}                 //  exposed to client)     │
+│    "contentToken": "hkdf(secret,     // Backend-only reference │
+│                       sourceId)",     // stripped from public   │
+│    "metadata": {...}                 // search results          │
 │  }                                                              │
 │                                                                 │
 │  DB_CONTENT Document                                            │
@@ -158,16 +159,16 @@ TOKEN MAPPING SCHEMA:
 │  │ LAYER 1: NETWORK PERIMETER                                            │   │
 │  │ ├─ Rate Limiting (IP + User + Endpoint)                              │   │
 │  │ ├─ Geo Allowlist (Configurable country codes)                        │   │
-│  │ ├─ Audio/Upload Validation (Size, Duration, MIME, Entropy)           │   │
-│  │ └─ Auth Token Verification (Firebase/JWT)                            │   │
+│  │ ├─ Audio/Upload Validation (Size, MIME, Duration Heuristic)          │   │
+│  │ └─ Cooldown Enforcement                                               │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                         │
 │                                    ▼                                         │
 │  ┌──────────────────────────────────────────────────────────────────────┐   │
 │  │ LAYER 2: SEMANTIC FIREWALL (Koma Gate)                                │   │
-│  │ ├─ Prompt Injection Detection (Regex + LLM)                          │   │
+│  │ ├─ Prompt Injection Detection (LLM classifier)                       │   │
 │  │ ├─ Intent Classification (In-Scope vs Out-of-Scope)                  │   │
-│  │ ├─ Profanity/Toxicity Filter                                         │   │
+│  │ ├─ Domain Scope Enforcement                                           │   │
 │  │ └─ Fail-Open Design (Availability Priority)                          │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │
 │                                    │                                         │
@@ -184,7 +185,7 @@ TOKEN MAPPING SCHEMA:
 │  │ LAYER 3: DATA ACCESS CONTROL (Koma Core)                              │   │
 │  │ ├─ Dual-Collection Architecture (Index + Content)                    │   │
 │  │ ├─ Cryptographic Token Mapping (HKDF-derived)                        │   │
-│  │ ├─ SPL_ID as Document ID (Prevents Enumeration)                      │   │
+│  │ ├─ Random-suffix index IDs + token-addressed content                 │   │
 │  │ ├─ Per-Token Rate Limiting                                           │   │
 │  │ └─ Audit Trail + Access Tracking                                     │   │
 │  └──────────────────────────────────────────────────────────────────────┘   │

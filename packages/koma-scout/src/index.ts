@@ -2,7 +2,7 @@
  * Koma Scout: anti-bot voice and API rate limiting middleware.
  * 
  * Distilled from production voice AI system. Handles:
- * - Binary stream/audio entry-point validation (size, duration, entropy)
+ * - Binary stream/audio entry-point validation (size, MIME, duration heuristic)
  * - Token bucket rate limiting (Firestore-backed, distributed-safe)
  * - Geographic allowlisting (configurable country codes)
  * - Cooldown enforcement between requests
@@ -36,7 +36,7 @@ export interface RateLimitConfig {
 export interface AudioValidationConfig {
   /** Maximum audio file size in bytes (default: 5MB) */
   maxSizeBytes: number;
-  /** Minimum audio file size in bytes (default: 6KB - silence guard) */
+  /** Minimum audio file size in bytes (default: 8KB - undersized upload guard) */
   minSizeBytes: number;
   /** Maximum recording duration in ms (default: 12s) */
   maxDurationMs: number;
@@ -268,7 +268,7 @@ export interface AudioValidationResult {
 /**
  * Validates audio uploads before expensive AI processing.
  * Prevents:
- * - Silent/near-silent recordings that cause hallucination
+ * - Undersized or too-short recordings that often produce poor transcriptions
  * - Oversized files (DoS)
  * - Invalid formats
  * - Rapid-fire requests (emulator/script flooding)
@@ -317,7 +317,7 @@ export class AudioValidator {
     if (approxRawSize < this.config.minSizeBytes) {
       return { 
         valid: false, 
-        error: `Audio too small (likely silence): ${approxRawSize} bytes (min ${this.config.minSizeBytes})`, 
+        error: `Audio too small: ${approxRawSize} bytes (min ${this.config.minSizeBytes})`,
         errorCode: 'TOO_SMALL',
         metadata: { sizeBytes: approxRawSize, mimeType }
       };
@@ -335,8 +335,8 @@ export class AudioValidator {
       };
     }
 
-    // 4. Duration estimation (rough: 44.1kHz 16-bit mono = ~88KB/s)
-    const estimatedDurationMs = (approxRawSize / 88) * 1000;
+    // 4. Duration estimation (rough: 44.1kHz 16-bit mono = 88.2 bytes/ms)
+    const estimatedDurationMs = approxRawSize / 88.2;
     if (estimatedDurationMs > this.config.maxDurationMs) {
       return {
         valid: false,
@@ -394,7 +394,7 @@ export class GeoAllowlist {
       allowedCountries: config.allowedCountries ?? ['US', 'FI'],
       ipinfoToken: config.ipinfoToken,
       cacheTtlMs: config.cacheTtlMs ?? 60 * 60 * 1000,
-      failOpen: config.failOpen ?? false
+      failOpen: config.failOpen ?? true
     };
     this.config = {
       allowedCountries: resolvedConfig.allowedCountries,

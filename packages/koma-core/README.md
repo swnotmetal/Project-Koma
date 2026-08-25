@@ -72,9 +72,12 @@ const result = await storage.writer.ingest({
   payload: { title: 'Meeting Notes', body: 'Confidential content' },
 });
 
-// Read: search the index, resolve the token, fetch content
-const hits = await storage.reader.search('Meeting');
-const detail = await storage.reader.getContent(hits[0].contentToken);
+// Read: public search results do not contain the content token.
+const hits = await storage.reader.search({ category: 'internal' });
+
+// In an authenticated backend route, resolve the selected hit to the sourceId
+// that your application already owns, then derive and fetch content internally.
+const detail = await storage.reader.fetchBySourceId('doc-42', 'enterprise');
 ```
 
 ## Exports

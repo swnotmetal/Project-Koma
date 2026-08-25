@@ -50,9 +50,10 @@ instance, so it cannot enforce a hard daily budget.
 
 1. `cd demo/web && npm install`
 2. Set your key as a secret: `npx wrangler secret put GEMINI_API_KEY`
-3. (Optional kill switch) Create a KV namespace, uncomment the `kv_namespaces`
+3. Apply the feedback schema: `npx wrangler d1 migrations apply koma-demo-feedback --remote`
+4. (Optional kill switch) Create a KV namespace, uncomment the `kv_namespaces`
    block in `wrangler.toml`, and paste the id.
-4. `npx wrangler deploy`
+5. `npx wrangler deploy`
 
 `wrangler.toml` is already configured with:
 
@@ -60,10 +61,17 @@ instance, so it cannot enforce a hard daily budget.
 - `nodejs_compat` (enabled by default on compatibility date ≥ 2026-08-04, needed
   by `koma-gate`'s `crypto.createHash`)
 - A Durable Object rate limiter: **30 req/min per IP + 500 req/day global hard cap**
+- An EU-region D1 database for explicitly opted-in wrong-verdict feedback; prompts
+  are not stored during normal classification, users can delete by submission ID,
+  and feedback rows expire after 30 days
 
-> ⚠️ The Cloudflare Worker currently serves the **Gate** tab only. Scout (pure
-> logic) and Core (needs Node's `crypto.hkdfSync`) run on the Node server path —
-> deploy to Railway/Zeabur or run locally for all three tabs.
+The Cloudflare Worker serves all three tabs. Gate runs the real `koma-gate`
+classifier, Scout runs deterministic pre-flight checks, and Core runs the real
+`koma-core` package with an in-memory demo adapter. The compatibility date
+enables the Node crypto APIs used by Core.
+
+The daily cron deletes expired feedback rows. See the just-in-time notice in the
+Gate tab and `public/privacy.html` before changing the collected fields or retention.
 
 ### Vercel
 

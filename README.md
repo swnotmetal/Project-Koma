@@ -43,6 +43,7 @@ npm install koma-gate
 | AI chatbot | Prompt injection / jailbreak | Semantic filter blocks attacks before the model | `koma-gate` |
 | Voice AI | Audio abuse / flooding | Validation + rate limiting + geo | `koma-scout` |
 | RAG / search | Data enumeration / scraping | Split index from content, token-gate retrieval | `koma-core` |
+| AI coding agent | Skill omission / compliance drift | Verify preparation, actions, and completion evidence | `koma-miko` *(source alpha)* |
 
 Different attacks cross different boundaries. Koma provides a small primitive for each one.
 
@@ -110,6 +111,12 @@ curl http://localhost:8080/self-test
 
 Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
 
+**Experimental: `koma-miko` source alpha** — verifies that an agent loaded the
+required skill, stayed within its action contract, and produced completion evidence
+such as tests or rendered UI review. It is deterministic, has 19 alpha tests, and
+is deliberately not published to npm yet. [README →](./packages/koma-miko/README.md) ·
+[research and design →](./docs/design/miko.md)
+
 **MCP servers** — expose Koma to AI agents directly:
 
 - `koma-gate-mcp` — `classify_input` tool for prompt-injection checks. [README →](./packages/koma-gate-mcp/README.md)
@@ -138,9 +145,9 @@ Koma is designed for both human and agent discoverability — including two [MCP
 
 ### Trust & Safety
 
-- **Zero runtime dependencies.** No supply-chain surface.
+- **Minimal dependency surface.** Gate and Core have no third-party runtime dependencies; Scout declares Express as a peer.
 - **No code execution.** Classifies, rate-limits, stores — never executes AI output.
-- **Fail-closed by default.** A broken guard blocks, not passes.
+- **Fail-open by default.** A broken optional guard does not take down the app; security-first deployments can set `failOpen: false`.
 - **CodeQL on every push.** Targets OWASP LLM01.
 - **MIT licensed.**
 
@@ -148,6 +155,6 @@ Koma is designed for both human and agent discoverability — including two [MCP
 
 ---
 
-Koma comes from Komainu ("狛犬"), the stone guardian lions of Japanese Shinto shrines. Three defense layers. Each standalone. Patterns distilled from production, not papers.
+Koma comes from Komainu ("狛犬"), the stone guardian lions of Japanese Shinto shrines. Three deployed defense layers, each standalone, plus the experimental Miko agent-contract boundary. Patterns distilled from production, not papers.
 
 [License](./LICENSE)

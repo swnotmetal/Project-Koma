@@ -75,7 +75,7 @@ middlewares.forEach((mw) => app.use(mw));
 
 - burst traffic from scripts or bots
 - repeated uploads inside a short window
-- near-silent or undersized audio
+- undersized or too-short audio uploads (not acoustic silence detection)
 - unsupported audio formats
 - optional geographic allowlisting
 

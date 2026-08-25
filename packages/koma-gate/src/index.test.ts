@@ -117,15 +117,16 @@ describe('KomaGuard', () => {
     expect(result.rejectReason).toContain('exceeds maximum length');
   });
 
-  it('should fail open on adapter error', async () => {
-    const guard = new KomaGuard(createMockConfig({
+  it('should fail open on adapter error by default', async () => {
+    const config = createMockConfig({
       llm: {
         provider: 'custom',
         model: 'mock',
         customRequest: async () => { throw new Error('Network error'); },
       },
-      behavior: { failOpen: true, maxInputLength: 500, logDecisions: false },
-    }));
+    });
+    delete config.behavior;
+    const guard = new KomaGuard(config);
 
     const result = await guard.classify('anything');
     expect(result.allowed).toBe(true); // fail-open

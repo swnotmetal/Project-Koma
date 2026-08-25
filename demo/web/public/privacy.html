@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Koma Demo — Privacy</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    :root { color-scheme: light; --text:#18181b; --muted:#62626a; --border:#e8e4de; --accent:#a34c2b; --panel:#fff; --bg:#fafafa; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    main { width: min(760px, calc(100% - 42px)); margin: 55px auto 89px; background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 34px; }
+    h1 { margin: 0 0 8px; font-size: 32px; }
+    h2 { margin: 34px 0 8px; font-size: 19px; }
+    p, li { color: var(--muted); }
+    strong { color: var(--text); }
+    a { color: var(--accent); }
+    code { background: #f4f2ef; padding: 2px 5px; border-radius: 5px; }
+    .summary { border-left: 3px solid var(--accent); padding: 10px 16px; background: #f4f2ef; }
+    .back { display: inline-block; margin-bottom: 21px; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="/">← Back to the demo</a>
+    <h1>Koma demo privacy notice</h1>
+    <p>Last updated: 25 August 2026</p>
+
+    <p class="summary"><strong>Koma does not save prompts by default.</strong> A prompt is stored only when you mark a verdict as wrong, tick the sharing checkbox, and submit the feedback.</p>
+
+    <h2>Classification</h2>
+    <p>When you run Koma Gate, the prompt and selected assistant scene are sent through the Koma Cloudflare Worker to the configured LLM provider so it can produce a verdict. The current provider and model are shown with each result. This processing is necessary to provide the demo response; it does not opt the prompt into Koma's feedback database.</p>
+
+    <h2>Optional feedback</h2>
+    <p>If you explicitly share a wrong verdict, Koma stores:</p>
+    <ul>
+      <li>the prompt text;</li>
+      <li>the selected assistant scene;</li>
+      <li>the verdict returned by Gate and the verdict you expected;</li>
+      <li>the submission time, expiry time, and a random submission ID.</li>
+    </ul>
+    <p>The purpose is to reproduce false positives and false negatives and improve Koma's tests. The legal basis for this optional storage is your consent. You can use the classifier without giving that consent.</p>
+
+    <h2>What the feedback database does not store</h2>
+    <p>It does not store an account, email address, cookies, IP address, or user-agent string. Cloudflare still processes network information such as your IP address to deliver and rate-limit the request. The Koma rate limiter converts the address to a keyed HMAC identifier and automatically deletes request-window data after it expires; it does not write the raw address to its storage. The configured LLM provider processes the prompt to classify it under that provider's terms and privacy policy.</p>
+
+    <h2>Storage and retention</h2>
+    <p>Opt-in feedback is stored in a Cloudflare D1 database constrained to the European Union. Each record receives an expiry time 30 days after submission and is removed by a scheduled cleanup. There is no public read endpoint for the database.</p>
+
+    <h2>Your choices and rights</h2>
+    <p>Do not submit secrets, health information, or other personal data. Immediately after saving, you can use <strong>Delete my saved feedback</strong> to withdraw consent and remove that row. If you leave the page, keep the submission ID: send <code>DELETE /api/feedback/{submission ID}</code>, or request access or deletion through the project's <a href="https://github.com/swnotmetal/Project-Koma/security/advisories/new">private GitHub reporting channel</a>. Do not paste the prompt into a public issue.</p>
+
+    <h2>Controller and contact</h2>
+    <p>The Koma project maintainer, Shuang Wu, determines the purpose of the optional feedback collection. The private reporting channel above is the contact route for privacy requests.</p>
+  </main>
+</body>
+</html>

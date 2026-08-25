@@ -1,0 +1,41 @@
+{
+  "name": "koma-miko",
+  "version": "0.1.0-alpha.0",
+  "description": "Deterministic skill and action contract verification for AI agent workflows.",
+  "author": "Shuang Wu",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepack": "npm run build",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "README.zh-CN.md"
+  ],
+  "keywords": [
+    "ai",
+    "agents",
+    "skills",
+    "contracts",
+    "guardrails",
+    "hooks",
+    "typescript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swnotmetal/Project-Koma"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "homepage": "https://github.com/swnotmetal/Project-Koma#readme"
+}

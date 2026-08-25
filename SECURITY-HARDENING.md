@@ -8,7 +8,7 @@ This document tracks known security limitations, their status, and the rationale
 |---|-------|-----|--------|
 | 1 | `getPreview()` bypassed authorization entirely — no userTier, no rate limit | Added access-tier enforcement; preview is now gated the same as full content | — |
 | 2 | `search()` returned `contentToken` in public results, contradicting the "token never exposed" security architecture | `contentToken` now excluded by default; gated behind explicit `includeTokens: true` opt-in | — |
-| 3 | All components defaulted to `failOpen: true` — a security component should default to secure | Changed to `failOpen: false` across gate, scout, and all presets. Users who need availability-over-security can opt in explicitly | — |
+| 3 | Failure-mode defaults and documentation disagreed across packages | Standardized optional guards on `failOpen: true`; security-first deployments, MCP entry points, the public demo, and benchmarks opt into `failOpen: false` explicitly | — |
 
 ## P1 — Fixed
 
@@ -26,7 +26,7 @@ This document tracks known security limitations, their status, and the rationale
 |---|-------|----------------|
 | A | Gate is an LLM judge, not true instruction isolation — policy and user input share a message | Inherent to the scope-classifier architecture. Documented in [Security Boundary](https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-gate/README.md#security-boundary). Mitigation: use providers with system/user message separation |
 | B | Benchmark corpus (263 attacks, 50 safe) is too small for production confidence | Acknowledged. 96.2% is a dataset score, not a security guarantee. Expanding corpus is tracked in [Future Work](https://github.com/swnotmetal/Project-Koma/blob/main/BENCHMARKS.md#future-work) |
-| C | Audio duration is estimated from file size (88KB/s heuristic), not parsed from container metadata | By design for zero-dependency. Renamed in docs from "duration validation" to "size-based heuristic." For production, use a dedicated audio processing pipeline |
+| C | Audio duration is estimated from file size (88KB/s heuristic), not parsed from container metadata | By design for a dependency-light perimeter check. Renamed in docs from "duration validation" to "size-based heuristic." For production, use a dedicated audio processing pipeline |
 | D | Geo allowlist falls open when ipinfo is unreachable | Documented. For compliance use cases, set `failOpen: false` explicitly |
 | E | Geo trusts `req.ip` without enforcing trusted-proxy configuration | Documented. Users must configure Express `trust proxy` for accurate client IP behind reverse proxies |
 | F | Firestore rate-limit key truncated to 128 chars — long keys may collide | Acknowledged. Low-severity for typical key lengths. Hash-based key storage recommended for production |
@@ -40,8 +40,8 @@ Koma is not a production-grade security appliance. It is a set of **AI applicati
 
 - **Scope over depth**: Each layer solves one problem well, rather than three problems partially
 - **Honesty over marketing**: Limitations are documented before features are added
-- **Fail-secure by default**: v0.2+ defaults to `failOpen: false`; availability-first mode is opt-in
-- **Zero-dependency by design**: Every external dependency is a supply-chain risk. Audio duration uses a heuristic, not a library, by choice
+- **Availability-safe by default**: optional guards fail open; security-first applications opt into `failOpen: false`
+- **Minimal dependencies by design**: Core primitives avoid third-party runtime dependencies where practical. Audio duration uses a documented heuristic, not a parser library, by choice
 
 ## Contributing
 

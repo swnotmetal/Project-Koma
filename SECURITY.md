@@ -32,9 +32,9 @@ technique, the challenge issue is public.
 
 Koma is built with defense-first design, targeting the most common LLM security threats (OWASP Top 10 for LLM: LLM01 Prompt Injection, LLM02 Insecure Output Handling, LLM06 Sensitive Information Disclosure). Every layer follows these rules:
 
-- **Fail-closed by default.** A broken classifier, rate limiter, or storage layer
-  defaults to rejecting the request. Security is not sacrificed for availability
-  — set `failOpen: true` explicitly if your use case requires availability-first behavior.
+- **Fail-open by default for optional guards.** A classifier or geo lookup failure
+  does not take down the application. Security-first deployments should set
+  `failOpen: false`; the public demo and benchmark suite do so explicitly.
 - **Least privilege.** Gate presets use the smallest possible LLM models
   (~500 token budget). Scout checks are deterministic and stateless wherever
   possible. Core tokens are backend-derived and never exposed to clients.

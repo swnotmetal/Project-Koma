@@ -5,6 +5,7 @@ node_modules/
 dist/
 build/
 coverage/
+.wrangler/
 
 # Editor and OS files
 .DS_Store
