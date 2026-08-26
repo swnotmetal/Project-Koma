@@ -189,30 +189,32 @@
 
     .lead { color: var(--muted); font-size: var(--fs-sm); line-height: 1.55; margin: 0 0 var(--sp-4); max-width: 60ch; }
 
-    /* Scout: attack-stream */
-    .scout-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-4); }
-    .scout-header > div:first-child { flex: 1; min-width: 260px; }
-    .scout-header .lead { margin-bottom: 0; }
-    .scout-metrics { display: flex; gap: var(--sp-4); }
-    .metric { text-align: right; }
-    .metric-num { display: block; font-family: var(--mono); font-size: var(--fs-lg); font-weight: 800; color: var(--text); line-height: 1; }
-    .metric-label { font-size: var(--fs-xs); color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
-    .stream { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--sp-3); }
-    .req {
-      display: flex; align-items: center; gap: var(--sp-3);
-      border: 1px solid var(--border); border-radius: var(--r-md);
-      padding: var(--sp-2) var(--sp-3); background: var(--panel-2);
-      animation: fadein 0.25s ease;
-    }
-    @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-    .req-label { flex: 1; font-family: var(--mono); font-size: var(--fs-sm); color: var(--text); }
-    .req-reason { font-size: var(--fs-xs); color: var(--muted); }
-    .req-reason.fail { color: var(--red); }
-    .req-badge { font-family: var(--mono); font-weight: 800; font-size: var(--fs-xs); letter-spacing: 0.04em; padding: 3px 10px; border-radius: 999px; white-space: nowrap; }
-    .req-badge.pass { background: rgba(24,122,82,0.12); color: var(--green); }
-    .req-badge.block { background: rgba(201,58,58,0.12); color: var(--red); }
-    .scout-grid { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--sp-4); }
-    .scout-grid > section { min-width: 0; }
+    /* Scout + Core: scenario-first developer demos */
+    .defense-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-4); align-items: end; margin-bottom: var(--sp-3); }
+    .defense-hero h2 { margin: 0 0 var(--sp-2); font-size: clamp(22px, 3vw, 32px); letter-spacing: -0.025em; }
+    .defense-hero .lead { margin: 0; max-width: 68ch; font-size: var(--fs-md); }
+    .defense-proof { border: 1px solid var(--border); border-radius: 999px; padding: 6px 11px; color: var(--muted); background: var(--panel-2); font: 600 var(--fs-xs) var(--mono); white-space: nowrap; }
+    .scenario-bar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-3) 0 var(--sp-4); }
+    .scenario-label { color: var(--muted); font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-right: var(--sp-1); }
+    .scenario-chip { border: 1px solid var(--border); border-radius: 999px; padding: 6px 11px; background: var(--panel); color: var(--muted); cursor: pointer; font: 600 var(--fs-xs) var(--mono); }
+    .scenario-chip:hover, .scenario-chip[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: rgba(194,94,56,0.07); }
+    .scenario-chip.risky[aria-pressed="true"] { border-color: rgba(201,58,58,0.45); color: var(--red); background: rgba(201,58,58,0.06); }
+    .defense-grid { display: grid; grid-template-columns: minmax(0, 1.38fr) minmax(290px, 0.62fr); gap: var(--sp-4); align-items: start; }
+    .defense-terminal { padding: 0; overflow: hidden; background: #17191c; border-color: #292d32; min-height: 510px; }
+    .defense-terminal .miko-terminal-body { height: 385px; }
+    .defense-terminal-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 12px 14px; border-top: 1px solid #2d3136; background: #202328; }
+    .defense-terminal-footer span { color: #969fa8; font: var(--fs-xs) var(--mono); }
+    .defense-terminal-footer button { border: 1px solid #bf5a38; border-radius: 6px; background: #a7462b; color: white; padding: 8px 13px; cursor: pointer; font-weight: 700; }
+    .defense-inspector { display: flex; flex-direction: column; }
+    .defense-verdict { display: inline-flex; align-self: flex-start; border-radius: 999px; padding: 5px 10px; margin-bottom: var(--sp-2); font: 800 var(--fs-xs) var(--mono); }
+    .defense-verdict.idle { background: var(--panel-2); color: var(--muted); }
+    .defense-verdict.block { background: rgba(201,58,58,0.1); color: var(--red); }
+    .defense-verdict.pass { background: rgba(24,122,82,0.1); color: var(--green); }
+    .defense-title { margin: var(--sp-2) 0; font-size: 23px; line-height: 1.25; }
+    .defense-copy { color: var(--muted); font-size: var(--fs-sm); line-height: 1.65; min-height: 72px; }
+    .defense-details { border-top: 1px solid var(--border); padding-top: var(--sp-3); margin-top: var(--sp-3); }
+    .defense-details summary { cursor: pointer; color: var(--text); font-size: var(--fs-sm); font-weight: 700; }
+    .defense-details summary:hover { color: var(--accent-strong); }
     .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
     .field-grid .field { margin-bottom: 0; }
     .policy-box {
@@ -221,33 +223,21 @@
       color: var(--muted); font-family: var(--mono); line-height: 1.7;
     }
     .policy-box strong { color: var(--text); }
-    .trace-verdict { display: flex; align-items: center; gap: var(--sp-3); margin-bottom: var(--sp-3); }
-    .trace-verdict .req-reason { margin-left: auto; }
-    .check-row {
-      display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; align-items: center;
-      gap: var(--sp-3); padding: var(--sp-2) 0; border-bottom: 1px solid var(--border);
-      font-size: var(--fs-sm);
-    }
-    .check-row:last-child { border-bottom: none; }
-    .check-name { font-family: var(--mono); color: var(--text); }
-    .check-detail { color: var(--muted); font-size: var(--fs-xs); }
     .simulator-note { margin-top: var(--sp-3); color: var(--muted); font-size: var(--fs-xs); line-height: 1.55; }
-    @media (max-width: 820px) {
-      .scout-grid { grid-template-columns: 1fr; }
-      .field-grid { grid-template-columns: 1fr; }
-      .scout-metrics { width: 100%; justify-content: space-between; }
-      .metric { text-align: left; }
+    .core-index-raw { max-height: 190px; font-size: 10px; margin-top: var(--sp-2); }
+    .core-path { font: 11px/1.65 var(--mono); color: var(--muted); margin-top: var(--sp-2); }
+    .core-path strong { color: var(--text); }
+    @media (max-width: 900px) {
+      .defense-hero { grid-template-columns: 1fr; align-items: start; }
+      .defense-proof { justify-self: start; }
+      .defense-grid { grid-template-columns: 1fr; }
     }
-
-    /* Core: scraper view */
-    .doc-id { font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); word-break: break-all; margin-top: var(--sp-1); }
-    .doc-id b { color: var(--accent-strong); font-weight: 700; }
-    .attempt { font-family: var(--mono); font-size: var(--fs-xs); padding: var(--sp-2) 0; border-bottom: 1px solid var(--border); line-height: 1.5; word-break: break-all; }
-    .attempt:last-child { border-bottom: none; }
-    .attempt .ok { color: var(--green); }
-    .attempt .fail { color: var(--red); }
-    .core-why { margin-top: var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--muted); line-height: 1.6; }
-    .core-why strong { color: var(--text); }
+    @media (max-width: 520px) {
+      .field-grid { grid-template-columns: 1fr; }
+      .defense-terminal .miko-terminal-body { height: 390px; }
+      .defense-terminal-footer { align-items: flex-start; flex-direction: column; }
+      .defense-terminal-footer button { width: 100%; }
+    }
 
     /* Miko: CLI-shaped deterministic replay */
     .miko-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-4); align-items: end; margin-bottom: var(--sp-4); }
@@ -276,6 +266,10 @@
     .miko-terminal-line.claude .miko-speaker { color: #b9a0ec; }
     .miko-terminal-line.miko .miko-speaker { color: #e58a63; font-weight: 700; }
     .miko-terminal-line.runner .miko-speaker { color: #74b7d9; }
+    .miko-terminal-line.app .miko-speaker { color: #f0c36c; }
+    .miko-terminal-line.scout .miko-speaker { color: #68c7d8; font-weight: 700; }
+    .miko-terminal-line.attacker .miko-speaker { color: #ff8f88; }
+    .miko-terminal-line.core .miko-speaker { color: #82d39f; font-weight: 700; }
     .miko-terminal-line.deny .miko-text { color: #ff8881; font-weight: 700; }
     .miko-terminal-line.review .miko-text { color: #f2c66d; font-weight: 700; }
     .miko-terminal-line.allow .miko-text { color: #7fd69f; font-weight: 700; }
@@ -439,105 +433,119 @@
 
     <!-- SCOUT -->
     <div class="tabpanel" id="tab-scout" role="tabpanel" aria-labelledby="tab-btn-scout">
-      <div class="scout-header">
+      <div class="defense-hero">
         <div>
-          <h2>Scout — request metadata simulator</h2>
-          <p class="lead">Explore the cheap pre-flight boundary before an upload reaches transcription or an LLM. No model call is made here.</p>
+          <h2>Stop bad voice uploads before they burn an AI call.</h2>
+          <p class="lead">Pick a real failure mode. Scout checks the cheap request boundary first, then either blocks immediately or hands the request to your expensive transcription and LLM pipeline.</p>
         </div>
-        <div class="scout-metrics" aria-label="Scout results">
-          <div class="metric"><span class="metric-num" id="scout-blocked">0</span><span class="metric-label">blocked</span></div>
-          <div class="metric"><span class="metric-num" id="scout-passed">0</span><span class="metric-label">passed</span></div>
-          <div class="metric"><span class="metric-num" id="scout-saved">0</span><span class="metric-label">downstream calls avoided</span></div>
-        </div>
+        <span class="defense-proof">real deterministic Scout checks · 0 LLM calls</span>
       </div>
 
-      <div class="scout-grid">
-        <section class="panel">
-          <h2>Build an incoming request</h2>
-          <div class="field-grid">
-            <div class="field">
-              <label class="field-label" for="scout-size">Upload size (bytes)</label>
-              <input id="scout-size" type="number" min="0" max="10000000" step="1" value="176400" />
-            </div>
-            <div class="field">
-              <label class="field-label" for="scout-duration">Declared duration (ms)</label>
-              <input id="scout-duration" type="number" min="0" max="120000" step="100" value="2000" />
-            </div>
-            <div class="field">
-              <label class="field-label" for="scout-mime">MIME type</label>
-              <select id="scout-mime">
-                <option value="audio/wav">audio/wav</option>
-                <option value="audio/mp4">audio/mp4</option>
-                <option value="audio/webm">audio/webm</option>
-                <option value="audio/mp3">audio/mp3</option>
-                <option value="text/plain">text/plain</option>
-              </select>
-            </div>
-            <div class="field">
-              <label class="field-label" for="scout-country">Request country</label>
-              <select id="scout-country">
-                <option value="US">US</option>
-                <option value="FI">FI</option>
-                <option value="DE">DE</option>
-                <option value="LOCAL">LOCAL</option>
-              </select>
-            </div>
-            <div class="field">
-              <label class="field-label" for="scout-burst">Requests in this burst</label>
-              <input id="scout-burst" type="number" min="1" max="10" step="1" value="1" />
-            </div>
-          </div>
+      <div class="scenario-bar" aria-label="Scout scenarios">
+        <span class="scenario-label">Try a request</span>
+        <button class="scenario-chip risky" type="button" data-scout-scenario="oversized" aria-pressed="true">6 MB upload bomb</button>
+        <button class="scenario-chip" type="button" data-scout-scenario="legit" aria-pressed="false">Normal voice note</button>
+        <button class="scenario-chip risky" type="button" data-scout-scenario="badformat" aria-pressed="false">Text disguised as audio</button>
+        <button class="scenario-chip risky" type="button" data-scout-scenario="flood" aria-pressed="false">Bot burst ×6</button>
+        <button class="scenario-chip risky" type="button" data-scout-scenario="region" aria-pressed="false">Blocked region</button>
+        <button class="scenario-chip risky" type="button" data-scout-scenario="undersized" aria-pressed="false">Empty clip</button>
+      </div>
 
-          <div class="policy-box">
-            <strong>Active policy</strong><br>
-            MIME: audio/* allowlist · size: 8,000–5,242,880 B · duration: 1,500–12,000 ms<br>
-            country: US / FI / LOCAL · burst: first 3 requests per 1.5 s
+      <div class="defense-grid">
+        <section class="panel defense-terminal" aria-label="Scout request terminal">
+          <div class="miko-terminal-bar">
+            <span class="miko-window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="miko-terminal-title">voice-api — request boundary</span>
+            <span class="miko-attached">● Scout attached</span>
           </div>
-
-          <div class="examples" aria-label="Request presets">
-            <button class="chip" data-scenario="legit">Legit</button>
-            <button class="chip bad" data-scenario="undersized">Undersized</button>
-            <button class="chip bad" data-scenario="oversized">Oversized</button>
-            <button class="chip bad" data-scenario="badformat">Wrong format</button>
-            <button class="chip bad" data-scenario="region">Outside allowlist</button>
-            <button class="chip bad" data-scenario="flood">Flood ×6</button>
+          <div class="miko-terminal-body" id="scout-terminal" aria-live="polite"></div>
+          <div class="defense-terminal-footer">
+            <span id="scout-request-summary">6.0 MB · audio/mp4 · 60.0s · US</span>
+            <button id="run-scout" type="button">Send this request</button>
           </div>
-          <button class="run" id="run-scout">Run request</button>
-          <div class="simulator-note">This demo sends simulated request metadata, not audio content. Scout's package-level audio validator uses file size, MIME, and a documented PCM duration heuristic; it does not detect acoustic silence.</div>
         </section>
 
-        <section class="panel result-panel">
-          <h2>Pre-flight trace</h2>
-          <div id="scout-trace" aria-live="polite">
-            <div class="state"><div><div class="big">Ready to inspect</div><div>Edit the request or choose a preset.</div></div></div>
+        <aside class="panel defense-inspector" aria-live="polite">
+          <span class="defense-verdict idle" id="scout-verdict">READY</span>
+          <h3 class="defense-title" id="scout-title">The expensive pipeline has not started.</h3>
+          <p class="defense-copy" id="scout-copy">Send the 6 MB upload bomb. You will see exactly which cheap checks fail before a single byte reaches transcription or an LLM.</p>
+
+          <div class="miko-receipts" aria-label="Scout outcome">
+            <div class="miko-receipt"><span>Downstream AI call</span><strong id="scout-downstream">not started</strong></div>
+            <div class="miko-receipt"><span>Failed boundary</span><strong id="scout-boundary">not checked</strong></div>
+            <div class="miko-receipt"><span>Scout check time</span><strong id="scout-latency">—</strong></div>
           </div>
-          <div class="stream" id="scout-stream" aria-live="polite"></div>
-        </section>
+
+          <details class="defense-details">
+            <summary>Tune the request metadata</summary>
+            <div class="field-grid" style="margin-top:var(--sp-3)">
+              <div class="field"><label class="field-label" for="scout-size">Upload size (bytes)</label><input id="scout-size" type="number" min="0" max="10000000" step="1" value="6291456" /></div>
+              <div class="field"><label class="field-label" for="scout-duration">Declared duration (ms)</label><input id="scout-duration" type="number" min="0" max="120000" step="100" value="60000" /></div>
+              <div class="field"><label class="field-label" for="scout-mime">MIME type</label><select id="scout-mime"><option value="audio/wav">audio/wav</option><option value="audio/mp4" selected>audio/mp4</option><option value="audio/webm">audio/webm</option><option value="audio/mp3">audio/mp3</option><option value="text/plain">text/plain</option></select></div>
+              <div class="field"><label class="field-label" for="scout-country">Request country</label><select id="scout-country"><option value="US">US</option><option value="FI">FI</option><option value="DE">DE</option><option value="LOCAL">LOCAL</option></select></div>
+              <div class="field"><label class="field-label" for="scout-burst">Requests in this burst</label><input id="scout-burst" type="number" min="1" max="10" step="1" value="1" /></div>
+            </div>
+          </details>
+          <details class="defense-details">
+            <summary>Under the hood — active policy</summary>
+            <div class="policy-box"><strong>Cheap checks, first</strong><br>MIME: audio/* allowlist · size: 8,000–5,242,880 B<br>duration: 1,500–12,000 ms · country: US / FI / LOCAL<br>burst: first 3 requests per 1.5 s</div>
+          </details>
+          <p class="simulator-note">This browser sends simulated metadata, not audio. Scout's package validator uses size, MIME, and a documented PCM duration heuristic; it does not claim to detect acoustic silence.</p>
+        </aside>
       </div>
     </div>
 
     <!-- CORE -->
     <div class="tabpanel" id="tab-core" role="tabpanel" aria-labelledby="tab-btn-core">
-      <div class="grid">
-        <section class="panel">
-          <h2>What a scraper sees — the public index</h2>
-          <p class="lead">Everything below is fully scrapable. Notice what's missing: the content.</p>
-          <div id="core-index"></div>
-          <button class="run" id="run-scraper">Run the scraper</button>
-        </section>
+      <div class="defense-hero">
+        <div>
+          <h2>Let a scraper steal the whole index—and still get zero content.</h2>
+          <p class="lead">Core separates searchable metadata from protected payloads. Run the attack first, then compare it with the legitimate backend path that can derive the missing content address.</p>
+        </div>
+        <span class="defense-proof">real koma-core split store · no model call</span>
+      </div>
 
-        <section class="panel result-panel">
-          <h2>What the scraper actually gets</h2>
-          <div id="core-attempts" class="stream">
-            <div class="state"><div><div class="big">Run the scraper</div><div>See why a scraped index is worthless to an attacker.</div></div></div>
+      <div class="scenario-bar" aria-label="Core scenarios">
+        <span class="scenario-label">Choose a path</span>
+        <button class="scenario-chip risky" type="button" data-core-scenario="attack" aria-pressed="true">Run scraper attack</button>
+        <button class="scenario-chip" type="button" data-core-scenario="legit" aria-pressed="false">Run legitimate app path</button>
+      </div>
+
+      <div class="defense-grid">
+        <section class="panel defense-terminal" aria-label="Core attack terminal">
+          <div class="miko-terminal-bar">
+            <span class="miko-window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="miko-terminal-title" id="core-terminal-title">scraper — public network</span>
+            <span class="miko-attached">● Core online</span>
+          </div>
+          <div class="miko-terminal-body" id="core-terminal" aria-live="polite"></div>
+          <div class="defense-terminal-footer">
+            <span id="core-run-summary">attacker knows only public index IDs</span>
+            <button id="run-scraper" type="button">Run scraper attack</button>
           </div>
         </section>
-      </div>
-      <div class="core-why">
-        <strong>Why it works:</strong> content is keyed by an opaque token derived from
-        <code>HKDF(masterKey, sourceId)</code>. The index never returns that token, and each
-        <code>indexId</code> carries a random suffix — so a scraped ID is not a content address,
-        and IDs can't be enumerated.
+
+        <aside class="panel defense-inspector" aria-live="polite">
+          <span class="defense-verdict idle" id="core-verdict">READY</span>
+          <h3 class="defense-title" id="core-title">The index is public on purpose.</h3>
+          <p class="defense-copy" id="core-copy">A scraper can copy every search row. It still lacks the server-only source ID and master key required to derive a content token.</p>
+
+          <div class="miko-receipts" aria-label="Core outcome">
+            <div class="miko-receipt"><span>Public index rows</span><strong id="core-index-count">loading…</strong></div>
+            <div class="miko-receipt"><span>Protected contents exposed</span><strong id="core-exposed">not tested</strong></div>
+            <div class="miko-receipt"><span>Content tokens leaked</span><strong id="core-token-state">0</strong></div>
+          </div>
+
+          <details class="defense-details">
+            <summary>Inspect the fully scrapable public index</summary>
+            <pre class="out core-index-raw" id="core-index-raw">Loading public index…</pre>
+          </details>
+          <details class="defense-details">
+            <summary>Under the hood — why the two paths differ</summary>
+            <div class="core-path"><strong>Scraper:</strong> indexId → retrieval attempt → <span class="fail">NOT_FOUND</span><br><strong>Backend:</strong> displayName → secret sourceId → HKDF(masterKey, sourceId) → content token → <span class="ok">payload</span></div>
+          </details>
+          <p class="simulator-note">The demo uses the real Core search, attack, and authorized retrieval routes. The public index intentionally contains metadata and previews—but never payloads or content tokens.</p>
+        </aside>
       </div>
     </div>
 
@@ -872,26 +880,49 @@
       });
     })();
 
+    function addDefenseLine(container, speaker, speakerClass, message, tone, isBreak) {
+      const line = document.createElement('div');
+      line.className = 'miko-terminal-line ' + speakerClass + (tone ? ' ' + tone : '') + (isBreak ? ' break' : '');
+      const who = document.createElement('span');
+      who.className = 'miko-speaker';
+      who.textContent = speaker;
+      const text = document.createElement('span');
+      text.className = 'miko-text';
+      text.textContent = message;
+      line.append(who, text);
+      container.appendChild(line);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function setDefenseVerdict(element, label, state) {
+      element.textContent = label;
+      element.className = 'defense-verdict ' + state;
+    }
+
     // ---- Scout ----
     (function scout() {
       const runBtn = document.getElementById('run-scout');
-      const stream = document.getElementById('scout-stream');
-      const trace = document.getElementById('scout-trace');
-      const blockedEl = document.getElementById('scout-blocked');
-      const passedEl = document.getElementById('scout-passed');
-      const savedEl = document.getElementById('scout-saved');
+      const terminal = document.getElementById('scout-terminal');
+      const requestSummary = document.getElementById('scout-request-summary');
+      const verdict = document.getElementById('scout-verdict');
+      const title = document.getElementById('scout-title');
+      const copy = document.getElementById('scout-copy');
+      const downstream = document.getElementById('scout-downstream');
+      const boundary = document.getElementById('scout-boundary');
+      const latency = document.getElementById('scout-latency');
       const sizeEl = document.getElementById('scout-size');
       const durationEl = document.getElementById('scout-duration');
       const mimeEl = document.getElementById('scout-mime');
       const countryEl = document.getElementById('scout-country');
       const burstEl = document.getElementById('scout-burst');
+      const scenarioButtons = [...document.querySelectorAll('[data-scout-scenario]')];
 
       const REASON = {
-        mime: 'unsupported format',
-        size: 'size out of range',
-        duration: 'duration out of range',
-        country: 'region not allowed',
-        rate: 'rate limited (flood)',
+        mime: 'unsupported MIME',
+        size: 'upload size',
+        duration: 'declared duration',
+        country: 'country allowlist',
+        rate: 'burst rate limit',
       };
 
       const SCENARIOS = {
@@ -902,9 +933,6 @@
         region: { sizeBytes: 176400, durationMs: 2000, mimeType: 'audio/wav', country: 'DE', burst: 1 },
         flood: { sizeBytes: 176400, durationMs: 2000, mimeType: 'audio/wav', country: 'US', burst: 6 },
       };
-
-      let blocked = 0;
-      let passed = 0;
 
       function formatBytes(value) {
         if (value >= 1024 * 1024) return (value / (1024 * 1024)).toFixed(1) + ' MB';
@@ -922,89 +950,36 @@
         };
       }
 
+      function formatRequest(item) {
+        const burst = item.burst > 1 ? ' · ×' + item.burst + ' burst' : '';
+        return formatBytes(item.sizeBytes) + ' · ' + item.mimeType + ' · ' + (item.durationMs / 1000).toFixed(1) + 's · ' + item.country + burst;
+      }
+
+      function resetTerminal() {
+        const item = readRequest();
+        terminal.innerHTML = '';
+        addDefenseLine(terminal, 'app', 'app', 'POST /voice', 'command');
+        addDefenseLine(terminal, 'upload', 'dim', formatRequest(item));
+        addDefenseLine(terminal, 'scout', 'scout', 'waiting at the cheap boundary — transcription has not started', 'dim');
+        requestSummary.textContent = formatRequest(item);
+        setDefenseVerdict(verdict, 'READY', 'idle');
+        title.textContent = 'The expensive pipeline has not started.';
+        copy.textContent = 'Send this request to see which deterministic boundary checks run before transcription or an LLM.';
+        downstream.textContent = 'not started';
+        downstream.className = '';
+        boundary.textContent = 'not checked';
+        boundary.className = '';
+        latency.textContent = '—';
+        latency.className = '';
+      }
+
       function setRequest(value) {
         sizeEl.value = String(value.sizeBytes);
         durationEl.value = String(value.durationMs);
         mimeEl.value = value.mimeType;
         countryEl.value = value.country;
         burstEl.value = String(value.burst);
-      }
-
-      function requestLabel(item, ordinal, total) {
-        const prefix = total > 1 ? 'request ' + ordinal + '/' + total + ' · ' : '';
-        return prefix + item.mimeType + ' · ' + formatBytes(item.sizeBytes) + ' · ' + (item.durationMs / 1000).toFixed(1) + 's · ' + item.country;
-      }
-
-      function addRow(label, ok, reason, elapsedMs) {
-        const row = document.createElement('div');
-        row.className = 'req';
-        const badge = document.createElement('span');
-        badge.className = 'req-badge ' + (ok ? 'pass' : 'block');
-        badge.textContent = ok ? 'PASS' : 'BLOCK';
-        const lbl = document.createElement('span');
-        lbl.className = 'req-label';
-        lbl.textContent = label;
-        row.appendChild(badge);
-        row.appendChild(lbl);
-        if (reason) {
-          const r = document.createElement('span');
-          r.className = 'req-reason fail';
-          r.textContent = reason;
-          row.appendChild(r);
-        } else if (Number.isFinite(elapsedMs)) {
-          const r = document.createElement('span');
-          r.className = 'req-reason';
-          r.textContent = elapsedMs + ' ms';
-          row.appendChild(r);
-        }
-        stream.appendChild(row);
-      }
-
-      function updateMetrics() {
-        blockedEl.textContent = String(blocked);
-        passedEl.textContent = String(passed);
-        savedEl.textContent = String(blocked);
-      }
-
-      function checkDetail(key, item, policy, ordinal) {
-        if (key === 'mime') return item.mimeType + ' · audio allowlist';
-        if (key === 'size') return formatBytes(item.sizeBytes) + ' · expected ' + formatBytes(policy.minSizeBytes) + '–' + formatBytes(policy.maxSizeBytes);
-        if (key === 'duration') return item.durationMs + ' ms · expected ' + policy.minDurationMs + '–' + policy.maxDurationMs + ' ms';
-        if (key === 'country') return item.country + ' · allowlist ' + policy.allowedCountries.join(', ') + ', LOCAL';
-        return 'request ' + ordinal + ' · first ' + policy.burstMax + ' per ' + policy.burstWindowMs + ' ms pass';
-      }
-
-      function renderTrace(data, item, ordinal) {
-        trace.innerHTML = '';
-        const verdict = document.createElement('div');
-        verdict.className = 'trace-verdict';
-        const badge = document.createElement('span');
-        badge.className = 'req-badge ' + (data.passed ? 'pass' : 'block');
-        badge.textContent = data.passed ? 'PASS' : 'BLOCK';
-        const summary = document.createElement('span');
-        summary.className = 'req-label';
-        summary.textContent = data.passed ? 'Request may continue downstream' : 'Stopped before expensive processing';
-        const timing = document.createElement('span');
-        timing.className = 'req-reason';
-        timing.textContent = data.elapsedMs + ' ms';
-        verdict.append(badge, summary, timing);
-        trace.appendChild(verdict);
-
-        Object.entries(data.checks || {}).forEach(([key, ok]) => {
-          const row = document.createElement('div');
-          row.className = 'check-row';
-          const name = document.createElement('span');
-          name.className = 'check-name';
-          name.textContent = key;
-          const detail = document.createElement('span');
-          detail.className = 'check-detail';
-          detail.textContent = checkDetail(key, item, data.policy, ordinal);
-          const status = document.createElement('span');
-          status.className = ok ? 'ok' : 'fail';
-          status.textContent = ok ? 'PASS' : 'BLOCK';
-          row.append(name, detail, status);
-          trace.appendChild(row);
-        });
+        resetTerminal();
       }
 
       async function runCurrent() {
@@ -1012,10 +987,14 @@
         const clientId = (globalThis.crypto && crypto.randomUUID)
           ? crypto.randomUUID()
           : 'run-' + Date.now() + '-' + Math.random();
-        stream.innerHTML = '';
-        blocked = 0;
-        passed = 0;
-        updateMetrics();
+        let blocked = 0;
+        let passed = 0;
+        let elapsed = 0;
+        const failed = new Set();
+
+        terminal.innerHTML = '';
+        addDefenseLine(terminal, 'app', 'app', 'POST /voice  ' + formatRequest(request), 'command');
+        addDefenseLine(terminal, 'scout', 'scout', 'preflight: MIME → size → duration → country → rate', 'dim');
 
         for (let i = 1; i <= request.burst; i++) {
           const item = { ...request, clientId };
@@ -1030,23 +1009,53 @@
             data = await res.json().catch(() => ({}));
             if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
           } catch (error) {
-            trace.innerHTML = '';
-            const state = document.createElement('div');
-            state.className = 'state';
-            state.textContent = error.message || 'Network error';
-            trace.appendChild(state);
-            addRow(requestLabel(item, i, request.burst), false, error.message || 'network error');
-            blocked++;
-            updateMetrics();
-            break;
+            setDefenseVerdict(verdict, 'ERROR', 'block');
+            title.textContent = 'The demo endpoint did not answer.';
+            copy.textContent = error.message || 'Network error';
+            addDefenseLine(terminal, 'network', 'scout', copy.textContent, 'deny', true);
+            return;
           }
-          const ok = !!data.passed;
-          if (ok) passed++; else blocked++;
-          const reason = ok ? '' : (data.failed || []).map((f) => REASON[f] || f).join(' · ');
-          renderTrace(data, item, i);
-          addRow(requestLabel(item, i, request.burst), ok, reason, data.elapsedMs);
-          updateMetrics();
+
+          elapsed += Number(data.elapsedMs) || 0;
+          (data.failed || []).forEach((key) => failed.add(key));
+          if (data.passed) passed++; else blocked++;
+
+          if (request.burst > 1) {
+            const tone = data.passed ? 'allow' : 'deny';
+            const message = data.passed
+              ? 'request ' + i + '/' + request.burst + '  🟢 PASS → downstream allowed'
+              : 'request ' + i + '/' + request.burst + '  🔴 BLOCK — ' + (data.failed || []).map((key) => REASON[key] || key).join(', ');
+            addDefenseLine(terminal, 'scout', 'scout', message, tone, i === 1);
+          } else {
+            Object.entries(data.checks || {}).forEach(([key, ok], index) => {
+              addDefenseLine(terminal, 'scout', 'scout', (ok ? '✓ ' : '✕ ') + key.padEnd(9) + (ok ? 'PASS' : 'BLOCK'), ok ? 'evidence' : 'deny', index === 0);
+            });
+          }
         }
+
+        if (blocked) {
+          const reason = [...failed].map((key) => REASON[key] || key).join(', ');
+          addDefenseLine(terminal, 'scout', 'scout', '🔴 STOPPED ' + blocked + ' request' + (blocked === 1 ? '' : 's') + ' before expensive processing', 'deny', true);
+          setDefenseVerdict(verdict, request.burst > 1 ? 'RATE LIMITED' : 'BLOCKED', 'block');
+          title.textContent = request.burst > 1 ? 'The bot burst gets cut off.' : 'The bad upload never reaches the AI.';
+          copy.textContent = request.burst > 1
+            ? 'Scout lets the first ' + passed + ' legitimate-looking requests through, then prevents the remaining ' + blocked + ' from multiplying downstream cost.'
+            : 'Scout rejects the request on deterministic metadata: ' + reason + '. No transcription or model judgment was needed.';
+          downstream.textContent = passed ? passed + ' allowed · ' + blocked + ' avoided' : 'avoided';
+          downstream.className = 'deny';
+          boundary.textContent = reason;
+          boundary.className = 'deny';
+        } else {
+          addDefenseLine(terminal, 'scout', 'scout', '🟢 PASS — hand off to transcription / LLM', 'allow', true);
+          setDefenseVerdict(verdict, 'PASSED', 'pass');
+          title.textContent = 'The normal voice note can continue.';
+          copy.textContent = 'All cheap checks passed. Scout has done its job and now gets out of the way of the real voice pipeline.';
+          downstream.textContent = passed + ' allowed';
+          downstream.className = 'allow';
+          boundary.textContent = 'all checks passed';
+          boundary.className = 'allow';
+        }
+        latency.textContent = elapsed + ' ms' + (request.burst > 1 ? ' total' : '');
       }
 
       runBtn.addEventListener('click', () => {
@@ -1054,94 +1063,168 @@
         runCurrent().finally(() => { runBtn.disabled = false; });
       });
 
-      document.querySelectorAll('[data-scenario]').forEach((chip) => {
-        chip.addEventListener('click', () => {
-          setRequest(SCENARIOS[chip.dataset.scenario]);
-          runBtn.disabled = true;
-          runCurrent().finally(() => { runBtn.disabled = false; });
+      scenarioButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          scenarioButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+          setRequest(SCENARIOS[button.dataset.scoutScenario]);
         });
       });
+
+      [sizeEl, durationEl, mimeEl, countryEl, burstEl].forEach((input) => input.addEventListener('change', resetTerminal));
+      resetTerminal();
     })();
 
     // ---- Core ----
     let coreDocs = [];
-    const coreIndexEl = document.getElementById('core-index');
-    const coreAttemptsEl = document.getElementById('core-attempts');
+    let coreScenario = 'attack';
+    const coreTerminal = document.getElementById('core-terminal');
+    const coreTerminalTitle = document.getElementById('core-terminal-title');
+    const coreRunSummary = document.getElementById('core-run-summary');
+    const coreVerdict = document.getElementById('core-verdict');
+    const coreTitle = document.getElementById('core-title');
+    const coreCopy = document.getElementById('core-copy');
+    const coreIndexCount = document.getElementById('core-index-count');
+    const coreExposed = document.getElementById('core-exposed');
+    const coreTokenState = document.getElementById('core-token-state');
+    const coreIndexRaw = document.getElementById('core-index-raw');
     const runScraperBtn = document.getElementById('run-scraper');
+    const coreScenarioButtons = [...document.querySelectorAll('[data-core-scenario]')];
+
+    function resetCoreTerminal() {
+      coreTerminal.innerHTML = '';
+      setDefenseVerdict(coreVerdict, 'READY', 'idle');
+      coreExposed.textContent = 'not tested';
+      coreExposed.className = '';
+      coreTokenState.textContent = '0';
+      coreTokenState.className = 'allow';
+      if (coreScenario === 'attack') {
+        coreTerminalTitle.textContent = 'scraper — public network';
+        coreRunSummary.textContent = 'attacker knows only public index IDs';
+        runScraperBtn.textContent = 'Run scraper attack';
+        coreTitle.textContent = 'The index is public on purpose.';
+        coreCopy.textContent = 'A scraper can copy every search row. It still lacks the server-side derivation path required to turn an index ID into a content address.';
+        addDefenseLine(coreTerminal, 'attacker', 'attacker', '$ scrape /api/core?action=search', 'command');
+        addDefenseLine(coreTerminal, 'core', 'core', (coreDocs.length || '…') + ' metadata rows available · payload fields absent', 'dim');
+        addDefenseLine(coreTerminal, 'attacker', 'attacker', 'next: treat every indexId as a content URL', 'dim');
+      } else {
+        coreTerminalTitle.textContent = 'app-server — trusted backend';
+        coreRunSummary.textContent = 'authorized public document request';
+        runScraperBtn.textContent = 'Run legitimate app path';
+        coreTitle.textContent = 'Now use the path the app is supposed to use.';
+        coreCopy.textContent = 'The backend resolves the selected document, checks its access tier, and derives the opaque content token without publishing that token in search.';
+        addDefenseLine(coreTerminal, 'app', 'app', 'retrieve("Getting Started Guide", tier="public")', 'command');
+        addDefenseLine(coreTerminal, 'core', 'core', 'waiting for trusted backend retrieval', 'dim');
+      }
+    }
 
     async function loadCoreIndex() {
-      coreIndexEl.innerHTML = '<div class="state"><div><div class="spinner"></div></div></div>';
-      let res;
+      coreIndexRaw.textContent = 'Loading public index…';
       try {
-        res = await fetch('/api/core', {
+        const res = await fetch('/api/core', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'search' }),
         });
-      } catch {
-        coreIndexEl.innerHTML = '<div class="hint">Network error — is the server running?</div>';
-        return;
-      }
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        coreIndexEl.innerHTML = '<div class="hint">' + (data.error || 'error') + '</div>';
-        return;
-      }
-      coreDocs = data.results;
-      coreIndexEl.innerHTML = '';
-      coreDocs.forEach((d) => {
-        const div = document.createElement('div');
-        div.className = 'doc';
-        const suffix = d.indexId.match(/-[0-9a-f]{8}$/)?.[0] || '';
-        const base = suffix ? d.indexId.slice(0, -suffix.length) : d.indexId;
-        div.innerHTML =
-          '<div class="name">' + d.displayName + '<span class="tier-tag">' + d.accessTier + '</span></div>' +
-          '<div class="meta">' + d.category + ' · ' + (d.tags || []).join(', ') + '</div>' +
-          '<div class="doc-id">indexId: ' + base + '<b>' + suffix + '</b></div>' +
-          '<div class="meta">content: <strong>hidden</strong> (not in index)</div>';
-        coreIndexEl.appendChild(div);
-      });
-    }
-
-    function addAttempt(status, text) {
-      const line = document.createElement('div');
-      line.className = 'attempt';
-      line.innerHTML = '<span class="' + (status === 404 ? 'fail' : 'ok') + '">[' + status + ']</span> ' + text;
-      coreAttemptsEl.appendChild(line);
-    }
-
-    async function runScraper() {
-      coreAttemptsEl.innerHTML = '';
-      let extracted = 0;
-      for (const d of coreDocs) {
-        let res;
-        try {
-          res = await fetch('/api/core', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'attempt', id: d.indexId }),
-          });
-        } catch {
-          continue;
-        }
         const data = await res.json().catch(() => ({}));
-        if (data.success) extracted++;
-        addAttempt(404, 'GET /content/' + d.indexId + ' — ' + (data.errorCode === 'NOT_FOUND' ? 'not found: the indexId is not a content address' : (data.error || 'blocked')));
+        if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+        coreDocs = Array.isArray(data.results) ? data.results : [];
+        coreIndexCount.textContent = String(coreDocs.length);
+        coreIndexCount.className = '';
+        coreIndexRaw.textContent = JSON.stringify(coreDocs, null, 2);
+        resetCoreTerminal();
+        return true;
+      } catch (error) {
+        coreIndexCount.textContent = 'unavailable';
+        coreIndexCount.className = 'deny';
+        coreIndexRaw.textContent = error.message || 'Network error';
+        return false;
       }
-      if (coreDocs.length) {
-        const guess = coreDocs[0].indexId.replace(/([0-9a-f])$/, (c) => (parseInt(c, 16) + 1).toString(16));
-        addAttempt(404, 'GET /content/' + guess + ' — guessing the next ID fails (IDs are not sequential)');
-      }
-      const summary = document.createElement('div');
-      summary.className = 'attempt';
-      summary.innerHTML = '<strong>Result: ' + extracted + ' / ' + coreDocs.length + ' contents extracted.</strong> The index is fully scrapable — and it does not matter.';
-      coreAttemptsEl.appendChild(summary);
     }
+
+    async function postCore(body) {
+      const res = await fetch('/api/core', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+      return data;
+    }
+
+    async function runCoreAttack() {
+      if (!coreDocs.length && !(await loadCoreIndex())) return;
+      coreTerminal.innerHTML = '';
+      addDefenseLine(coreTerminal, 'attacker', 'attacker', '$ curl -s /api/core/search', 'command');
+      addDefenseLine(coreTerminal, 'core', 'core', '200 OK · copied ' + coreDocs.length + ' public index rows', 'evidence');
+      let extracted = 0;
+      for (const doc of coreDocs) {
+        addDefenseLine(coreTerminal, 'attacker', 'attacker', 'GET /content/' + doc.indexId, '', true);
+        const data = await postCore({ action: 'attempt', id: doc.indexId });
+        if (data.success) extracted++;
+        addDefenseLine(coreTerminal, 'core', 'core', data.success ? '200 · payload exposed' : '404 ' + (data.errorCode || 'NOT_FOUND') + ' · indexId ≠ content address', data.success ? 'deny' : 'allow');
+      }
+      addDefenseLine(coreTerminal, 'result', 'core', (extracted ? '🔴' : '🟢') + ' ' + extracted + '/' + coreDocs.length + ' protected contents extracted', extracted ? 'deny' : 'allow', true);
+      if (extracted) {
+        setDefenseVerdict(coreVerdict, 'EXPOSED', 'block');
+        coreTitle.textContent = 'The scraper reached protected content.';
+        coreCopy.textContent = 'This should never happen. The demo found a split-store boundary failure.';
+        coreExposed.className = 'deny';
+      } else {
+        setDefenseVerdict(coreVerdict, 'PROTECTED', 'pass');
+        coreTitle.textContent = 'The scraper stole metadata—not the product.';
+        coreCopy.textContent = 'Every public index ID failed as a content address. Search stays useful while protected payloads remain behind the backend derivation path.';
+        coreExposed.className = 'allow';
+      }
+      coreExposed.textContent = String(extracted) + ' / ' + coreDocs.length;
+      coreTokenState.textContent = '0';
+      coreTokenState.className = 'allow';
+    }
+
+    async function runCoreLegit() {
+      coreTerminal.innerHTML = '';
+      addDefenseLine(coreTerminal, 'app', 'app', 'retrieve("Getting Started Guide", tier="public")', 'command');
+      addDefenseLine(coreTerminal, 'backend', 'core', 'resolve selection → sourceId (server-side)', 'evidence', true);
+      addDefenseLine(coreTerminal, 'core', 'core', 'derive content token with HKDF(masterKey, sourceId)', 'evidence');
+      const data = await postCore({ action: 'retrieve', displayName: 'Getting Started Guide', userTier: 'public' });
+      if (!data.success) throw new Error(data.error || 'Retrieval denied');
+      addDefenseLine(coreTerminal, 'core', 'core', '🟢 200 OK · access tier accepted', 'allow', true);
+      addDefenseLine(coreTerminal, 'payload', 'app', JSON.stringify(data.payload), 'evidence');
+      setDefenseVerdict(coreVerdict, 'AUTHORIZED', 'pass');
+      coreTitle.textContent = 'The legitimate app gets the payload.';
+      coreCopy.textContent = 'The same public document succeeds through the trusted backend path. Search did not need to expose the content token for retrieval to work.';
+      coreExposed.textContent = 'authorized only';
+      coreExposed.className = 'allow';
+      coreTokenState.textContent = '0';
+      coreTokenState.className = 'allow';
+    }
+
+    async function runCoreScenario() {
+      try {
+        if (coreScenario === 'attack') await runCoreAttack();
+        else await runCoreLegit();
+      } catch (error) {
+        setDefenseVerdict(coreVerdict, 'ERROR', 'block');
+        coreTitle.textContent = 'The demo endpoint did not answer.';
+        coreCopy.textContent = error.message || 'Network error';
+        addDefenseLine(coreTerminal, 'network', 'core', coreCopy.textContent, 'deny', true);
+      }
+    }
+
+    coreScenarioButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        coreScenario = button.dataset.coreScenario;
+        coreScenarioButtons.forEach((item) => item.setAttribute('aria-pressed', String(item === button)));
+        resetCoreTerminal();
+      });
+    });
 
     runScraperBtn.addEventListener('click', () => {
       runScraperBtn.disabled = true;
-      runScraper().finally(() => { runScraperBtn.disabled = false; });
+      runCoreScenario().finally(() => { runScraperBtn.disabled = false; });
     });
+
+    resetCoreTerminal();
 
     // ---- Miko ----
     const mikoTerminal = document.getElementById('miko-terminal');
