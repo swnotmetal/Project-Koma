@@ -24,11 +24,11 @@ append-only JSONL is auditable, not cryptographically immutable.
 - [x] Bounded `🔴 DENY` / `🟡 REVIEW` / `🟢 ALLOW` terminal rendering.
 - [x] Stable reason codes and actionable recovery text.
 - [x] Tool/path activation so the agent does not need to classify its own task.
-- [ ] Expose the contract file as a root-level `miko.json` Agent Spec while
+- [x] Expose the contract file as a root-level `miko.json` Agent Spec while
   retaining `.miko/contracts.json` compatibility.
-- [ ] Publish a JSON Schema with editor completion and validation.
-- [ ] Add `miko doctor` to report config errors, discovered Skills, Hook support,
-  and host permission gaps before a paid run.
+- [x] Publish a JSON Schema with editor completion and validation.
+- [x] Add `miko doctor` to report config errors, discovered project Skills,
+  required Hook coverage, and Git-ignore readiness before a paid run.
 - [ ] Build a static audit-timeline demo from a sanitized replay; no model backend
   should be required for the public demo.
 

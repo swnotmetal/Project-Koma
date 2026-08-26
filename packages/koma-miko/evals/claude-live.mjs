@@ -57,21 +57,24 @@ function writeFixture() {
     '',
   ].join('\n'));
 
-  writeFileSync(path.join(fixtureDir, '.miko', 'contracts.json'), JSON.stringify([
-    {
-      id: 'ui-skill-checkpoint',
-      appliesWhen: {
-        action: {
-          tools: ['Edit', 'Write'],
-          pathPrefixes: ['src/components'],
+  writeFileSync(path.join(fixtureDir, 'miko.json'), JSON.stringify({
+    version: 1,
+    specs: [
+      {
+        id: 'ui-skill-checkpoint',
+        appliesWhen: {
+          action: {
+            tools: ['Edit', 'Write'],
+            pathPrefixes: ['src/components'],
+          },
         },
+        requires: {
+          skills: [{ name: 'frontend-design', reloadAfterCompaction: true }],
+        },
+        mode: 'enforce',
       },
-      requires: {
-        skills: [{ name: 'frontend-design', reloadAfterCompaction: true }],
-      },
-      mode: 'enforce',
-    },
-  ], null, 2));
+    ],
+  }, null, 2));
 
   const hook = {
     type: 'command',

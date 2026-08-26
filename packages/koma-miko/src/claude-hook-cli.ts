@@ -16,6 +16,7 @@ import { createMiko } from './index.js';
 import type { EvidenceEvent, Miko, MikoContract, MikoTaskSnapshot } from './index.js';
 import { handleClaudeHookEvent } from './claude-code.js';
 import type { ClaudeHookInput } from './claude-code.js';
+import { loadMikoConfig } from './config.js';
 
 type LedgerRecord =
   | { type: 'task_started'; sessionId: string; taskId: string }
@@ -51,10 +52,7 @@ function readJson(pathname: string): unknown {
 
 function loadContracts(cwd: string): MikoContract[] {
   const projectRoot = process.env.CLAUDE_PROJECT_DIR ?? cwd;
-  const configPath = process.env.MIKO_CONTRACTS_PATH ?? path.join(projectRoot, '.miko', 'contracts.json');
-  const parsed = readJson(configPath);
-  if (!Array.isArray(parsed)) throw new Error(`Miko contracts must be an array: ${configPath}`);
-  return parsed as MikoContract[];
+  return loadMikoConfig(projectRoot, process.env.MIKO_CONTRACTS_PATH).contracts;
 }
 
 function statePathsFor(input: ClaudeHookInput): { ledger: string; snapshot: string } {

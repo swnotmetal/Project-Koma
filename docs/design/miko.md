@@ -322,6 +322,7 @@ The source alpha implements only the deterministic library and one adapter mappi
 ### Included
 
 - Contract schema validation
+- Root `miko.json` Agent Specs, JSON Schema, and offline `miko doctor`
 - Required-skill/reference checks
 - Pre-action allow/deny/risk/scope checks
 - Completion evidence checks

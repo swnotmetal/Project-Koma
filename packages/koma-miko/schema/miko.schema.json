@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/swnotmetal/Project-Koma/packages/koma-miko/schema/miko.schema.json",
+  "title": "Miko Agent Specs",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "specs"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "version": { "const": 1 },
+    "specs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/spec" }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": { "type": "string", "minLength": 1 },
+    "stringArray": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/nonEmptyString" }
+    },
+    "actionSelector": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tools": { "$ref": "#/$defs/stringArray" },
+        "pathPrefixes": { "$ref": "#/$defs/stringArray" },
+        "argumentNames": { "$ref": "#/$defs/stringArray" }
+      },
+      "anyOf": [
+        { "required": ["tools"] },
+        { "required": ["pathPrefixes"] }
+      ]
+    },
+    "skill": {
+      "oneOf": [
+        { "$ref": "#/$defs/nonEmptyString" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["name"],
+          "properties": {
+            "name": { "$ref": "#/$defs/nonEmptyString" },
+            "reloadAfterCompaction": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "requires": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "skills": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/skill" }
+        },
+        "references": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tools", "allowedPathPrefixes"],
+      "properties": {
+        "tools": { "$ref": "#/$defs/stringArray" },
+        "allowedPathPrefixes": { "$ref": "#/$defs/stringArray" },
+        "argumentNames": { "$ref": "#/$defs/stringArray" }
+      }
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": { "$ref": "#/$defs/stringArray" },
+        "deny": { "$ref": "#/$defs/stringArray" },
+        "maxRisk": { "enum": ["low", "medium", "high"] },
+        "scope": { "$ref": "#/$defs/scope" }
+      }
+    },
+    "skillEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "const": "skill_loaded" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "checkEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "name"],
+      "properties": {
+        "type": { "const": "check_passed" },
+        "name": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "referenceEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "path"],
+      "properties": {
+        "type": { "const": "reference_read" },
+        "path": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "artifactEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "path"],
+      "properties": {
+        "type": { "const": "artifact_changed" },
+        "path": { "$ref": "#/$defs/nonEmptyString" }
+      }
+    },
+    "toolEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "tool"],
+      "properties": {
+        "type": { "const": "tool_succeeded" },
+        "tool": { "$ref": "#/$defs/nonEmptyString" },
+        "matches": { "type": "object" }
+      }
+    },
+    "evidence": {
+      "oneOf": [
+        { "$ref": "#/$defs/skillEvidence" },
+        { "$ref": "#/$defs/checkEvidence" },
+        { "$ref": "#/$defs/referenceEvidence" },
+        { "$ref": "#/$defs/artifactEvidence" },
+        { "$ref": "#/$defs/toolEvidence" }
+      ]
+    },
+    "completion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evidence"],
+      "properties": {
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence" }
+        }
+      }
+    },
+    "spec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "appliesWhen"],
+      "properties": {
+        "id": { "$ref": "#/$defs/nonEmptyString" },
+        "appliesWhen": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "taskTags": { "$ref": "#/$defs/stringArray" },
+            "action": { "$ref": "#/$defs/actionSelector" }
+          },
+          "anyOf": [
+            { "required": ["taskTags"] },
+            { "required": ["action"] }
+          ]
+        },
+        "requires": { "$ref": "#/$defs/requires" },
+        "actions": { "$ref": "#/$defs/actions" },
+        "completion": { "$ref": "#/$defs/completion" },
+        "mode": { "enum": ["review", "enforce"] }
+      }
+    }
+  }
+}

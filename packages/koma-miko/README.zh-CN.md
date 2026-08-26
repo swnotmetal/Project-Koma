@@ -23,6 +23,34 @@ Agent 指令是有用的引导，但不等于强制约束。Skill 可能没有�
 
 ## 最小示例
 
+开发者直接维护项目根目录的 `miko.json`：
+
+```json
+{
+  "$schema": "./node_modules/koma-miko/schema/miko.schema.json",
+  "version": 1,
+  "specs": [
+    {
+      "id": "ui-change-v1",
+      "appliesWhen": {
+        "action": {
+          "tools": ["Edit", "Write"],
+          "pathPrefixes": ["src/ui"]
+        }
+      },
+      "requires": {
+        "skills": [
+          { "name": "product-design", "reloadAfterCompaction": true }
+        ]
+      },
+      "mode": "enforce"
+    }
+  ]
+}
+```
+
+TypeScript API 可以直接使用同一批 Spec 对象：
+
 ```ts
 import { createMiko } from 'koma-miko';
 
@@ -119,10 +147,21 @@ CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结
 变为缺失。adapter 保留 append-only JSONL 作为审计记录，同时使用紧凑 snapshot，
 每次 Hook 只需回放 snapshot 之后的尾部事件。该账本便于审计，但并非防篡改账本。
 
-试用源码 alpha 时，先构建/安装该包，把示例合约复制到
-`.miko/contracts.json`，再把示例 Hook 合并进 `.claude/settings.json`。
+试用源码 alpha 时，先构建/安装该包，把示例 `miko.json` 复制到项目根目录，
+再把示例 Hook 合并进 `.claude/settings.json`。
 示例不会自动启用，因为目标项目中必须真实存在被强制要求的
 `frontend-design` Skill。会话元数据写入 `.miko/state/`，该目录应保持忽略。
+旧 `.miko/contracts.json` 数组仍可读取，但不再是推荐的开发者入口。
+
+花费模型额度前，先运行完全离线的预检：
+
+```sh
+npx koma-miko doctor
+npx koma-miko doctor --strict --json
+```
+
+Doctor 会验证 Agent Spec，并报告项目 Skill、Claude Hook 覆盖范围以及
+`.miko/state/` 是否已忽略；它不会调用模型，也不会读取 API key。
 
 Claude Code 本地 CLI、Desktop Code tab 与 VS Code/Cursor 扩展共享 settings、
 Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可能禁用项目 Hook，

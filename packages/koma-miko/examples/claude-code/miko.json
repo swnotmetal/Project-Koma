@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/koma-miko/schema/miko.schema.json",
+  "version": 1,
+  "specs": [
+    {
+      "id": "ui-skill-checkpoint",
+      "appliesWhen": {
+        "action": {
+          "tools": ["Edit", "Write"],
+          "pathPrefixes": ["src/components", "src/pages", "src/app"]
+        }
+      },
+      "requires": {
+        "skills": [
+          {
+            "name": "frontend-design",
+            "reloadAfterCompaction": true
+          }
+        ]
+      },
+      "mode": "enforce"
+    }
+  ]
+}

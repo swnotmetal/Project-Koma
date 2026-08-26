@@ -27,6 +27,34 @@ contracts.
 
 ## Example
 
+The developer-facing project file is `miko.json`:
+
+```json
+{
+  "$schema": "./node_modules/koma-miko/schema/miko.schema.json",
+  "version": 1,
+  "specs": [
+    {
+      "id": "ui-change-v1",
+      "appliesWhen": {
+        "action": {
+          "tools": ["Edit", "Write"],
+          "pathPrefixes": ["src/ui"]
+        }
+      },
+      "requires": {
+        "skills": [
+          { "name": "product-design", "reloadAfterCompaction": true }
+        ]
+      },
+      "mode": "enforce"
+    }
+  ]
+}
+```
+
+The TypeScript API consumes the same spec objects directly:
+
 ```ts
 import { createMiko } from 'koma-miko';
 
@@ -145,11 +173,24 @@ Claude `PostCompact` event. The adapter keeps JSONL as the append-only audit
 record and uses a compact materialized snapshot so each Hook only replays events
 written after the latest snapshot. The ledger is auditable, not tamper-proof.
 
-To try the source alpha, build/install the package, copy the example contract to
-`.miko/contracts.json`, and merge the example hooks into
+To try the source alpha, build/install the package, copy the example `miko.json`
+to the project root, and merge the example hooks into
 `.claude/settings.json`. The example is intentionally not enabled automatically:
 its enforced `frontend-design` skill must actually exist in the target project.
 Miko writes session metadata under `.miko/state/`, which should stay ignored.
+Legacy `.miko/contracts.json` arrays remain readable but are no longer the
+preferred developer interface.
+
+Run an entirely offline preflight before spending model credits:
+
+```sh
+npx koma-miko doctor
+npx koma-miko doctor --strict --json
+```
+
+Doctor validates Agent Specs and reports project Skill discovery, required
+Claude Hook coverage, and whether `.miko/state/` is ignored. It never calls a
+model or reads an API key.
 
 Claude Code's local CLI, Desktop Code tab, and VS Code/Cursor extension share
 settings, hooks, and skills. Cloud/remote sessions have different configuration

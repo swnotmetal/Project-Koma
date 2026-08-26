@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 
 const packageDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const cli = path.join(packageDir, 'dist', 'claude-hook-cli.js');
-const contracts = path.join(packageDir, 'examples', 'claude-code', 'contracts.json');
+const contracts = path.join(packageDir, 'examples', 'claude-code', 'miko.json');
 const stateDir = mkdtempSync(path.join(tmpdir(), 'koma-miko-hook-'));
 const cwd = path.join(path.parse(packageDir).root, 'portfolio-fixture');
 

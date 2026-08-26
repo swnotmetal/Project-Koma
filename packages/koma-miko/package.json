@@ -8,9 +8,13 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./claude-code": "./dist/claude-code.js"
+    "./claude-code": "./dist/claude-code.js",
+    "./config": "./dist/config.js",
+    "./doctor": "./dist/doctor.js",
+    "./schema": "./schema/miko.schema.json"
   },
   "bin": {
+    "koma-miko": "./dist/cli.js",
     "koma-miko-claude-hook": "./dist/claude-hook-cli.js"
   },
   "scripts": {
@@ -27,6 +31,7 @@
     "dist",
     "evals",
     "examples",
+    "schema",
     "src",
     "README.md",
     "README.zh-CN.md"
