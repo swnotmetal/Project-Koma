@@ -180,9 +180,10 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 验证带审计记录的 `DENY → 观察到 Skill → ALLOW`，并确认账本没有保存代码内容。
 `npm run eval:scale -w koma-miko` 不需要 API key；它会测试 100/1,000 份
 Agent Spec、10,000 条索引证据、100 份重叠 Spec、snapshot 恢复和终端输出上限。
-`npm run eval:audit-demo -w koma-miko` 会用真实 Verifier 结果重新生成 13 个事件
-的公开审计时间线；`eval:audit-demo:check` 只检查 fixture 是否过期。回放不包含
-prompt、代码或模型回复，也不需要后端。
+`npm run eval:audit-demo -w koma-miko` 会用真实 Verifier 结果重新生成公开 CLI
+引导演示背后的 13 个事件；`eval:audit-demo:check` 只检查 fixture 是否过期。
+回放不包含 prompt、代码或模型回复，也不需要后端。终端故事只是展示层；可展开
+的原始事件仍保留 reason code、provenance 与 contract ID，供技术读者检查。
 
 父进程设置好 `ANTHROPIC_API_KEY` 后，
 `npm run eval:claude-live -w koma-miko` 会运行一个可自动删除的真实 Claude Code

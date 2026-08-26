@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Koma — Four defenses, one live demo</title>
-  <meta name="description" content="Try four Koma defenses: Gate classifies prompts, Scout drops abusive traffic, Core gates content, and Miko verifies AI-agent work." />
+  <meta name="description" content="Try four Koma defenses: Miko keeps coding agents on-spec, Gate classifies prompts, Scout drops abusive traffic, and Core gates content." />
   <meta name="theme-color" content="#FAFAFA" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Koma — Live Prompt-Injection Firewall" />
-  <meta property="og:description" content="Type a prompt or a jailbreak attempt and watch Koma Gate block it with a real LLM. Plus Scout and Core, live." />
+  <meta property="og:title" content="Koma — Keep AI coding agents on-spec" />
+  <meta property="og:description" content="Watch Miko block a premature Claude Code edit, guide recovery, and verify trusted evidence. Plus Gate, Scout, and Core." />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C25E38'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EK%3C/text%3E%3C/svg%3E" />
   <style>
@@ -249,47 +249,82 @@
     .core-why { margin-top: var(--sp-4); padding: var(--sp-3) var(--sp-4); background: var(--panel-2); border: 1px solid var(--border); border-radius: var(--r-md); font-size: var(--fs-sm); color: var(--muted); line-height: 1.6; }
     .core-why strong { color: var(--text); }
 
-    /* Miko: deterministic audit replay */
-    .miko-header { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--sp-4); flex-wrap: wrap; margin-bottom: var(--sp-4); }
-    .miko-header .lead { margin-bottom: 0; }
-    .miko-grid { display: grid; grid-template-columns: minmax(280px, 0.78fr) minmax(0, 1.22fr); gap: var(--sp-4); align-items: start; }
-    .miko-spec { font-size: 11px; max-height: 330px; }
-    .miko-controls { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); margin-top: var(--sp-3); }
-    .miko-controls .run:first-child { grid-column: 1 / -1; }
-    .miko-secondary { padding: var(--sp-2); border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--panel-2); color: var(--text); cursor: pointer; font-weight: 600; }
-    .miko-secondary:hover { border-color: var(--accent); }
-    .miko-legend { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-top: var(--sp-3); font-family: var(--mono); font-size: var(--fs-xs); color: var(--muted); }
-    .miko-legend span { padding: 3px 8px; border: 1px solid var(--border); border-radius: 999px; }
-    .miko-status { border: 1px solid var(--border); border-radius: var(--r-md); background: var(--panel-2); padding: var(--sp-3); margin-bottom: var(--sp-3); }
-    .miko-status-top { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
-    .miko-light { font-family: var(--mono); font-weight: 800; letter-spacing: 0.04em; }
-    .miko-light.deny { color: var(--red); }
-    .miko-light.review { color: var(--amber); }
-    .miko-light.allow { color: var(--green); }
-    .miko-light.evidence { color: var(--accent-strong); }
-    .miko-progress { color: var(--muted); font-family: var(--mono); font-size: var(--fs-xs); }
-    .miko-status-detail { color: var(--muted); font-size: var(--fs-xs); line-height: 1.5; margin-top: var(--sp-2); }
-    .miko-timeline { display: flex; flex-direction: column; gap: var(--sp-2); max-height: 520px; overflow: auto; padding-right: var(--sp-1); }
-    .miko-event { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: var(--sp-2); animation: fadein 0.25s ease; }
-    .miko-rail { display: flex; flex-direction: column; align-items: center; }
-    .miko-dot { width: 12px; height: 12px; margin-top: 5px; border-radius: 50%; border: 2px solid var(--muted); background: var(--panel); flex: 0 0 auto; }
-    .miko-dot.deny { border-color: var(--red); background: rgba(201,58,58,0.18); }
-    .miko-dot.review { border-color: var(--amber); background: rgba(156,100,20,0.18); }
-    .miko-dot.allow { border-color: var(--green); background: rgba(24,122,82,0.18); }
-    .miko-dot.evidence { border-color: var(--accent); background: rgba(194,94,56,0.18); }
-    .miko-line { width: 1px; flex: 1; min-height: 18px; background: var(--border); margin-top: 4px; }
-    .miko-event:last-child .miko-line { display: none; }
-    .miko-event-body { border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--panel-2); padding: var(--sp-2) var(--sp-3); }
-    .miko-event-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--sp-3); }
-    .miko-event-title { font-size: var(--fs-sm); font-weight: 600; color: var(--text); }
-    .miko-event-tag { font-family: var(--mono); font-size: 10px; white-space: nowrap; }
-    .miko-event-tag.deny { color: var(--red); }
-    .miko-event-tag.review { color: var(--amber); }
-    .miko-event-tag.allow { color: var(--green); }
-    .miko-event-tag.evidence { color: var(--accent-strong); }
-    .miko-event-detail { color: var(--muted); font-size: var(--fs-xs); line-height: 1.5; margin-top: var(--sp-1); }
-    .miko-event-code { font-family: var(--mono); color: var(--muted); font-size: 10px; margin-top: var(--sp-1); word-break: break-word; }
-    @media (max-width: 820px) { .miko-grid { grid-template-columns: 1fr; } }
+    /* Miko: CLI-shaped deterministic replay */
+    .miko-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-4); align-items: end; margin-bottom: var(--sp-4); }
+    .miko-hero h2 { margin: 0 0 var(--sp-2); font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.03em; }
+    .miko-hero .lead { margin: 0; max-width: 68ch; font-size: var(--fs-md); }
+    .miko-proof { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--sp-2); max-width: 430px; }
+    .miko-proof span { border: 1px solid var(--border); border-radius: 999px; padding: 5px 10px; background: var(--panel-2); color: var(--muted); font: 600 var(--fs-xs) var(--mono); white-space: nowrap; }
+    .miko-proof .verified { border-color: rgba(24,122,82,0.3); color: var(--green); background: rgba(24,122,82,0.08); }
+    .miko-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.55fr); gap: var(--sp-4); align-items: stretch; }
+    .miko-terminal-panel { padding: 0; overflow: hidden; background: #17191c; border-color: #292d32; min-height: 610px; }
+    .miko-terminal-bar { display: flex; align-items: center; gap: var(--sp-2); padding: 11px 14px; border-bottom: 1px solid #2d3136; background: #202328; color: #aeb5bd; font: var(--fs-xs) var(--mono); }
+    .miko-window-dots { display: flex; gap: 6px; margin-right: var(--sp-2); }
+    .miko-window-dots i { width: 10px; height: 10px; border-radius: 50%; background: #626870; }
+    .miko-window-dots i:first-child { background: #d35f58; }
+    .miko-window-dots i:nth-child(2) { background: #d5a84d; }
+    .miko-window-dots i:nth-child(3) { background: #4cac6b; }
+    .miko-terminal-title { flex: 1; text-align: center; }
+    .miko-attached { color: #82d39f; }
+    .miko-terminal-body { height: 475px; overflow: auto; padding: 18px; font: 13px/1.65 var(--mono); color: #e5e9ee; scroll-behavior: smooth; }
+    .miko-terminal-line { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 10px; white-space: pre-wrap; word-break: break-word; animation: terminal-in 0.18s ease; }
+    .miko-terminal-line + .miko-terminal-line { margin-top: 3px; }
+    .miko-terminal-line.break { margin-top: 16px; padding-top: 13px; border-top: 1px dashed #333840; }
+    @keyframes terminal-in { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+    .miko-speaker { color: #7f8994; text-align: right; user-select: none; }
+    .miko-terminal-line.you .miko-speaker, .miko-terminal-line.command .miko-text { color: #f0c36c; }
+    .miko-terminal-line.claude .miko-speaker { color: #b9a0ec; }
+    .miko-terminal-line.miko .miko-speaker { color: #e58a63; font-weight: 700; }
+    .miko-terminal-line.runner .miko-speaker { color: #74b7d9; }
+    .miko-terminal-line.deny .miko-text { color: #ff8881; font-weight: 700; }
+    .miko-terminal-line.review .miko-text { color: #f2c66d; font-weight: 700; }
+    .miko-terminal-line.allow .miko-text { color: #7fd69f; font-weight: 700; }
+    .miko-terminal-line.evidence .miko-text { color: #d7b4a2; }
+    .miko-terminal-line.dim .miko-text { color: #8d969f; }
+    .miko-terminal-cursor { display: inline-block; width: 7px; height: 14px; margin: 3px 0 0 90px; background: #d7dbe0; animation: blink 1s steps(1) infinite; vertical-align: top; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .miko-terminal-footer { display: grid; grid-template-columns: 1fr auto auto; gap: var(--sp-2); align-items: center; padding: 12px 14px; border-top: 1px solid #2d3136; background: #202328; }
+    .miko-progress-track { height: 5px; border-radius: 999px; overflow: hidden; background: #333840; }
+    .miko-progress-fill { display: block; width: 0; height: 100%; background: #c25e38; transition: width 0.2s ease; }
+    .miko-step-count { color: #969fa8; font: var(--fs-xs) var(--mono); white-space: nowrap; }
+    .miko-terminal-actions { display: flex; gap: 7px; }
+    .miko-terminal-footer button { border: 1px solid #434950; border-radius: 6px; background: #292d32; color: #e6e9ed; padding: 7px 11px; cursor: pointer; font-weight: 700; }
+    .miko-terminal-footer button:hover { border-color: #c25e38; }
+    .miko-terminal-footer button.primary { background: #a7462b; border-color: #bf5a38; color: white; min-width: 150px; }
+    .miko-inspector { display: flex; flex-direction: column; }
+    .miko-eyebrow { color: var(--accent-strong); font: 700 var(--fs-xs) var(--mono); letter-spacing: 0.05em; text-transform: uppercase; }
+    .miko-explain-title { margin: var(--sp-2) 0; font-size: 23px; line-height: 1.2; }
+    .miko-explain-copy { color: var(--muted); font-size: var(--fs-sm); line-height: 1.65; min-height: 74px; }
+    .miko-receipts { display: grid; gap: var(--sp-2); margin: var(--sp-3) 0; }
+    .miko-receipt { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 9px 11px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--panel-2); font-size: var(--fs-xs); }
+    .miko-receipt span:first-child { color: var(--muted); }
+    .miko-receipt strong { font: 700 var(--fs-xs) var(--mono); text-align: right; }
+    .miko-receipt strong.deny { color: var(--red); }
+    .miko-receipt strong.review { color: var(--amber); }
+    .miko-receipt strong.allow { color: var(--green); }
+    .miko-details { border-top: 1px solid var(--border); padding-top: var(--sp-3); margin-top: var(--sp-2); }
+    .miko-details summary { cursor: pointer; color: var(--text); font-size: var(--fs-sm); font-weight: 700; }
+    .miko-details summary:hover { color: var(--accent-strong); }
+    .miko-raw { margin-top: var(--sp-2); max-height: 180px; font-size: 10px; }
+    .miko-spec { margin-top: var(--sp-2); max-height: 250px; font-size: 10px; }
+    .miko-reality { margin-top: auto; padding-top: var(--sp-3); color: var(--muted); font-size: var(--fs-xs); line-height: 1.55; }
+    .miko-reality a { color: var(--accent-strong); }
+    @media (max-width: 900px) {
+      .miko-hero { grid-template-columns: 1fr; align-items: start; }
+      .miko-proof { justify-content: flex-start; max-width: none; }
+      .miko-grid { grid-template-columns: 1fr; }
+      .miko-terminal-panel { min-height: 560px; }
+      .miko-terminal-body { height: 430px; }
+    }
+    @media (max-width: 520px) {
+      .miko-terminal-body { padding: 14px 11px; font-size: 11.5px; height: 430px; }
+      .miko-terminal-line { grid-template-columns: 52px minmax(0, 1fr); gap: 7px; }
+      .miko-terminal-cursor { margin-left: 59px; }
+      .miko-terminal-footer { grid-template-columns: 1fr auto; }
+      .miko-progress-track { grid-column: 1 / -1; }
+      .miko-terminal-actions { justify-content: flex-end; flex-wrap: wrap; }
+      .miko-terminal-footer button.primary { min-width: 0; }
+    }
 
     footer { border-top: 1px solid var(--border); padding: var(--sp-5) 0; color: var(--muted); font-size: var(--fs-sm); }
     footer a { color: var(--accent-strong); text-decoration: none; }
@@ -301,7 +336,7 @@
       <img class="logo" src="/lognobg.png" alt="Koma logo" />
       <div>
         <h1>Koma</h1>
-        <div class="sub">Four defenses, one demo: <strong>Gate</strong> classifies prompts · <strong>Scout</strong> drops abusive traffic · <strong>Core</strong> gates content · <strong>Miko</strong> verifies agent work.</div>
+        <div class="sub">Four defenses, one demo: <strong>Miko</strong> keeps coding agents on-spec · <strong>Gate</strong> classifies prompts · <strong>Scout</strong> drops abusive traffic · <strong>Core</strong> gates content.</div>
       </div>
       <a class="gh-link" href="https://github.com/swnotmetal/Project-Koma" target="_blank" rel="noopener">GitHub ↗</a>
     </div>
@@ -309,14 +344,14 @@
 
   <main class="wrap">
     <nav class="tabs" role="tablist" aria-label="Koma defenses">
-      <button class="tab" role="tab" id="tab-btn-gate" aria-controls="tab-gate" aria-selected="true">Gate</button>
+      <button class="tab" role="tab" id="tab-btn-miko" aria-controls="tab-miko" aria-selected="true">Miko</button>
+      <button class="tab" role="tab" id="tab-btn-gate" aria-controls="tab-gate" aria-selected="false" tabindex="-1">Gate</button>
       <button class="tab" role="tab" id="tab-btn-scout" aria-controls="tab-scout" aria-selected="false" tabindex="-1">Scout</button>
       <button class="tab" role="tab" id="tab-btn-core" aria-controls="tab-core" aria-selected="false" tabindex="-1">Core</button>
-      <button class="tab" role="tab" id="tab-btn-miko" aria-controls="tab-miko" aria-selected="false" tabindex="-1">Miko</button>
     </nav>
 
     <!-- GATE -->
-    <div class="tabpanel active" id="tab-gate" role="tabpanel" aria-labelledby="tab-btn-gate">
+    <div class="tabpanel" id="tab-gate" role="tabpanel" aria-labelledby="tab-btn-gate">
       <div class="grid">
         <section class="panel">
           <h2>User input</h2>
@@ -507,68 +542,81 @@
     </div>
 
     <!-- MIKO -->
-    <div class="tabpanel" id="tab-miko" role="tabpanel" aria-labelledby="tab-btn-miko">
-      <div class="miko-header">
+    <div class="tabpanel active" id="tab-miko" role="tabpanel" aria-labelledby="tab-btn-miko">
+      <div class="miko-hero">
         <div>
-          <h2>Miko — Agent Spec audit replay</h2>
-          <p class="lead">Watch a deterministic verifier stop an edit, distinguish a claim from trusted evidence, and require a Skill reload after context compaction.</p>
+          <h2>See Miko catch an AI agent cutting corners.</h2>
+          <p class="lead">You ask Claude to change a UI. It tries to write before loading your design Skill. Miko blocks the write, tells Claude exactly what is missing, and lets it retry—inside the CLI you already use.</p>
+        </div>
+        <div class="miko-proof" aria-label="Miko demo proof points">
+          <span class="verified">✓ generated by the real Verifier</span>
+          <span>100 Skills / ~20k Haiku passed</span>
+          <span>no prompt or code in the ledger</span>
         </div>
       </div>
 
       <div class="miko-grid">
-        <section class="panel">
-          <h2>The developer writes this Agent Spec</h2>
-          <pre class="out miko-spec">{
-  "$schema": "./node_modules/koma-miko/schema/miko.schema.json",
-  "version": 1,
-  "specs": [{
-    "id": "ui-skill-checkpoint",
-    "appliesWhen": { "taskTags": ["ui-change"] },
-    "requires": {
-      "skills": [{
-        "name": "product-design",
-        "reloadAfterCompaction": true
-      }]
-    },
-    "actions": {
-      "scope": {
-        "tools": ["Edit"],
-        "allowedPathPrefixes": ["src/components"]
-      }
-    },
-    "mode": "enforce"
-  }]
-}</pre>
-          <div class="privacy-note"><strong>Replay, not theatre:</strong> this fixture is generated by the real Miko Verifier. It contains decision codes and evidence metadata—no prompt, code, model response, or API call.</div>
-          <div class="miko-controls">
-            <button class="run" id="miko-play" type="button">Play verified replay</button>
-            <button class="miko-secondary" id="miko-next" type="button">Next event</button>
-            <button class="miko-secondary" id="miko-reset" type="button">Reset</button>
+        <section class="panel miko-terminal-panel" aria-label="Simulated Claude Code terminal">
+          <div class="miko-terminal-bar">
+            <span class="miko-window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="miko-terminal-title">claude — ~/my-app</span>
+            <span class="miko-attached">● Miko attached</span>
           </div>
-          <div class="miko-legend" aria-label="Miko decision legend">
-            <span>🔴 DENY</span><span>🟡 REVIEW</span><span>🟢 ALLOW</span><span>◆ EVIDENCE</span>
+          <div class="miko-terminal-body" id="miko-terminal" aria-live="polite"></div>
+          <div class="miko-terminal-footer">
+            <div class="miko-progress-track" aria-hidden="true"><span class="miko-progress-fill" id="miko-progress-fill"></span></div>
+            <span class="miko-step-count" id="miko-progress">0 / 7</span>
+            <div class="miko-terminal-actions">
+              <button id="miko-reset" type="button">Restart</button>
+              <button id="miko-next" type="button">Next</button>
+              <button class="primary" id="miko-play" type="button">Run 10-sec demo</button>
+            </div>
           </div>
         </section>
 
-        <section class="panel result-panel">
-          <h2>Privacy-minimized evidence timeline</h2>
-          <div class="miko-status" id="miko-status" aria-live="polite">
-            <div class="miko-status-top">
-              <span class="miko-light evidence" id="miko-light">READY</span>
-              <span class="miko-progress" id="miko-progress">0 / 0</span>
-            </div>
-            <div class="miko-status-detail" id="miko-status-detail">Load the sanitized fixture, then step through each observed boundary.</div>
+        <aside class="panel miko-inspector" aria-live="polite">
+          <span class="miko-eyebrow" id="miko-eyebrow">Before the first write</span>
+          <h3 class="miko-explain-title" id="miko-explain-title">Miko sits between Claude and the tool.</h3>
+          <p class="miko-explain-copy" id="miko-explain-copy">The request is ordinary. The protection comes from a checked-in Agent Spec, so you do not have to keep reminding Claude to use the right Skill.</p>
+
+          <div class="miko-receipts" aria-label="Current Miko state">
+            <div class="miko-receipt"><span>Tool call</span><strong id="miko-tool-state">not attempted</strong></div>
+            <div class="miko-receipt"><span>Trusted evidence</span><strong id="miko-evidence-state">none yet</strong></div>
+            <div class="miko-receipt"><span>Context epoch</span><strong id="miko-epoch-state">0</strong></div>
           </div>
-          <div class="miko-timeline" id="miko-timeline" aria-live="polite">
-            <div class="state"><div><div class="big">Replay ready</div><div>No model backend is needed.</div></div></div>
-          </div>
-        </section>
+
+          <details class="miko-details">
+            <summary>Under the hood — raw Verifier events</summary>
+            <pre class="out miko-raw" id="miko-raw">Run a step to inspect its reasonCode, provenance, and contract IDs.</pre>
+          </details>
+          <details class="miko-details">
+            <summary>Show the Agent Spec behind this demo</summary>
+            <pre class="out miko-spec">{
+  "id": "ui-skill-checkpoint",
+  "requires": {
+    "skills": [{
+      "name": "product-design",
+      "reloadAfterCompaction": true
+    }]
+  },
+  "actions": {
+    "scope": {
+      "tools": ["Edit"],
+      "allowedPathPrefixes": ["src/components"]
+    }
+  },
+  "mode": "enforce"
+}</pre>
+          </details>
+
+          <p class="miko-reality"><strong>What is real?</strong> This browser is a CLI-shaped simulator, not an embedded Claude process. Every Miko outcome comes from a deterministic Verifier replay. A separate paid Haiku eval proved the real <code>DENY → Skill → Edit</code> recovery chain. <a href="https://github.com/swnotmetal/Project-Koma/blob/main/docs/evals/miko-claude-haiku-alpha.md" target="_blank" rel="noopener">Read the receipts ↗</a></p>
+        </aside>
       </div>
     </div>
   </main>
 
   <footer class="wrap">
-    <div>Open source — <a href="https://github.com/swnotmetal/Project-Koma" target="_blank" rel="noopener">github.com/swnotmetal/Project-Koma</a> · Gate · Scout · Core · Miko</div>
+    <div>Open source — <a href="https://github.com/swnotmetal/Project-Koma" target="_blank" rel="noopener">github.com/swnotmetal/Project-Koma</a> · Miko · Gate · Scout · Core</div>
   </footer>
 
   <script>
@@ -1096,113 +1144,197 @@
     });
 
     // ---- Miko ----
-    const mikoTimeline = document.getElementById('miko-timeline');
-    const mikoLight = document.getElementById('miko-light');
+    const mikoTerminal = document.getElementById('miko-terminal');
+    const mikoProgressFill = document.getElementById('miko-progress-fill');
     const mikoProgress = document.getElementById('miko-progress');
-    const mikoStatusDetail = document.getElementById('miko-status-detail');
     const mikoPlay = document.getElementById('miko-play');
     const mikoNext = document.getElementById('miko-next');
     const mikoReset = document.getElementById('miko-reset');
+    const mikoEyebrow = document.getElementById('miko-eyebrow');
+    const mikoExplainTitle = document.getElementById('miko-explain-title');
+    const mikoExplainCopy = document.getElementById('miko-explain-copy');
+    const mikoToolState = document.getElementById('miko-tool-state');
+    const mikoEvidenceState = document.getElementById('miko-evidence-state');
+    const mikoEpochState = document.getElementById('miko-epoch-state');
+    const mikoRaw = document.getElementById('miko-raw');
     let mikoFixture = null;
-    let mikoEventIndex = 0;
+    let mikoSteps = [];
+    let mikoStepIndex = 0;
     let mikoTimer = null;
     let mikoLoading = null;
 
-    function mikoTone(event) {
-      if (event.kind === 'decision') return event.decision.toLowerCase();
-      return 'evidence';
+    function buildMikoSteps(fixture) {
+      const event = fixture.events;
+      return [
+        {
+          eyebrow: '1 · before write',
+          title: 'The unsafe edit never reaches the file.',
+          copy: 'Claude skipped a required Skill. Miko denies the Edit tool call and returns a concrete recovery instruction instead of relying on another reminder from you.',
+          tool: ['blocked', 'deny'], evidence: ['missing', 'deny'], epoch: '0', raw: [event[0]],
+          lines: [
+            ['claude', 'claude', '› Edit src/components/Hero.tsx', true],
+            ['miko', 'miko', '🔴 BLOCKED before write', false, 'deny'],
+            ['miko', 'miko', 'Missing: Skill(product-design) + Read(docs/design-system.md)', false, 'deny'],
+            ['miko', 'miko', 'Next: load both, then retry the Edit.', false, 'dim'],
+          ],
+        },
+        {
+          eyebrow: '2 · guided recovery',
+          title: 'Claude gets a repair path, not a dead end.',
+          copy: 'The host observes the Skill load. Miko still shows yellow until the design reference is read, making partial preparation visible.',
+          tool: ['waiting to retry', 'review'], evidence: ['Skill + reference observed', 'allow'], epoch: '0', raw: event.slice(1, 4),
+          lines: [
+            ['claude', 'claude', '› Skill(product-design)', true],
+            ['miko', 'miko', '◆ observed  skill_loaded:product-design', false, 'evidence'],
+            ['miko', 'miko', '🟡 REVIEW — design reference still missing', false, 'review'],
+            ['claude', 'claude', '› Read docs/design-system.md'],
+            ['miko', 'miko', '◆ observed  reference_read:docs/design-system.md', false, 'evidence'],
+          ],
+        },
+        {
+          eyebrow: '3 · safe retry',
+          title: 'The same edit is now allowed.',
+          copy: 'Nothing about the user request changed. The difference is that Claude has now produced the preparation evidence your repository requires.',
+          tool: ['Edit allowed', 'allow'], evidence: ['requirements satisfied', 'allow'], epoch: '0', raw: [event[4]],
+          lines: [
+            ['claude', 'claude', '› Edit src/components/Hero.tsx', true],
+            ['miko', 'miko', '🟢 ALLOW  PRE_ACTION · Agent Spec satisfied', false, 'allow'],
+            ['host', 'runner', '✓ Edit passed the Miko checkpoint'],
+          ],
+        },
+        {
+          eyebrow: '4 · zero-trust completion',
+          title: '“Tests passed” is not proof.',
+          copy: 'Miko keeps Claude’s claim in the audit trail as asserted evidence, but refuses to treat it as a real test result.',
+          tool: ['completion blocked', 'deny'], evidence: ['asserted ≠ trusted', 'deny'], epoch: '0', raw: event.slice(5, 7),
+          lines: [
+            ['claude', 'claude', '“Targeted tests passed.”', true],
+            ['miko', 'miko', '◆ asserted  check_passed:targeted-tests', false, 'evidence'],
+            ['miko', 'miko', '🔴 COMPLETE denied — a claim is not evidence', false, 'deny'],
+          ],
+        },
+        {
+          eyebrow: '5 · trusted completion',
+          title: 'A real runner turns the light green.',
+          copy: 'Observed or external evidence can satisfy the Agent Spec. Developers get a short receipt instead of rereading an entire agent transcript.',
+          tool: ['task complete', 'allow'], evidence: ['external test pass', 'allow'], epoch: '0', raw: event.slice(7, 9),
+          lines: [
+            ['runner', 'runner', '› npm test -- Hero', true],
+            ['runner', 'runner', '✓ targeted-tests passed'],
+            ['miko', 'miko', '◆ external  check_passed:targeted-tests', false, 'evidence'],
+            ['miko', 'miko', '🟢 COMPLETE · trusted evidence satisfied', false, 'allow'],
+          ],
+        },
+        {
+          eyebrow: '6 · long-session drift',
+          title: 'Compaction invalidates stale Skill evidence.',
+          copy: 'When Claude compresses a long context, Miko advances the epoch. A Skill loaded before compaction cannot silently authorize a later edit.',
+          tool: ['new edit blocked', 'deny'], evidence: ['Skill is stale', 'deny'], epoch: '1', raw: event.slice(9, 11),
+          lines: [
+            ['claude', 'claude', '↻ context compacted', true],
+            ['miko', 'miko', 'context epoch  0 → 1', false, 'evidence'],
+            ['claude', 'claude', '› Edit src/components/Hero.tsx'],
+            ['miko', 'miko', '🔴 BLOCKED — reload product-design first', false, 'deny'],
+          ],
+        },
+        {
+          eyebrow: '7 · current-context proof',
+          title: 'Reload, retry, continue working.',
+          copy: 'Miko does not replace Claude or write code. It keeps the workflow honest by checking observable boundaries every time they matter.',
+          tool: ['Edit allowed again', 'allow'], evidence: ['Skill observed in epoch 1', 'allow'], epoch: '1', raw: event.slice(11, 13),
+          lines: [
+            ['claude', 'claude', '› Skill(product-design)', true],
+            ['miko', 'miko', '◆ observed  skill_loaded:product-design @ epoch 1', false, 'evidence'],
+            ['claude', 'claude', '› Edit src/components/Hero.tsx'],
+            ['miko', 'miko', '🟢 ALLOW  PRE_ACTION · current evidence', false, 'allow'],
+          ],
+        },
+      ];
     }
 
-    function setMikoStatus(event) {
-      const tone = mikoTone(event);
-      mikoLight.className = 'miko-light ' + tone;
-      mikoLight.textContent = event.kind === 'decision'
-        ? event.checkpoint + ' · ' + event.decision
-        : event.kind === 'context'
-          ? 'CONTEXT · EPOCH ' + event.epoch
-          : event.source.toUpperCase() + ' EVIDENCE';
-      mikoStatusDetail.textContent = event.detail;
-      mikoProgress.textContent = (mikoEventIndex + 1) + ' / ' + mikoFixture.events.length;
+    function appendMikoLine([speaker, speakerClass, text, isBreak = false, tone = '']) {
+      const line = document.createElement('div');
+      line.className = ['miko-terminal-line', speakerClass, tone, isBreak ? 'break' : ''].filter(Boolean).join(' ');
+      const label = document.createElement('span');
+      label.className = 'miko-speaker';
+      label.textContent = speaker;
+      const body = document.createElement('span');
+      body.className = 'miko-text';
+      body.textContent = text;
+      line.append(label, body);
+      mikoTerminal.appendChild(line);
     }
 
-    function appendMikoEvent(event) {
-      const tone = mikoTone(event);
-      const item = document.createElement('div');
-      item.className = 'miko-event';
+    function renderMikoInitial() {
+      mikoTerminal.innerHTML = '';
+      appendMikoLine(['you', 'you', '$ claude "Refresh the hero UI and run targeted tests."']);
+      appendMikoLine(['claude', 'claude', 'I’ll update the component and verify it.']);
+      appendMikoLine(['miko', 'miko', '● attached via Claude Code hooks · no prompt captured', true, 'dim']);
+      const cursor = document.createElement('span');
+      cursor.className = 'miko-terminal-cursor';
+      cursor.setAttribute('aria-hidden', 'true');
+      mikoTerminal.appendChild(cursor);
+    }
 
-      const rail = document.createElement('div');
-      rail.className = 'miko-rail';
-      const dot = document.createElement('span');
-      dot.className = 'miko-dot ' + tone;
-      const line = document.createElement('span');
-      line.className = 'miko-line';
-      rail.append(dot, line);
+    function setReceipt(element, [text, tone]) {
+      element.textContent = text;
+      element.className = tone || '';
+    }
 
-      const body = document.createElement('div');
-      body.className = 'miko-event-body';
-      const head = document.createElement('div');
-      head.className = 'miko-event-head';
-      const title = document.createElement('span');
-      title.className = 'miko-event-title';
-      title.textContent = event.sequence + '. ' + event.title;
-      const tag = document.createElement('span');
-      tag.className = 'miko-event-tag ' + tone;
-      tag.textContent = event.kind === 'decision'
-        ? event.checkpoint + ' / ' + event.decision
-        : event.kind === 'context'
-          ? 'CONTEXT / EPOCH ' + event.epoch
-          : event.evidenceType + ' / ' + event.source;
-      head.append(title, tag);
+    function setMikoInspector(step) {
+      mikoEyebrow.textContent = step.eyebrow;
+      mikoExplainTitle.textContent = step.title;
+      mikoExplainCopy.textContent = step.copy;
+      setReceipt(mikoToolState, step.tool);
+      setReceipt(mikoEvidenceState, step.evidence);
+      mikoEpochState.textContent = step.epoch;
+      mikoRaw.textContent = JSON.stringify(step.raw, null, 2);
+    }
 
-      const detail = document.createElement('div');
-      detail.className = 'miko-event-detail';
-      detail.textContent = event.detail;
-      body.append(head, detail);
-
-      const codeValue = event.reasonCode || event.value || (event.missing || []).join(' · ');
-      if (codeValue) {
-        const code = document.createElement('div');
-        code.className = 'miko-event-code';
-        code.textContent = codeValue;
-        body.appendChild(code);
-      }
-      item.append(rail, body);
-      mikoTimeline.appendChild(item);
-      mikoTimeline.scrollTop = mikoTimeline.scrollHeight;
-      setMikoStatus(event);
+    function setMikoInitialInspector() {
+      mikoEyebrow.textContent = 'Before the first write';
+      mikoExplainTitle.textContent = 'Miko sits between Claude and the tool.';
+      mikoExplainCopy.textContent = 'The request is ordinary. The protection comes from a checked-in Agent Spec, so you do not have to keep reminding Claude to use the right Skill.';
+      setReceipt(mikoToolState, ['not attempted', '']);
+      setReceipt(mikoEvidenceState, ['none yet', '']);
+      mikoEpochState.textContent = '0';
+      mikoRaw.textContent = 'Run a step to inspect its reasonCode, provenance, and contract IDs.';
     }
 
     function stopMikoReplay() {
       if (mikoTimer) clearTimeout(mikoTimer);
       mikoTimer = null;
-      mikoPlay.textContent = mikoEventIndex >= (mikoFixture?.events.length || 0)
-        ? 'Replay again'
-        : 'Play verified replay';
+      mikoPlay.textContent = mikoStepIndex >= mikoSteps.length ? 'Replay again' : 'Run 10-sec demo';
     }
 
     function resetMikoReplay() {
       stopMikoReplay();
-      mikoEventIndex = 0;
-      mikoTimeline.innerHTML = '<div class="state"><div><div class="big">Replay ready</div><div>No model backend is needed.</div></div></div>';
-      mikoLight.className = 'miko-light evidence';
-      mikoLight.textContent = 'READY';
-      mikoStatusDetail.textContent = 'Every event below is regenerated from deterministic Verifier output.';
-      mikoProgress.textContent = '0 / ' + (mikoFixture?.events.length || 0);
+      mikoStepIndex = 0;
+      renderMikoInitial();
+      setMikoInitialInspector();
+      mikoProgress.textContent = '0 / ' + mikoSteps.length;
+      mikoProgressFill.style.width = '0%';
     }
 
     function stepMikoReplay() {
-      if (!mikoFixture || mikoEventIndex >= mikoFixture.events.length) return false;
-      if (mikoEventIndex === 0) mikoTimeline.innerHTML = '';
-      appendMikoEvent(mikoFixture.events[mikoEventIndex]);
-      mikoEventIndex += 1;
-      if (mikoEventIndex >= mikoFixture.events.length) stopMikoReplay();
+      if (!mikoFixture || mikoStepIndex >= mikoSteps.length) return false;
+      const cursor = mikoTerminal.querySelector('.miko-terminal-cursor');
+      if (cursor) cursor.remove();
+      const step = mikoSteps[mikoStepIndex];
+      step.lines.forEach(appendMikoLine);
+      setMikoInspector(step);
+      mikoStepIndex += 1;
+      mikoProgress.textContent = mikoStepIndex + ' / ' + mikoSteps.length;
+      mikoProgressFill.style.width = ((mikoStepIndex / mikoSteps.length) * 100) + '%';
+      mikoTerminal.scrollTop = mikoTerminal.scrollHeight;
+      if (mikoStepIndex >= mikoSteps.length) stopMikoReplay();
       return true;
     }
 
     function scheduleMikoReplay() {
       if (!stepMikoReplay()) return;
-      if (mikoEventIndex < mikoFixture.events.length) {
-        mikoTimer = setTimeout(scheduleMikoReplay, 720);
+      if (mikoStepIndex < mikoSteps.length) {
+        mikoTimer = setTimeout(scheduleMikoReplay, 1200);
       }
     }
 
@@ -1215,17 +1347,17 @@
           return response.json();
         })
         .then((fixture) => {
-          if (fixture.version !== 1 || !Array.isArray(fixture.events)) throw new Error('invalid fixture');
+          if (fixture.version !== 1 || !Array.isArray(fixture.events) || fixture.events.length !== 13) {
+            throw new Error('invalid fixture');
+          }
           mikoFixture = fixture;
+          mikoSteps = buildMikoSteps(fixture);
           resetMikoReplay();
           return fixture;
         })
         .catch((error) => {
-          mikoTimeline.innerHTML = '';
-          const state = document.createElement('div');
-          state.className = 'state';
-          state.textContent = 'Could not load the verified replay: ' + error.message;
-          mikoTimeline.appendChild(state);
+          mikoTerminal.innerHTML = '';
+          appendMikoLine(['miko', 'miko', 'Could not load the verified replay: ' + error.message, false, 'deny']);
           throw error;
         })
         .finally(() => { mikoLoading = null; });
@@ -1238,20 +1370,21 @@
         stopMikoReplay();
         return;
       }
-      if (mikoEventIndex >= mikoFixture.events.length) resetMikoReplay();
-      mikoPlay.textContent = 'Pause replay';
+      if (mikoStepIndex >= mikoSteps.length) resetMikoReplay();
+      mikoPlay.textContent = 'Pause demo';
       scheduleMikoReplay();
     });
     mikoNext.addEventListener('click', async () => {
       if (!await loadMikoReplay().catch(() => null)) return;
       stopMikoReplay();
-      if (mikoEventIndex >= mikoFixture.events.length) resetMikoReplay();
+      if (mikoStepIndex >= mikoSteps.length) resetMikoReplay();
       stepMikoReplay();
     });
     mikoReset.addEventListener('click', async () => {
       if (!await loadMikoReplay().catch(() => null)) return;
       resetMikoReplay();
     });
+    loadMikoReplay().catch(() => {});
   </script>
 </body>
 </html>

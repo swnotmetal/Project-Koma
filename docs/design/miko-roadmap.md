@@ -29,8 +29,8 @@ append-only JSONL is auditable, not cryptographically immutable.
 - [x] Publish a JSON Schema with editor completion and validation.
 - [x] Add `miko doctor` to report config errors, discovered project Skills,
   required Hook coverage, and Git-ignore readiness before a paid run.
-- [x] Build a static audit-timeline demo from a sanitized replay; no model backend
-  should be required for the public demo.
+- [x] Build a guided CLI simulation from a sanitized deterministic replay; keep
+  raw events and the Agent Spec expandable, with no model backend required.
 
 ## Evidence ledger
 

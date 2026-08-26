@@ -213,10 +213,12 @@ ledger privacy.
 `npm run eval:scale -w koma-miko` uses no API key. It benchmarks 100/1,000 Agent
 Specs, 10,000 indexed evidence events, 100 overlapping specs, and snapshot
 restore while checking that terminal output remains bounded.
-`npm run eval:audit-demo -w koma-miko` regenerates the 13-event public audit
-timeline from real Verifier results. `eval:audit-demo:check` detects a stale
-fixture without changing it; the replay contains no prompt, code, or model
-response and needs no backend.
+`npm run eval:audit-demo -w koma-miko` regenerates the 13-event fixture behind
+the public guided CLI simulation from real Verifier results.
+`eval:audit-demo:check` detects a stale fixture without changing it; the replay
+contains no prompt, code, or model response and needs no backend. The friendly
+terminal story is presentation only; expandable raw events preserve reason
+codes, provenance, and contract IDs for inspection.
 
 With `ANTHROPIC_API_KEY` set in the parent process,
 `npm run eval:claude-live -w koma-miko` runs one disposable, real Claude Code
