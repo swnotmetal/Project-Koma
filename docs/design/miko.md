@@ -10,6 +10,9 @@ result obeys the contract.
 
 The alpha should prove that contract before it grows into another agent framework.
 
+Developer-facing product language calls this contract an **Agent Spec**: a small,
+versioned workflow test rather than an enterprise governance policy.
+
 ---
 
 ## 1. Evidence and Problem Statement
@@ -68,7 +71,7 @@ that the output obeys it.
 
 **This alpha does not observe or control hidden model attention. It has not
 validated model behavior with a near-million-token context and 100 available
-skills.** The deterministic core can be load-tested without an LLM, but whether
+skills.** The deterministic verifier can be load-tested without an LLM, but whether
 an agent selects, retains, and follows the right skill at that scale requires a
 separate model eval.
 
@@ -94,7 +97,7 @@ skill, request human approval, run a reviewer, or stop.
 
 ### UI ownership
 
-**Miko core does not own a graphical interface.** It returns a stable structured
+**Miko Verifier does not own a graphical interface.** It returns a stable structured
 result plus a plain-text rendering. A host adapter owns the final interaction:
 
 - CLI: print the result and use the host's approval prompt;
@@ -103,7 +106,7 @@ result plus a plain-text rendering. A host adapter owns the final interaction:
 
 For Claude Code, `REVIEW` maps to native `ask`, `DENY` maps to `deny`, and the
 adapter returns both a user-visible `systemMessage` and agent-visible recovery
-context. This keeps Miko useful on text-only surfaces without coupling the core
+context. This keeps Miko useful on text-only surfaces without coupling the verifier
 package to one UI toolkit.
 
 ### Claude surface matrix
@@ -114,7 +117,7 @@ package to one UI toolkit.
 | Desktop Code tab, local session | Same settings, Hooks, Skills, and native approval UI | Interactive only; no `--print` or Agent SDK scripting |
 | VS Code / Cursor Claude Code extension | Shared Claude settings and Hooks | Must be the Claude Code extension, not an unrelated editor agent |
 | Claude Code cloud/web | Not an alpha target yet | Does not read local user settings; package/install availability differs |
-| Other agents/editors | Core protocol only | Requires a dedicated adapter; Claude compatibility does not imply support |
+| Other agents/editors | Verifier protocol only | Requires a dedicated adapter; Claude compatibility does not imply support |
 
 Official references: [platform comparison](https://code.claude.com/docs/en/platforms),
 [Desktop shared configuration](https://code.claude.com/docs/en/desktop),
@@ -261,7 +264,7 @@ Example for the motivating UI case:
 }
 ```
 
-Events belong to a host-provided `sessionId` and `taskId`. Core keeps an
+Events belong to a host-provided `sessionId` and `taskId`. The verifier keeps an
 in-memory ledger; the Claude adapter replays a local append-only JSONL ledger
 across independent hook processes. Remote identity and hosted storage remain
 later concerns.
@@ -322,16 +325,19 @@ The source alpha implements only the deterministic library and one adapter mappi
 - Required-skill/reference checks
 - Pre-action allow/deny/risk/scope checks
 - Completion evidence checks
-- In-memory core ledger plus a privacy-minimized local JSONL Claude adapter ledger
+- In-memory verifier state plus a privacy-minimized local JSONL Claude adapter ledger
 - Audited non-ALLOW decisions without prompt, code, or model-response persistence
 - Evidence provenance (`observed`, `external`, `asserted`)
 - Explicit and tool/path-driven contract activation
 - `ALLOW`, `DENY`, and `REVIEW` with stable reason codes
 - A Claude Code adapter covering `UserPromptExpansion`, `PreToolUse`,
-  `PostToolUse`, and `Stop`
+  `PostToolUse`, `PostCompact`, and `Stop`
 - A native text/approval interaction (`ALLOW / DENY / REVIEW` to
   `allow / deny / ask`)
 - Ten deterministic skill-contract replay profiles
+- A zero-API scale replay for 100/1,000 Agent Specs and 10,000 evidence events
+- Context epochs for Skills that must be reloaded after compaction
+- Append-only JSONL plus a materialized snapshot and ledger-tail replay
 - One opt-in, budget-capped Haiku live fixture for the narrow enforced UI path
 
 ### Not included
@@ -357,6 +363,10 @@ The source alpha implements only the deterministic library and one adapter mappi
 8. Invalid/unknown evidence never silently satisfies an obligation.
 9. A real Claude Code run produces `DENY → observed skill → changed artifact`
    while Miko persists neither prompt nor code content.
+10. A context-fresh Skill becomes missing after `PostCompact` until it is
+    observed again.
+11. One hundred overlapping Agent Specs keep their full machine-readable result
+    while the developer-facing terminal summary remains bounded.
 
 ---
 
@@ -380,12 +390,8 @@ skill contract was honored**.
 
 ---
 
-## 8. Decisions Still Needed After Alpha
+## 8. Roadmap
 
-- Which adapter comes after Claude Code: MCP, an Agent SDK, or a framework-neutral
-  event stream.
-- Whether the current `review` → `REVIEW` and `enforce` → `DENY` mapping needs
-  per-checkpoint overrides.
-- How to attest evidence across remote or untrusted hosts beyond local hook
-  observation.
-- Whether post-compaction events should require re-loading high-priority skills.
+The maintained positioning, evidence-ledger caveats, MCP adapter scope, scale
+matrix, and executable TODO are in the
+[Miko developer roadmap](./miko-roadmap.md).

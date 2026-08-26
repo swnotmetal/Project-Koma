@@ -50,6 +50,7 @@ describe('Koma Miko alpha', () => {
     const result = startUiTask().verifyPreparation('settings-page');
 
     expect(result.decision).toBe('REVIEW');
+    expect(result.checkpoint).toBe('PREPARE');
     expect(result.reasonCode).toBe('PREPARATION_EVIDENCE_MISSING');
     expect(result.missing).toEqual([
       'ui-change-v1:skill_loaded:product-design',
@@ -62,6 +63,62 @@ describe('Koma Miko alpha', () => {
     recordPreparation(miko);
 
     expect(miko.verifyPreparation('settings-page').decision).toBe('ALLOW');
+  });
+
+  it('requires selected skills to reload after context compaction', () => {
+    const contract: MikoContract = {
+      id: 'fresh-ui-skill',
+      appliesWhen: { taskTags: ['ui'] },
+      requires: {
+        skills: [{ name: 'product-design', reloadAfterCompaction: true }],
+      },
+      mode: 'enforce',
+    };
+    const miko = createMiko({ contracts: [contract] });
+    miko.startTask({ sessionId: 'compact-session', taskId: 'compact-task', tags: ['ui'] });
+    miko.record({
+      taskId: 'compact-task', type: 'skill_loaded', name: 'product-design', source: 'observed',
+    });
+
+    expect(miko.verifyPreparation('compact-task').decision).toBe('ALLOW');
+    expect(miko.advanceContext('compact-task', 'compaction').epoch).toBe(1);
+    expect(miko.verifyPreparation('compact-task').decision).toBe('DENY');
+
+    miko.record({
+      taskId: 'compact-task', type: 'skill_loaded', name: 'product-design', source: 'observed',
+    });
+    expect(miko.verifyPreparation('compact-task').decision).toBe('ALLOW');
+  });
+
+  it('keeps task-lifetime skill evidence valid across compaction by default', () => {
+    const miko = startUiTask();
+    recordPreparation(miko);
+    miko.advanceContext('settings-page', 'compaction');
+
+    expect(miko.verifyPreparation('settings-page').decision).toBe('ALLOW');
+  });
+
+  it('restores a task snapshot without losing evidence epochs', () => {
+    const contract: MikoContract = {
+      id: 'snapshot-skill',
+      appliesWhen: { taskTags: ['ui'] },
+      requires: { skills: [{ name: 'product-design', reloadAfterCompaction: true }] },
+      mode: 'enforce',
+    };
+    const first = createMiko({ contracts: [contract] });
+    first.startTask({ sessionId: 'snapshot-session', taskId: 'snapshot-task', tags: ['ui'] });
+    first.record({
+      taskId: 'snapshot-task', type: 'skill_loaded', name: 'product-design', source: 'observed',
+    });
+    first.advanceContext('snapshot-task', 'compaction');
+    const snapshot = first.snapshotTask('snapshot-task');
+
+    const restored = createMiko({ contracts: [contract] });
+    restored.restoreTask(snapshot!);
+
+    expect(restored.getContextEpoch('snapshot-task')).toBe(1);
+    expect(restored.verifyPreparation('snapshot-task').decision).toBe('DENY');
+    expect(restored.getEvidence('snapshot-task')).toHaveLength(1);
   });
 
   it('retains an agent claim but never accepts it as observed skill evidence', () => {
@@ -324,5 +381,24 @@ describe('Koma Miko alpha', () => {
     expect(toClaudePreToolUseDecision(allow).systemMessage).toBeUndefined();
     expect(toClaudePreToolUseDecision(deny).hookSpecificOutput.permissionDecision).toBe('deny');
     expect(formatMikoDecision(deny)).toContain('TOOL_DENIED');
+  });
+
+  it('renders a bounded developer traffic-light summary without truncating machine evidence', () => {
+    const contracts: MikoContract[] = Array.from({ length: 6 }, (_, index) => ({
+      id: `spec-${index}`,
+      appliesWhen: { taskTags: ['many'] },
+      requires: { skills: [`skill-${index}`] },
+      mode: 'enforce',
+    }));
+    const miko = createMiko({ contracts });
+    miko.startTask({ sessionId: 'many-session', taskId: 'many-task', tags: ['many'] });
+    const result = miko.verifyPreparation('many-task');
+    const rendered = formatMikoDecision(result);
+
+    expect(result.missing).toHaveLength(6);
+    expect(rendered).toContain('🔴 Miko DENY · PREPARE');
+    expect(rendered).toContain('(+3 more)');
+    expect(rendered).toContain('… and 3 more');
+    expect(rendered).not.toContain('skill-5');
   });
 });

@@ -1,6 +1,6 @@
 [
   {
-    "id": "ui-skill-gate",
+    "id": "ui-skill-checkpoint",
     "appliesWhen": {
       "action": {
         "tools": ["Edit", "Write"],
@@ -8,7 +8,12 @@
       }
     },
     "requires": {
-      "skills": ["frontend-design"]
+      "skills": [
+        {
+          "name": "frontend-design",
+          "reloadAfterCompaction": true
+        }
+      ]
     },
     "mode": "enforce"
   }

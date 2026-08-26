@@ -1,5 +1,11 @@
 import path from 'node:path';
-import type { EvidenceEvent, Miko, RiskLevel, VerificationResult } from './index.js';
+import type {
+  AdvanceContextResult,
+  EvidenceEvent,
+  Miko,
+  RiskLevel,
+  VerificationResult,
+} from './index.js';
 import { formatMikoDecision, toClaudePreToolUseDecision } from './index.js';
 
 interface ClaudeHookBase {
@@ -26,16 +32,23 @@ export interface ClaudeUserPromptExpansionInput extends ClaudeHookBase {
   command_name: string;
 }
 
+export interface ClaudePostCompactInput extends ClaudeHookBase {
+  hook_event_name: 'PostCompact';
+  trigger?: 'manual' | 'auto';
+}
+
 export type ClaudeHookInput =
   | ClaudePreToolUseInput
   | ClaudePostToolUseInput
   | ClaudeUserPromptExpansionInput
+  | ClaudePostCompactInput
   | ClaudeHookBase;
 
 export interface ClaudeHookHandlingResult {
   output?: object;
   evidence: EvidenceEvent[];
   verification?: VerificationResult;
+  contextAdvance?: AdvanceContextResult;
 }
 
 const PATH_KEYS = ['file_path', 'path', 'filePath'];
@@ -147,6 +160,13 @@ export function handleClaudeHookEvent(
 ): ClaudeHookHandlingResult {
   const evidence = evidenceFromClaudeEvent(input);
   for (const event of evidence) miko.record({ taskId, ...event });
+
+  if (input.hook_event_name === 'PostCompact') {
+    return {
+      evidence,
+      contextAdvance: miko.advanceContext(taskId, 'compaction'),
+    };
+  }
 
   if (input.hook_event_name === 'PreToolUse') {
     const event = input as ClaudePreToolUseInput;

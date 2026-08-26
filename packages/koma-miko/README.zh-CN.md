@@ -2,6 +2,9 @@
 
 面向 AI agent 工作流的确定性 skill / action 契约验证器。
 
+可以把每份 Contract 理解成开发者维护的 **Agent Spec（智能体测试用例）**：
+它像测试代码一样约束 agent 如何准备、行动和完成任务，而不是企业治理控制台。
+
 Miko 在三个可观察节点检查证据：
 
 1. **准备阶段** — 必需的 skill 和参考文档是否真的被加载；
@@ -33,7 +36,7 @@ const miko = createMiko({
       },
     },
     requires: {
-      skills: ['product-design'],
+      skills: [{ name: 'product-design', reloadAfterCompaction: true }],
       references: ['docs/design-system.md'],
     },
     actions: {
@@ -91,9 +94,19 @@ miko.verifyCompletion('new-settings-page');
 `mode: 'review'` 会把缺失证据映射为 `REVIEW`；`mode: 'enforce'` 则映射为
 `DENY`。明确越权的工具、风险或路径在两种模式下都会返回 `DENY`。
 
+终端文字采用有阶段含义、且长度受限的开发者红绿灯；即使许多 Agent Spec
+重叠，也只展开最重要的前三项：
+
+```text
+🔴 Miko DENY · PREPARE — PREPARATION_EVIDENCE_MISSING
+Missing evidence:
+- ui-change-v1:skill_loaded:product-design
+Next: load the required skill/reference, then retry the blocked action.
+```
+
 `toClaudePreToolUseDecision(result)` 可将 `ALLOW / DENY / REVIEW` 映射到
 Claude Code `PreToolUse` 的 `allow / deny / ask`。非 ALLOW 结果还会同时
-向用户显示精简文字，并把恢复提示交给 agent。Miko core 本身不带图形 UI；
+向用户显示精简文字，并把恢复提示交给 agent。Miko Verifier 本身不带图形 UI；
 CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结构化结果。
 
 包内的 `koma-miko-claude-hook` 提供最小可用的持久化 Claude Code 适配器：
@@ -101,6 +114,10 @@ CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结
 `Write` 事件；使用仅含必要元数据、并记录非 ALLOW 决策的本地 JSONL 账本；
 并可根据真实工具与路径激活合约，不再只相信模型提供的任务标签。配置示例见
 [`examples/claude-code`](./examples/claude-code)。
+
+设置 `reloadAfterCompaction: true` 的 Skill 会在 Claude `PostCompact` 后重新
+变为缺失。adapter 保留 append-only JSONL 作为审计记录，同时使用紧凑 snapshot，
+每次 Hook 只需回放 snapshot 之后的尾部事件。该账本便于审计，但并非防篡改账本。
 
 试用源码 alpha 时，先构建/安装该包，把示例合约复制到
 `.miko/contracts.json`，再把示例 Hook 合并进 `.claude/settings.json`。
@@ -122,6 +139,8 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 第一个 UI 案例是窄范围强制演示，其余九个保持 review-only。
 `npm run eval:claude-hook -w koma-miko` 还会启动三个彼此独立的 Hook 进程，
 验证带审计记录的 `DENY → 观察到 Skill → ALLOW`，并确认账本没有保存代码内容。
+`npm run eval:scale -w koma-miko` 不需要 API key；它会测试 100/1,000 份
+Agent Spec、10,000 条索引证据、100 份重叠 Spec、snapshot 恢复和终端输出上限。
 
 父进程设置好 `ANTHROPIC_API_KEY` 后，
 `npm run eval:claude-live -w koma-miko` 会运行一个可自动删除的真实 Claude Code
@@ -147,4 +166,5 @@ fixture 建在包工作区内，使 Claude Code 把它视为项目内容，结�
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**
 
 研究案例、契约模型和 alpha 后问题见
-[设计文档](../../docs/design/miko.md)。
+[设计文档](../../docs/design/miko.md)；产品定位与可执行 TODO 见
+[开发者路线图](../../docs/design/miko-roadmap.md)。

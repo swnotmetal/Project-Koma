@@ -2,6 +2,10 @@
 
 Deterministic skill and action contract verification for AI agent workflows.
 
+Think of each contract as an **Agent Spec**: a developer-owned executable test
+for how an agent prepares, acts, and completes work—not an enterprise policy
+console.
+
 Miko checks observable evidence at three points:
 
 1. **Prepare** — were the required skills and references loaded?
@@ -38,7 +42,7 @@ const miko = createMiko({
       },
     },
     requires: {
-      skills: ['product-design'],
+      skills: [{ name: 'product-design', reloadAfterCompaction: true }],
       references: ['docs/design-system.md'],
     },
     actions: {
@@ -98,11 +102,22 @@ Every result is machine-readable and explainable:
 ```ts
 {
   decision: 'REVIEW',
+  checkpoint: 'COMPLETE',
   reasonCode: 'COMPLETION_EVIDENCE_MISSING',
   reason: 'Required completion evidence is missing.',
   contractIds: ['ui-change-v1'],
   missing: ['ui-change-v1:check_passed:rendered-ui-review']
 }
+```
+
+The plain-text renderer is intentionally developer-facing and bounded even when
+many Agent Specs overlap:
+
+```text
+🔴 Miko DENY · PREPARE — PREPARATION_EVIDENCE_MISSING
+Missing evidence:
+- ui-change-v1:skill_loaded:product-design
+Next: load the required skill/reference, then retry the blocked action.
 ```
 
 ## Claude Code hook mapping
@@ -115,7 +130,7 @@ structured `PreToolUse` output:
 - `REVIEW` → `ask`
 
 Non-ALLOW results also include a concise `systemMessage` for the user and
-`additionalContext` for the agent. Miko core has no graphical UI: each host
+`additionalContext` for the agent. Miko Verifier has no graphical UI: each host
 renders the same structured decision using its native text/approval surface.
 
 The included `koma-miko-claude-hook` executable provides a minimal durable
@@ -124,6 +139,11 @@ expansions, `Read`, `Edit`, and `Write` events; persists a privacy-minimized
 JSONL ledger including non-ALLOW decisions; and can activate a contract from an
 observed tool/path instead of model-supplied tags. See
 [`examples/claude-code`](./examples/claude-code).
+
+Skills declared with `reloadAfterCompaction: true` become missing again after a
+Claude `PostCompact` event. The adapter keeps JSONL as the append-only audit
+record and uses a compact materialized snapshot so each Hook only replays events
+written after the latest snapshot. The ledger is auditable, not tamper-proof.
 
 To try the source alpha, build/install the package, copy the example contract to
 `.miko/contracts.json`, and merge the example hooks into
@@ -149,6 +169,9 @@ enforcement demo; the other nine remain review-only.
 `npm run eval:claude-hook -w koma-miko` additionally spawns three independent
 hook processes and verifies an audited `DENY → observed Skill → ALLOW` plus
 ledger privacy.
+`npm run eval:scale -w koma-miko` uses no API key. It benchmarks 100/1,000 Agent
+Specs, 10,000 indexed evidence events, 100 overlapping specs, and snapshot
+restore while checking that terminal output remains bounded.
 
 With `ANTHROPIC_API_KEY` set in the parent process,
 `npm run eval:claude-live -w koma-miko` runs one disposable, real Claude Code
@@ -176,4 +199,5 @@ runner at `$1`).
 
 See the [design and discovery notes](../../docs/design/miko.md), including the
 first-hand failure case, public reports used as test discovery data, and the
-post-alpha questions.
+post-alpha questions. Product positioning and executable follow-up work live in
+the [developer roadmap](../../docs/design/miko-roadmap.md).

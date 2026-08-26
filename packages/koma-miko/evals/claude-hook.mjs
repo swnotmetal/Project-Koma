@@ -45,15 +45,41 @@ try {
     tool_input: { skill: 'frontend-design' },
   });
   const second = run(edit);
+  run({
+    session_id: 'cross-process-fixture',
+    cwd,
+    hook_event_name: 'PostCompact',
+    trigger: 'auto',
+  });
+  const afterCompact = run(edit);
+  run({
+    session_id: 'cross-process-fixture',
+    cwd,
+    hook_event_name: 'PostToolUse',
+    tool_name: 'Skill',
+    tool_input: { skill: 'frontend-design' },
+  });
+  const afterReload = run(edit);
 
-  const ledger = readFileSync(path.join(stateDir, readdirSync(stateDir)[0]), 'utf8');
+  const stateFiles = readdirSync(stateDir);
+  const ledger = readFileSync(path.join(stateDir, stateFiles.find((name) => name.endsWith('.jsonl'))), 'utf8');
+  const snapshot = readFileSync(
+    path.join(stateDir, stateFiles.find((name) => name.endsWith('.snapshot.json'))),
+    'utf8',
+  );
   const passed = first?.hookSpecificOutput?.permissionDecision === 'deny' &&
     second?.hookSpecificOutput?.permissionDecision === 'allow' &&
+    afterCompact?.hookSpecificOutput?.permissionDecision === 'deny' &&
+    afterReload?.hookSpecificOutput?.permissionDecision === 'allow' &&
     ledger.includes('"type":"decision_recorded"') &&
     ledger.includes('"decision":"DENY"') &&
-    !ledger.includes('must-not-persist');
+    ledger.includes('"type":"context_advanced"') &&
+    !ledger.includes('must-not-persist') &&
+    !snapshot.includes('must-not-persist');
   if (!passed) throw new Error('Claude hook persistence fixture failed');
-  console.log('Miko Claude hook: PASS (audited DENY -> observed Skill -> ALLOW; no code content persisted)');
+  console.log(
+    'Miko Claude hook: PASS (snapshot restore; DENY -> Skill -> ALLOW -> compact -> DENY -> reload -> ALLOW; no code content persisted)',
+  );
 } finally {
   rmSync(stateDir, { recursive: true, force: true });
 }

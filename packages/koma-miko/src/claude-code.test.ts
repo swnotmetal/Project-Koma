@@ -8,7 +8,7 @@ import {
 } from './claude-code';
 
 const contract: MikoContract = {
-  id: 'ui-skill-gate',
+  id: 'ui-skill-checkpoint',
   appliesWhen: {
     action: { tools: ['Edit', 'Write'], pathPrefixes: ['src/components'] },
   },
@@ -74,6 +74,42 @@ describe('Claude Code adapter', () => {
 
     const allowed = handleClaudeHookEvent(miko, 'claude-session', edit);
     expect(allowed.verification?.decision).toBe('ALLOW');
+  });
+
+  it('invalidates context-fresh skill evidence after Claude compaction', () => {
+    const freshContract: MikoContract = {
+      ...contract,
+      requires: {
+        skills: [{ name: 'frontend-design', reloadAfterCompaction: true }],
+      },
+    };
+    const miko = createMiko({ contracts: [freshContract] });
+    miko.startTask({ sessionId: 'claude-session', taskId: 'claude-session', tags: [] });
+    handleClaudeHookEvent(miko, 'claude-session', {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PostToolUse',
+      tool_name: 'Skill',
+      tool_input: { skill: 'frontend-design' },
+    });
+    const edit = {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PreToolUse' as const,
+      tool_name: 'Edit',
+      tool_input: { file_path: 'D:\\portfolio\\src\\components\\Hero.tsx' },
+    };
+    expect(handleClaudeHookEvent(miko, 'claude-session', edit).verification?.decision).toBe('ALLOW');
+
+    const compacted = handleClaudeHookEvent(miko, 'claude-session', {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PostCompact',
+      trigger: 'auto',
+    });
+
+    expect(compacted.contextAdvance?.epoch).toBe(1);
+    expect(handleClaudeHookEvent(miko, 'claude-session', edit).verification?.decision).toBe('DENY');
   });
 
   it('stores only path metadata from edits, never file content', () => {

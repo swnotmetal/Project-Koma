@@ -59,14 +59,16 @@ function writeFixture() {
 
   writeFileSync(path.join(fixtureDir, '.miko', 'contracts.json'), JSON.stringify([
     {
-      id: 'ui-skill-gate',
+      id: 'ui-skill-checkpoint',
       appliesWhen: {
         action: {
           tools: ['Edit', 'Write'],
           pathPrefixes: ['src/components'],
         },
       },
-      requires: { skills: ['frontend-design'] },
+      requires: {
+        skills: [{ name: 'frontend-design', reloadAfterCompaction: true }],
+      },
       mode: 'enforce',
     },
   ], null, 2));
@@ -80,6 +82,7 @@ function writeFixture() {
     hooks: {
       PreToolUse: [{ matcher: 'Edit|Write', hooks: [hook] }],
       PostToolUse: [{ matcher: 'Skill|Read|Edit|Write', hooks: [hook] }],
+      PostCompact: [{ hooks: [hook] }],
     },
   }, null, 2));
 }
