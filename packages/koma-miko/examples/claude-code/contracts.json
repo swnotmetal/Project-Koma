@@ -1,0 +1,15 @@
+[
+  {
+    "id": "ui-skill-gate",
+    "appliesWhen": {
+      "action": {
+        "tools": ["Edit", "Write"],
+        "pathPrefixes": ["src/components", "src/pages", "src/app"]
+      }
+    },
+    "requires": {
+      "skills": ["frontend-design"]
+    },
+    "mode": "enforce"
+  }
+]

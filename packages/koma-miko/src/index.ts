@@ -12,6 +12,7 @@
 export type MikoDecision = 'ALLOW' | 'DENY' | 'REVIEW';
 export type RiskLevel = 'low' | 'medium' | 'high';
 export type ContractMode = 'review' | 'enforce';
+export type EvidenceSource = 'observed' | 'asserted' | 'external';
 
 export type EvidenceRequirement =
   | { type: 'skill_loaded'; name: string }
@@ -20,18 +21,36 @@ export type EvidenceRequirement =
   | { type: 'artifact_changed'; path: string }
   | { type: 'check_passed'; name: string };
 
-export type EvidenceEvent =
+export type EvidenceEvent = (
   | { type: 'skill_loaded'; name: string }
   | { type: 'reference_read'; path: string }
   | { type: 'tool_succeeded'; tool: string; arguments?: Record<string, unknown> }
   | { type: 'artifact_changed'; path: string }
-  | { type: 'check_passed'; name: string };
+  | { type: 'check_passed'; name: string }
+) & {
+  /**
+   * `observed` comes from a host lifecycle/tool event, `external` from an
+   * independently executed check, and `asserted` is only an agent claim.
+   * Asserted evidence is retained for audit but never satisfies a contract.
+   */
+  source: EvidenceSource;
+};
+
+export interface ActionSelector {
+  /** Every configured field must match. */
+  tools?: string[];
+  pathPrefixes?: string[];
+  /** Argument names that may contain a path. Defaults to Claude and generic names. */
+  argumentNames?: string[];
+}
 
 export interface MikoContract {
   id: string;
   appliesWhen: {
-    /** A contract applies when at least one of these tags is on the task. */
-    taskTags: string[];
+    /** A matching tag activates the contract without relying on an action. */
+    taskTags?: string[];
+    /** A matching observed action activates the contract independently of task tags. */
+    action?: ActionSelector;
   };
   requires?: {
     skills?: string[];
@@ -77,6 +96,7 @@ export interface VerificationResult {
     | 'NO_APPLICABLE_CONTRACT'
     | 'TASK_NOT_FOUND'
     | 'PREPARATION_EVIDENCE_MISSING'
+    | 'SKILL_DECLARED_BUT_NOT_OBSERVED'
     | 'TOOL_DENIED'
     | 'TOOL_NOT_ALLOWED'
     | 'RISK_TOO_HIGH'
@@ -95,17 +115,26 @@ export interface RecordEvidenceResult {
   reason: string;
 }
 
+export interface ActivateContractResult {
+  activated: boolean;
+  reasonCode: 'CONTRACT_ACTIVATED' | 'TASK_NOT_FOUND' | 'CONTRACT_NOT_FOUND';
+  reason: string;
+}
+
 export interface Miko {
   startTask(input: StartTaskInput): void;
+  activateContract(taskId: string, contractId: string): ActivateContractResult;
   record(input: EvidenceEvent & { taskId: string }): RecordEvidenceResult;
   verifyPreparation(taskId: string): VerificationResult;
   verifyAction(input: VerifyActionInput): VerificationResult;
   verifyCompletion(taskId: string): VerificationResult;
   getEvidence(taskId: string): readonly EvidenceEvent[];
+  getActiveContractIds(taskId: string): readonly string[];
 }
 
 interface TaskState extends StartTaskInput {
   evidence: EvidenceEvent[];
+  activeContractIds: Set<string>;
 }
 
 const RISK_RANK: Record<RiskLevel, number> = { low: 0, medium: 1, high: 2 };
@@ -117,6 +146,8 @@ const EVIDENCE_TYPES = new Set([
   'artifact_changed',
   'check_passed',
 ]);
+const EVIDENCE_SOURCES = new Set<EvidenceSource>(['observed', 'asserted', 'external']);
+const DEFAULT_PATH_ARGUMENT_NAMES = ['path', 'file_path', 'filePath'];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -181,7 +212,37 @@ function validateContract(contract: MikoContract, index: number): MikoContract {
   if (!isRecord(contract)) throw new Error(`${label} must be an object`);
   if (!isNonEmptyString(contract.id)) throw new Error(`${label}.id must be a non-empty string`);
   if (!isRecord(contract.appliesWhen)) throw new Error(`${label}.appliesWhen is required`);
-  requireStringArray(contract.appliesWhen.taskTags, `${label}.appliesWhen.taskTags`);
+  const taskTags = contract.appliesWhen.taskTags;
+  const actionSelector = contract.appliesWhen.action;
+  if (taskTags !== undefined) {
+    requireStringArray(taskTags, `${label}.appliesWhen.taskTags`);
+  }
+  if (actionSelector !== undefined) {
+    if (!isRecord(actionSelector)) throw new Error(`${label}.appliesWhen.action must be an object`);
+    if (actionSelector.tools !== undefined) {
+      requireStringArray(actionSelector.tools, `${label}.appliesWhen.action.tools`);
+    }
+    if (actionSelector.pathPrefixes !== undefined) {
+      const pathPrefixes = requireStringArray(
+        actionSelector.pathPrefixes,
+        `${label}.appliesWhen.action.pathPrefixes`,
+      );
+      for (const prefix of pathPrefixes) {
+        if (normalizeRelativePath(prefix) === null) {
+          throw new Error(`${label}.appliesWhen.action.pathPrefixes must be project-relative`);
+        }
+      }
+    }
+    if (actionSelector.argumentNames !== undefined) {
+      requireStringArray(actionSelector.argumentNames, `${label}.appliesWhen.action.argumentNames`);
+    }
+    if (actionSelector.tools === undefined && actionSelector.pathPrefixes === undefined) {
+      throw new Error(`${label}.appliesWhen.action must select tools or pathPrefixes`);
+    }
+  }
+  if (taskTags === undefined && actionSelector === undefined) {
+    throw new Error(`${label}.appliesWhen must select taskTags or an action`);
+  }
 
   if (contract.mode !== undefined && contract.mode !== 'review' && contract.mode !== 'enforce') {
     throw new Error(`${label}.mode must be "review" or "enforce"`);
@@ -247,6 +308,7 @@ function validateEvidence(value: unknown): value is EvidenceEvent {
   try {
     validateRequirement(value, 'evidence');
     const candidate = value as unknown as Record<string, unknown>;
+    if (!EVIDENCE_SOURCES.has(candidate.source as EvidenceSource)) return false;
     if (candidate.type === 'tool_succeeded') {
       if (candidate.arguments !== undefined && !isRecord(candidate.arguments)) return false;
       if ('matches' in candidate) return false;
@@ -281,27 +343,35 @@ function requirementKey(requirement: EvidenceRequirement): string {
   return `${requirement.type}:${requirement.tool}`;
 }
 
+function evidenceMatches(event: EvidenceEvent, requirement: EvidenceRequirement): boolean {
+  if (event.type !== requirement.type) return false;
+  if (event.type === 'skill_loaded' && requirement.type === 'skill_loaded') {
+    return event.name === requirement.name;
+  }
+  if (event.type === 'check_passed' && requirement.type === 'check_passed') {
+    return event.name === requirement.name;
+  }
+  if (event.type === 'reference_read' && requirement.type === 'reference_read') {
+    return normalizeRelativePath(event.path) === normalizeRelativePath(requirement.path);
+  }
+  if (event.type === 'artifact_changed' && requirement.type === 'artifact_changed') {
+    return normalizeRelativePath(event.path) === normalizeRelativePath(requirement.path);
+  }
+  if (event.type === 'tool_succeeded' && requirement.type === 'tool_succeeded') {
+    return event.tool === requirement.tool &&
+      (requirement.matches === undefined || deepSubset(requirement.matches, event.arguments));
+  }
+  return false;
+}
+
 function hasEvidence(events: EvidenceEvent[], requirement: EvidenceRequirement): boolean {
   return events.some((event) => {
-    if (event.type !== requirement.type) return false;
-    if (event.type === 'skill_loaded' && requirement.type === 'skill_loaded') {
-      return event.name === requirement.name;
-    }
-    if (event.type === 'check_passed' && requirement.type === 'check_passed') {
-      return event.name === requirement.name;
-    }
-    if (event.type === 'reference_read' && requirement.type === 'reference_read') {
-      return normalizeRelativePath(event.path) === normalizeRelativePath(requirement.path);
-    }
-    if (event.type === 'artifact_changed' && requirement.type === 'artifact_changed') {
-      return normalizeRelativePath(event.path) === normalizeRelativePath(requirement.path);
-    }
-    if (event.type === 'tool_succeeded' && requirement.type === 'tool_succeeded') {
-      return event.tool === requirement.tool &&
-        (requirement.matches === undefined || deepSubset(requirement.matches, event.arguments));
-    }
-    return false;
+    return event.source !== 'asserted' && evidenceMatches(event, requirement);
   });
+}
+
+function hasAssertedEvidence(events: EvidenceEvent[], requirement: EvidenceRequirement): boolean {
+  return events.some((event) => event.source === 'asserted' && evidenceMatches(event, requirement));
 }
 
 function missingDecision(contracts: MikoContract[]): MikoDecision {
@@ -316,6 +386,24 @@ function result(
   missing?: string[],
 ): VerificationResult {
   return { decision, reasonCode, reason, contractIds, ...(missing?.length ? { missing } : {}) };
+}
+
+function actionPath(input: VerifyActionInput, argumentNames = DEFAULT_PATH_ARGUMENT_NAMES): string | null {
+  const candidate = argumentNames
+    .map((name) => input.arguments?.[name])
+    .find((value): value is string => isNonEmptyString(value));
+  return candidate ? normalizeRelativePath(candidate) : null;
+}
+
+function matchesActionSelector(input: VerifyActionInput, selector: ActionSelector): boolean {
+  if (selector.tools !== undefined && !selector.tools.includes(input.tool)) return false;
+  if (selector.pathPrefixes !== undefined) {
+    const path = actionPath(input, selector.argumentNames ?? DEFAULT_PATH_ARGUMENT_NAMES);
+    if (path === null) return false;
+    const prefixes = selector.pathPrefixes.map((prefix) => normalizeRelativePath(prefix)!);
+    if (!prefixes.some((prefix) => isPathWithin(path, prefix))) return false;
+  }
+  return true;
 }
 
 export function createMiko(config: { contracts: MikoContract[] }): Miko {
@@ -335,23 +423,32 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
     return tasks.get(taskId);
   }
 
-  function applicable(task: TaskState): MikoContract[] {
+  function applicable(task: TaskState, action?: VerifyActionInput): MikoContract[] {
     const tags = new Set(task.tags);
-    return contracts.filter((contract) => contract.appliesWhen.taskTags.some((tag) => tags.has(tag)));
+    return contracts.filter((contract) => {
+      const tagMatch = contract.appliesWhen.taskTags?.some((tag) => tags.has(tag)) ?? false;
+      const explicitMatch = task.activeContractIds.has(contract.id);
+      const actionMatch = action !== undefined && contract.appliesWhen.action !== undefined &&
+        matchesActionSelector(action, contract.appliesWhen.action);
+      if (actionMatch) task.activeContractIds.add(contract.id);
+      return tagMatch || explicitMatch || actionMatch;
+    });
   }
 
   function missingPreparation(
     task: TaskState,
     matched: MikoContract[],
-  ): { items: string[]; contracts: MikoContract[] } {
+  ): { items: string[]; contracts: MikoContract[]; assertedSkills: boolean } {
     const missing: string[] = [];
     const missingContracts = new Set<MikoContract>();
+    let assertedSkills = false;
     for (const contract of matched) {
       for (const name of contract.requires?.skills ?? []) {
         const requirement: EvidenceRequirement = { type: 'skill_loaded', name };
         if (!hasEvidence(task.evidence, requirement)) {
           missing.push(`${contract.id}:${requirementKey(requirement)}`);
           missingContracts.add(contract);
+          assertedSkills ||= hasAssertedEvidence(task.evidence, requirement);
         }
       }
       for (const path of contract.requires?.references ?? []) {
@@ -362,10 +459,13 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
         }
       }
     }
-    return { items: missing, contracts: [...missingContracts] };
+    return { items: missing, contracts: [...missingContracts], assertedSkills };
   }
 
-  function lookup(taskId: string): { task?: TaskState; matched: MikoContract[]; error?: VerificationResult } {
+  function lookup(
+    taskId: string,
+    action?: VerifyActionInput,
+  ): { task?: TaskState; matched: MikoContract[]; error?: VerificationResult } {
     const task = getTask(taskId);
     if (!task) {
       return {
@@ -373,7 +473,7 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
         error: result('REVIEW', 'TASK_NOT_FOUND', `Task "${taskId}" has not been started.`, []),
       };
     }
-    const matched = applicable(task);
+    const matched = applicable(task, action);
     if (matched.length === 0) {
       return {
         task,
@@ -392,8 +492,10 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
     if (missing.items.length > 0) {
       return result(
         missingDecision(missing.contracts),
-        'PREPARATION_EVIDENCE_MISSING',
-        'Required preparation evidence is missing.',
+        missing.assertedSkills ? 'SKILL_DECLARED_BUT_NOT_OBSERVED' : 'PREPARATION_EVIDENCE_MISSING',
+        missing.assertedSkills
+          ? 'The agent declared a required skill, but the host did not observe it being loaded.'
+          : 'Required preparation evidence is missing.',
         contractIds,
         missing.items,
       );
@@ -408,7 +510,19 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
       }
       requireStringArray(input.tags, 'tags', true);
       if (tasks.has(input.taskId)) throw new Error(`task already exists: ${input.taskId}`);
-      tasks.set(input.taskId, { ...cloneJson(input), evidence: [] });
+      tasks.set(input.taskId, { ...cloneJson(input), evidence: [], activeContractIds: new Set() });
+    },
+
+    activateContract(taskId, contractId) {
+      const task = getTask(taskId);
+      if (!task) {
+        return { activated: false, reasonCode: 'TASK_NOT_FOUND', reason: `Task "${taskId}" has not been started.` };
+      }
+      if (!ids.has(contractId)) {
+        return { activated: false, reasonCode: 'CONTRACT_NOT_FOUND', reason: `Contract "${contractId}" does not exist.` };
+      }
+      task.activeContractIds.add(contractId);
+      return { activated: true, reasonCode: 'CONTRACT_ACTIVATED', reason: `Contract "${contractId}" is active.` };
     },
 
     record(input) {
@@ -434,7 +548,7 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
           !RISK_LEVELS.has(input.risk) || (input.arguments !== undefined && !isRecord(input.arguments))) {
         return result('REVIEW', 'INVALID_ACTION', 'Action does not match the expected schema.', []);
       }
-      const found = lookup(input.taskId);
+      const found = lookup(input.taskId, input);
       if (found.error) return found.error;
       const preparation = verifyPreparation(input.taskId);
       if (preparation.decision !== 'ALLOW') return preparation;
@@ -504,15 +618,36 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
     getEvidence(taskId) {
       return cloneJson(getTask(taskId)?.evidence ?? []);
     },
+
+    getActiveContractIds(taskId) {
+      return [...(getTask(taskId)?.activeContractIds ?? [])];
+    },
   };
 }
 
 export interface ClaudePreToolUseDecision {
+  /** Claude Code displays this warning to the user on interactive surfaces. */
+  systemMessage?: string;
   hookSpecificOutput: {
     hookEventName: 'PreToolUse';
     permissionDecision: 'allow' | 'deny' | 'ask';
     permissionDecisionReason: string;
+    additionalContext?: string;
   };
+}
+
+export function formatMikoDecision(result: VerificationResult): string {
+  const lines = [`Miko ${result.decision} — ${result.reasonCode}`, result.reason];
+  if (result.contractIds.length > 0) lines.push(`Contracts: ${result.contractIds.join(', ')}`);
+  if (result.missing?.length) {
+    lines.push('Missing evidence:');
+    lines.push(...result.missing.map((item) => `- ${item}`));
+  }
+  if (result.reasonCode === 'PREPARATION_EVIDENCE_MISSING' ||
+      result.reasonCode === 'SKILL_DECLARED_BUT_NOT_OBSERVED') {
+    lines.push('Next: load the required skill/reference, then retry the blocked action.');
+  }
+  return lines.join('\n');
 }
 
 /**
@@ -525,13 +660,16 @@ export function toClaudePreToolUseDecision(result: VerificationResult): ClaudePr
     : result.decision === 'DENY'
       ? 'deny'
       : 'ask';
+  const message = formatMikoDecision(result);
   return {
+    ...(result.decision === 'ALLOW' ? {} : { systemMessage: message }),
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecision,
-      permissionDecisionReason: `[${result.reasonCode}] ${result.reason}`,
+      permissionDecisionReason: message,
+      ...(result.decision === 'ALLOW' ? {} : { additionalContext: message }),
     },
   };
 }
 
-export default { createMiko, toClaudePreToolUseDecision };
+export default { createMiko, formatMikoDecision, toClaudePreToolUseDecision };

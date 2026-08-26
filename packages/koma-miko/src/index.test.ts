@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createMiko, toClaudePreToolUseDecision } from './index';
+import { createMiko, formatMikoDecision, toClaudePreToolUseDecision } from './index';
 import type { MikoContract } from './index';
 
 const uiContract: MikoContract = {
@@ -36,8 +36,13 @@ function startUiTask() {
 }
 
 function recordPreparation(miko: ReturnType<typeof startUiTask>) {
-  miko.record({ taskId: 'settings-page', type: 'skill_loaded', name: 'product-design' });
-  miko.record({ taskId: 'settings-page', type: 'reference_read', path: './docs/design-system.md' });
+  miko.record({ taskId: 'settings-page', type: 'skill_loaded', name: 'product-design', source: 'observed' });
+  miko.record({
+    taskId: 'settings-page',
+    type: 'reference_read',
+    path: './docs/design-system.md',
+    source: 'observed',
+  });
 }
 
 describe('Koma Miko alpha', () => {
@@ -57,6 +62,42 @@ describe('Koma Miko alpha', () => {
     recordPreparation(miko);
 
     expect(miko.verifyPreparation('settings-page').decision).toBe('ALLOW');
+  });
+
+  it('retains an agent claim but never accepts it as observed skill evidence', () => {
+    const miko = startUiTask();
+    miko.record({
+      taskId: 'settings-page', type: 'skill_loaded', name: 'product-design', source: 'asserted',
+    });
+
+    const result = miko.verifyPreparation('settings-page');
+    expect(result.decision).toBe('REVIEW');
+    expect(result.reasonCode).toBe('SKILL_DECLARED_BUT_NOT_OBSERVED');
+    expect(miko.getEvidence('settings-page')).toHaveLength(1);
+  });
+
+  it('activates a UI contract from an observed edit path without model-supplied task tags', () => {
+    const pathContract: MikoContract = {
+      id: 'ui-path-contract',
+      appliesWhen: {
+        action: { tools: ['Edit', 'Write'], pathPrefixes: ['src/components'] },
+      },
+      requires: { skills: ['frontend-design'] },
+      mode: 'enforce',
+    };
+    const miko = createMiko({ contracts: [pathContract] });
+    miko.startTask({ sessionId: 'session-path', taskId: 'path-task', tags: [] });
+
+    const blocked = miko.verifyAction({
+      taskId: 'path-task',
+      tool: 'Edit',
+      risk: 'medium',
+      arguments: { file_path: 'src/components/Hero.tsx' },
+    });
+
+    expect(blocked.decision).toBe('DENY');
+    expect(blocked.reasonCode).toBe('PREPARATION_EVIDENCE_MISSING');
+    expect(miko.getActiveContractIds('path-task')).toEqual(['ui-path-contract']);
   });
 
   it('denies a forbidden tool even after preparation succeeds', () => {
@@ -150,13 +191,18 @@ describe('Koma Miko alpha', () => {
   it('allows completion only after all declared evidence is present', () => {
     const miko = startUiTask();
     recordPreparation(miko);
-    miko.record({ taskId: 'settings-page', type: 'check_passed', name: 'rendered-ui-review' });
-    miko.record({ taskId: 'settings-page', type: 'check_passed', name: 'targeted-tests' });
+    miko.record({
+      taskId: 'settings-page', type: 'check_passed', name: 'rendered-ui-review', source: 'external',
+    });
+    miko.record({
+      taskId: 'settings-page', type: 'check_passed', name: 'targeted-tests', source: 'external',
+    });
     miko.record({
       taskId: 'settings-page',
       type: 'tool_succeeded',
       tool: 'run_check',
       arguments: { suite: 'ui', attempt: 1 },
+      source: 'observed',
     });
 
     expect(miko.verifyCompletion('settings-page').decision).toBe('ALLOW');
@@ -165,13 +211,18 @@ describe('Koma Miko alpha', () => {
   it('does not accept tool evidence whose arguments fail the declared subset match', () => {
     const miko = startUiTask();
     recordPreparation(miko);
-    miko.record({ taskId: 'settings-page', type: 'check_passed', name: 'rendered-ui-review' });
-    miko.record({ taskId: 'settings-page', type: 'check_passed', name: 'targeted-tests' });
+    miko.record({
+      taskId: 'settings-page', type: 'check_passed', name: 'rendered-ui-review', source: 'external',
+    });
+    miko.record({
+      taskId: 'settings-page', type: 'check_passed', name: 'targeted-tests', source: 'external',
+    });
     miko.record({
       taskId: 'settings-page',
       type: 'tool_succeeded',
       tool: 'run_check',
       arguments: { suite: 'server' },
+      source: 'observed',
     });
 
     expect(miko.verifyCompletion('settings-page').missing).toContain(
@@ -194,6 +245,7 @@ describe('Koma Miko alpha', () => {
       taskId: 'settings-page',
       type: 'skill_loaded',
       name: '',
+      source: 'observed',
     } as any);
 
     expect(recorded.accepted).toBe(false);
@@ -238,13 +290,16 @@ describe('Koma Miko alpha', () => {
 
   it('returns a defensive copy of recorded evidence', () => {
     const miko = startUiTask();
-    miko.record({ taskId: 'settings-page', type: 'skill_loaded', name: 'product-design' });
+    miko.record({
+      taskId: 'settings-page', type: 'skill_loaded', name: 'product-design', source: 'observed',
+    });
     const evidence = miko.getEvidence('settings-page') as Array<{ type: string; name: string }>;
     evidence[0].name = 'tampered';
 
     expect(miko.getEvidence('settings-page')[0]).toEqual({
       type: 'skill_loaded',
       name: 'product-design',
+      source: 'observed',
     });
   });
 
@@ -264,7 +319,10 @@ describe('Koma Miko alpha', () => {
     });
 
     expect(toClaudePreToolUseDecision(review).hookSpecificOutput.permissionDecision).toBe('ask');
+    expect(toClaudePreToolUseDecision(review).systemMessage).toContain('Miko REVIEW');
     expect(toClaudePreToolUseDecision(allow).hookSpecificOutput.permissionDecision).toBe('allow');
+    expect(toClaudePreToolUseDecision(allow).systemMessage).toBeUndefined();
     expect(toClaudePreToolUseDecision(deny).hookSpecificOutput.permissionDecision).toBe('deny');
+    expect(formatMikoDecision(deny)).toContain('TOOL_DENIED');
   });
 });

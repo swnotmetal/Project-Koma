@@ -21,7 +21,10 @@ yarn-error.log*
 pnpm-debug.log*
 .env
 .env.*
+miko-apis.env
 .npmrc
+.miko/state/
+packages/koma-miko/.miko-live-*/
 
 # TypeScript artifacts
 *.tsbuildinfo

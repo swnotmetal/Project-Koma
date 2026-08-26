@@ -7,16 +7,25 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js"
+    ".": "./dist/index.js",
+    "./claude-code": "./dist/claude-code.js"
+  },
+  "bin": {
+    "koma-miko-claude-hook": "./dist/claude-hook-cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "eval:replay": "npm run build && node ./evals/replay.mjs",
+    "eval:claude-hook": "npm run build && node ./evals/claude-hook.mjs",
+    "eval:claude-live": "npm run build && node ./evals/claude-live.mjs",
     "prepack": "npm run build",
     "prepublishOnly": "npm run build"
   },
   "files": [
     "dist",
+    "evals",
+    "examples",
     "src",
     "README.md",
     "README.zh-CN.md"

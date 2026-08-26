@@ -1,6 +1,7 @@
 # Koma Miko — Alpha Design
 
-Status: **source alpha implemented; npm publication pending**.
+Status: **Witness alpha implemented with a narrow Claude Code enforcement demo;
+npm publication pending**.
 
 Miko addresses a narrower, observable problem than general "agent reliability":
 an agent starts work without loading a required skill, forgets a loaded contract as
@@ -57,13 +58,19 @@ Sources: [Claude Code skills](https://code.claude.com/docs/en/skills),
 
 ### Alpha hypothesis
 
-> An explicit task-to-contract declaration plus event evidence can detect a
+> An explicit or observed action-to-contract activation plus trusted event evidence can detect a
 > missing skill, a forbidden action, and a missing completion obligation without
 > inspecting or estimating the model's context window.
 
 Miko should be **event-driven**, not token-threshold-driven. Context length is not
 portable across hosts, and "the instruction is still in context" does not prove
 that the output obeys it.
+
+**This alpha does not observe or control hidden model attention. It has not
+validated model behavior with a near-million-token context and 100 available
+skills.** The deterministic core can be load-tested without an LLM, but whether
+an agent selects, retains, and follows the right skill at that scale requires a
+separate model eval.
 
 ---
 
@@ -73,8 +80,8 @@ that the output obeys it.
 > before work, what may happen during work, and what evidence must exist before
 > completion.
 
-Miko does not take over planning. The host supplies the current task, applicable
-contracts, and observable events. Miko returns one of three decisions:
+**Miko does not take over planning.** The host supplies the current task,
+applicable contracts, and observable events. Miko returns one of three decisions:
 
 | Decision | Meaning |
 |---|---|
@@ -84,6 +91,48 @@ contracts, and observable events. Miko returns one of three decisions:
 
 `REVIEW` deliberately leaves the response to the host: ask the agent to load a
 skill, request human approval, run a reviewer, or stop.
+
+### UI ownership
+
+**Miko core does not own a graphical interface.** It returns a stable structured
+result plus a plain-text rendering. A host adapter owns the final interaction:
+
+- CLI: print the result and use the host's approval prompt;
+- Desktop/IDE: show the same text in the native transcript/permission dialog;
+- non-interactive runner: emit JSON and an exit status for automation.
+
+For Claude Code, `REVIEW` maps to native `ask`, `DENY` maps to `deny`, and the
+adapter returns both a user-visible `systemMessage` and agent-visible recovery
+context. This keeps Miko useful on text-only surfaces without coupling the core
+package to one UI toolkit.
+
+### Claude surface matrix
+
+| Surface | Alpha expectation | Important limit |
+|---|---|---|
+| Local CLI | Full local Hook path; best automation target | Needs a supported Claude Code credential/provider |
+| Desktop Code tab, local session | Same settings, Hooks, Skills, and native approval UI | Interactive only; no `--print` or Agent SDK scripting |
+| VS Code / Cursor Claude Code extension | Shared Claude settings and Hooks | Must be the Claude Code extension, not an unrelated editor agent |
+| Claude Code cloud/web | Not an alpha target yet | Does not read local user settings; package/install availability differs |
+| Other agents/editors | Core protocol only | Requires a dedicated adapter; Claude compatibility does not imply support |
+
+Official references: [platform comparison](https://code.claude.com/docs/en/platforms),
+[Desktop shared configuration](https://code.claude.com/docs/en/desktop),
+[VS Code/Cursor integration](https://code.claude.com/docs/en/ide-integrations), and
+[Hook configuration scopes](https://code.claude.com/docs/en/hooks).
+
+### Evidence trust
+
+Every evidence event has a source:
+
+| Source | Meaning | May satisfy a contract? |
+|---|---|---|
+| `observed` | A host hook observed the lifecycle/tool event | Yes |
+| `external` | An independent check produced the result | Yes |
+| `asserted` | The agent claimed it happened | No; audit only |
+
+Miko can prove that a skill load event occurred. **It cannot prove that the model
+understood, retained, or correctly applied the skill's guidance.**
 
 ---
 
@@ -115,9 +164,12 @@ task submitted
 
 ### 3.1 Prepare
 
-Before implementation begins, match the host-declared task tags to contracts.
-If `ui` work requires `product-design`, Miko asks for evidence that the skill was
-loaded. It does not infer hidden model state.
+Before implementation begins, a host may explicitly activate a contract. At the
+first action, Miko can also match the actual tool and path against a deterministic
+selector. If an `Edit` under `src/components` requires `product-design`, the
+contract activates even when the agent supplied no `ui` task tag. Miko asks for
+host-observed evidence that the skill was loaded; it does not infer hidden model
+state.
 
 ### 3.2 Pre-action
 
@@ -138,7 +190,14 @@ check, and a passing targeted test. "I followed the skill" is not evidence.
 ```ts
 type MikoContract = {
   id: string;
-  appliesWhen: { taskTags: string[] };
+  appliesWhen: {
+    taskTags?: string[];
+    action?: {
+      tools?: string[];
+      pathPrefixes?: string[];
+      argumentNames?: string[];
+    };
+  };
   requires?: {
     skills?: string[];
     references?: string[];
@@ -171,7 +230,12 @@ Example for the motivating UI case:
 ```json
 {
   "id": "ui-change-v1",
-  "appliesWhen": { "taskTags": ["ui"] },
+  "appliesWhen": {
+    "action": {
+      "tools": ["write_file"],
+      "pathPrefixes": ["src/components", "src/pages"]
+    }
+  },
   "requires": {
     "skills": ["product-design"],
     "references": ["docs/design-system.md"]
@@ -197,9 +261,10 @@ Example for the motivating UI case:
 }
 ```
 
-Events belong to a host-provided `sessionId` and `taskId`. The alpha keeps an
-append-only in-memory event ledger; durable storage and cross-session identity
-are later concerns.
+Events belong to a host-provided `sessionId` and `taskId`. Core keeps an
+in-memory ledger; the Claude adapter replays a local append-only JSONL ledger
+across independent hook processes. Remote identity and hosted storage remain
+later concerns.
 
 ---
 
@@ -218,12 +283,14 @@ miko.record({
   taskId: 'new-settings-page',
   type: 'skill_loaded',
   name: 'product-design',
+  source: 'observed',
 });
 
 miko.record({
   taskId: 'new-settings-page',
   type: 'reference_read',
   path: 'docs/design-system.md',
+  source: 'observed',
 });
 
 const beforeEdit = miko.verifyAction({
@@ -233,9 +300,7 @@ const beforeEdit = miko.verifyAction({
   risk: 'medium',
 });
 
-const completion = miko.verifyCompletion({
-  taskId: 'new-settings-page',
-});
+const completion = miko.verifyCompletion('new-settings-page');
 
 // { decision: 'REVIEW', missing: ['check_passed:rendered-ui-review'] }
 ```
@@ -257,29 +322,41 @@ The source alpha implements only the deterministic library and one adapter mappi
 - Required-skill/reference checks
 - Pre-action allow/deny/risk/scope checks
 - Completion evidence checks
-- In-memory task ledger
+- In-memory core ledger plus a privacy-minimized local JSONL Claude adapter ledger
+- Audited non-ALLOW decisions without prompt, code, or model-response persistence
+- Evidence provenance (`observed`, `external`, `asserted`)
+- Explicit and tool/path-driven contract activation
 - `ALLOW`, `DENY`, and `REVIEW` with stable reason codes
-- A Claude Code `PreToolUse` decision mapping (`ALLOW / DENY / REVIEW` to
-  `allow / deny / ask`); the host owns cross-process task/evidence persistence
+- A Claude Code adapter covering `UserPromptExpansion`, `PreToolUse`,
+  `PostToolUse`, and `Stop`
+- A native text/approval interaction (`ALLOW / DENY / REVIEW` to
+  `allow / deny / ask`)
+- Ten deterministic skill-contract replay profiles
+- One opt-in, budget-capped Haiku live fixture for the narrow enforced UI path
 
 ### Not included
 
-- A planner or task decomposition engine
-- Automatic skill selection from raw conversation history
-- Context-window/token monitoring
-- A generic agent runtime
-- Durable telemetry, dashboards, or hosted policy service
-- An LLM classifier
-- Automatic rewriting of tool calls
+- **A planner or task decomposition engine**
+- **Automatic skill selection from raw conversation history**
+- **Context-window/token monitoring**
+- **A validated claim about model behavior at near-million-token / 100-skill scale**
+- **A generic agent runtime**
+- **Durable telemetry, dashboards, or hosted policy service**
+- **An LLM classifier**
+- **Automatic rewriting of tool calls**
 
 ### Must-pass cases
 
 1. UI task starts without `product-design` evidence → `REVIEW`.
-2. Skill is loaded, but a forbidden tool is proposed → `DENY`.
-3. All actions pass, but required UI review/test evidence is absent → `REVIEW`.
-4. All declared evidence is present → `ALLOW`.
-5. A non-applicable contract does not affect an unrelated task.
-6. Invalid/unknown evidence never silently satisfies an obligation.
+2. UI `Edit` under an enforced path starts without observed skill evidence → `DENY`.
+3. Agent claims it loaded a skill but the host did not observe it → still `REVIEW`/`DENY`.
+4. Skill is loaded, but a forbidden tool is proposed → `DENY`.
+5. All actions pass, but required UI review/test evidence is absent → `REVIEW`.
+6. All trusted evidence is present → `ALLOW`.
+7. A non-applicable contract does not affect an unrelated task.
+8. Invalid/unknown evidence never silently satisfies an obligation.
+9. A real Claude Code run produces `DENY → observed skill → changed artifact`
+   while Miko persists neither prompt nor code content.
 
 ---
 
@@ -305,11 +382,10 @@ skill contract was honored**.
 
 ## 8. Decisions Still Needed After Alpha
 
-- Whether task tags must always be supplied by the host or may be suggested by a
-  semantic matcher.
 - Which adapter comes after Claude Code: MCP, an Agent SDK, or a framework-neutral
   event stream.
 - Whether the current `review` → `REVIEW` and `enforce` → `DENY` mapping needs
   per-checkpoint overrides.
-- How to cryptographically or operationally trust evidence supplied by a host.
+- How to attest evidence across remote or untrusted hosts beyond local hook
+  observation.
 - Whether post-compaction events should require re-loading high-priority skills.
