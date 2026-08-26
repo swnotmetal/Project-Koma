@@ -49,6 +49,7 @@
     "hooks",
     "typescript"
   ],
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/swnotmetal/Project-Koma"

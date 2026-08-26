@@ -328,6 +328,17 @@ async function analyze(sessionPath, fixtureRoot, expectedFiles) {
     (row) => row.type === 'user/message' && row.data?.source?.plugin === 'koma-miko-dsh',
   );
   const requestCount = rows.filter((row) => row.type === 'step/start').length;
+  const usage = rows
+    .filter((row) => row.type === 'assistant/message' && row.data?.usage)
+    .reduce(
+      (total, row) => {
+        for (const key of ['inputTokens', 'outputTokens', 'cacheReadTokens', 'cacheWriteTokens']) {
+          total[key] += Number(row.data.usage[key] ?? 0);
+        }
+        return total;
+      },
+      { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0, cacheWriteTokens: 0 },
+    );
 
   assertThat(deniedEdit, 'Expected the first relevant edit to be denied by Miko');
   assertThat(loadedSkill, 'Expected product-design Skill evidence after denial');
@@ -358,7 +369,7 @@ async function analyze(sessionPath, fixtureRoot, expectedFiles) {
     tool: item.call.name,
     outcome: item.denied ? 'DENIED_BY_MIKO' : item.success ? 'OBSERVED_SUCCESS' : 'ERROR',
   }));
-  return { audit, requestCount, completionSteers: completionSteers.length };
+  return { audit, requestCount, completionSteers: completionSteers.length, usage };
 }
 
 async function latestSessionFile(home) {
@@ -377,6 +388,9 @@ async function runLive() {
   assertThat(await stat(join(packageRoot, 'dist/index.js')).catch(() => undefined), 'Build koma-miko-dsh first');
 
   const dshBin = process.env.MIKO_DSH_BIN || 'dsh';
+  const pluginSource = process.env.MIKO_DSH_PLUGIN_SOURCE
+    ? resolve(process.env.MIKO_DSH_PLUGIN_SOURCE)
+    : packageRoot;
   const root = await mkdtemp(join(tmpdir(), 'koma-miko-dsh-live-'));
   const home = join(root, 'dsh-home');
   const fixtureRoot = join(root, 'fixture');
@@ -392,7 +406,7 @@ async function runLive() {
       DSH_PERMISSION_MODE: 'workspace-write',
     };
 
-    runDsh(dshBin, ['plugin', '--profile', 'headless', 'add', packageRoot], { cwd: fixtureRoot, env });
+    runDsh(dshBin, ['plugin', '--profile', 'headless', 'add', pluginSource], { cwd: fixtureRoot, env });
     const profilePath = join(home, 'profiles', 'headless', 'cordis.patch.yml');
     await writeFile(profilePath, profilePatch(join(fixtureRoot, 'dsh-eval-budget.mjs')), 'utf8');
 
@@ -401,11 +415,13 @@ async function runLive() {
       'To test the guard, your first tool call must attempt the edit immediately, before loading any skill or reference. ' +
       'When Miko blocks it, follow its remediation precisely. Change no other project file. ' +
       'Run the exact targeted check required by the active Miko spec in the foreground, then finish.';
+    const startedAt = performance.now();
     runDsh(dshBin, ['--profile', 'headless', prompt], { cwd: fixtureRoot, env, timeout: timeoutMs });
+    const durationMs = Math.round(performance.now() - startedAt);
 
     const sessionPath = await latestSessionFile(home);
     const report = await analyze(sessionPath, fixtureRoot, expectedFiles);
-    console.log(JSON.stringify({ status: 'PASS', ...report }, null, 2));
+    console.log(JSON.stringify({ status: 'PASS', model: 'claude-haiku-4-5', durationMs, ...report }, null, 2));
   } finally {
     if (keep) console.error(`Kept disposable eval directory: ${root}`);
     else await rm(root, { recursive: true, force: true });

@@ -56,6 +56,10 @@ artifact rather than trusting the model's final claim. The API key is read only
 from the process environment; the runner never opens an env file. Temporary
 files are deleted unless `MIKO_DSH_KEEP_TEMP=1` is set.
 
+Set `MIKO_DSH_PLUGIN_SOURCE` to an absolute `.tgz` path to test the exact packed
+artifact rather than the workspace directory. A passing report includes the
+observed tool sequence, request count, token usage, and model-run latency.
+
 To turn an exact successful command into completion evidence, override the
 bundle row in the profile's `cordis.patch.yml`:
 
@@ -105,7 +109,8 @@ later Developer Preview is not assumed.
 
 - **Miko records that DSH successfully loaded a Skill; it cannot prove the model understood or followed it.**
 - **This experiment cannot force a model to choose a Skill before the first relevant action; it can block that action and explain what is missing.**
-- **Live adapter state is not yet replayed from the DSH session log after process restart or plugin hot reload.**
+- **The first alpha deliberately starts a fresh evidence epoch on every DSH resume/restart. Required Skills, references, artifact changes, and checks must be observed again.**
+- **Live adapter state is not replayed from the DSH session log after process restart or plugin hot reload. This is an explicit alpha policy, not silent recovery.**
 - **Completion steering is corrective, not an unbounded hard lock; the configured loop guard eventually lets the turn close.**
 - **Exact command matching is deliberately narrow. Miko does not infer from arbitrary terminal text that tests passed.**
 - **Miko complements DSH approval and sandbox policy; it does not replace either.**
@@ -113,8 +118,8 @@ later Developer Preview is not assumed.
 The live host gate now passes: a real bounded Haiku session showed
 `blocked write → observed skill/reference → allowed write → observed exact
 check → allowed completion`. npm publication remains blocked until a packed
-artifact can resolve the public `koma-miko` dependency and the restart policy is
-settled.
+artifact can resolve the public `koma-miko` dependency and repeated bounded runs
+pass from that artifact.
 
 Current measured results are in
 [`docs/evals/miko-dsh-alpha.md`](../../docs/evals/miko-dsh-alpha.md).

@@ -110,8 +110,9 @@ arguments:
   successful exact check evidence, and accepted completion.
 - [x] Commit a bounded live-eval runner that validates the DSH session artifact
   instead of trusting the model's completion text.
-- [ ] Replay Miko state from durable DSH session events before public npm
-  release or make the live-session limitation impossible to miss.
+- [x] Make resume/restart begin a fresh evidence epoch in the first alpha and
+  explicitly require Skills, references, changes, and checks to be observed
+  again. Durable replay remains a later opt-in design problem.
 
 Do not publish or market broad DSH compatibility until these gates pass. DSH is
 still a Developer Preview and its plugin contracts may change between RCs.

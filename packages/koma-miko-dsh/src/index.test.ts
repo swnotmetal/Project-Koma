@@ -269,6 +269,35 @@ describe('koma-miko-dsh experimental adapter', () => {
     expect((await adapter.beforeTool(execution(agent, 'write', {}), allowNext())).kind).toBe('deny');
   });
 
+  it('starts a fresh evidence epoch on resume and requires Skill reload', async () => {
+    const cwd = workspace(uiSpec());
+    const { adapter, agent, steer, warn } = configuredAdapter(cwd);
+    const skill = execution(agent, 'skill', { name: 'product-design' });
+    const reference = execution(agent, 'read', { file_path: 'docs/design-system.md' });
+    const write = execution(agent, 'write', { file_path: 'src/ui/Hero.tsx' });
+    const check = execution(agent, 'bash', { command: 'npm test -- Hero' });
+
+    adapter.toolResult(skill, success);
+    adapter.toolResult(reference, success);
+    adapter.toolResult(write, success);
+    adapter.toolResult(check, success);
+    adapter.turnStopping(agent);
+    expect(steer).not.toHaveBeenCalled();
+    expect(adapter.snapshot(agent)?.evidence.length).toBeGreaterThan(0);
+
+    adapter.sessionStart(agent, 'resume');
+
+    expect(adapter.snapshot(agent)?.evidence).toHaveLength(0);
+    const denied = await adapter.beforeTool(
+      execution(agent, 'write', { file_path: 'src/ui/Hero.tsx' }),
+      allowNext(),
+    );
+    expect(denied.kind).toBe('deny');
+    expect('reason' in denied ? denied.reason : '').toContain('skill_loaded:product-design');
+    expect('reason' in denied ? denied.reason : '').toContain('reference_read:docs/design-system.md');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('fresh evidence epoch'));
+  });
+
   it('uses conservative risk defaults with explicit deployment overrides', () => {
     expect(riskForDshTool('read')).toBe('low');
     expect(riskForDshTool('write')).toBe('medium');

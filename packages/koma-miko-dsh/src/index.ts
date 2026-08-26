@@ -336,11 +336,16 @@ export function createDshMikoAdapter(
 
   return {
     sessionStart(agent, source) {
-      if (source === 'clear') states.delete(agent);
+      if (source === 'clear' || source === 'resume') states.delete(agent);
       const state = ensure(agent);
       if (!state) return;
       if (source === 'compact') state.miko.advanceContext(state.taskId, 'compaction');
-      if (source === 'resume') state.miko.advanceContext(state.taskId, 'resume');
+      if (source === 'resume') {
+        logger.warn(
+          'koma-miko-dsh: resumed session starts a fresh evidence epoch; ' +
+          'reload required Skills and references before protected actions',
+        );
+      }
     },
 
     async beforeTool(exec, next) {

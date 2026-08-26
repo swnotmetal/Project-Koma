@@ -80,15 +80,16 @@ future runs.
 
 ## What remains before npm publication
 
-1. Decide whether restart/hot-reload support must replay Miko state from DSH's
-   durable session log in the first public version. Until then, document the
-   live-session limitation prominently.
-2. Install a real packed artifact after `koma-miko` itself has a resolvable npm
+1. Install a real packed artifact after `koma-miko` itself has a resolvable npm
    version; the current local bundle links the unpublished workspace package.
-3. Repeat the bounded run enough times to report recovery rate and token/latency
+2. Repeat the bounded run enough times to report recovery rate and token/latency
    overhead instead of presenting one successful trajectory as reliability.
-4. Re-run the matrix before widening the exact DSH peer versions. Developer
+3. Re-run the matrix before widening the exact DSH peer versions. Developer
    Preview compatibility must not be inferred from one RC.
+
+The restart decision for the first alpha is now explicit: every DSH
+resume/restart begins a fresh Miko evidence epoch. Skills, references, artifact
+changes, and checks must be observed again; durable replay is deferred.
 
 ## Claim boundary
 
