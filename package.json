@@ -10,7 +10,7 @@
   "scripts": {
     "demo": "node demo/server.js",
     "demo:web": "node demo/web/server.mjs",
-    "build": "npm run build -w koma-core -w koma-gate -w koma-scout -w koma-miko && npm run build -w koma-core-mcp -w koma-gate-mcp",
+    "build": "npm run build -w koma-core -w koma-gate -w koma-scout -w koma-miko -w koma-miko-dsh && npm run build -w koma-core-mcp -w koma-gate-mcp",
     "check": "npm run build && npm run typecheck -ws --if-present",
     "typecheck": "npm run typecheck -ws --if-present",
     "smoke:npm": "node scripts/smoke-npm.mjs",

@@ -1,0 +1,35 @@
+{
+  "$schema": "../../../koma-miko/schema/miko.schema.json",
+  "version": 1,
+  "specs": [
+    {
+      "id": "dsh-ui-change-v1",
+      "appliesWhen": {
+        "action": {
+          "tools": ["write", "edit"],
+          "pathPrefixes": ["src/ui"],
+          "argumentNames": ["file_path"]
+        }
+      },
+      "requires": {
+        "skills": ["product-design"],
+        "references": ["docs/design-system.md"]
+      },
+      "actions": {
+        "allow": ["skill", "read", "write", "edit", "bash"],
+        "maxRisk": "high",
+        "scope": {
+          "tools": ["write", "edit"],
+          "allowedPathPrefixes": ["src/ui"],
+          "argumentNames": ["file_path"]
+        }
+      },
+      "completion": {
+        "evidence": [
+          { "type": "check_passed", "name": "targeted-tests" }
+        ]
+      },
+      "mode": "enforce"
+    }
+  ]
+}

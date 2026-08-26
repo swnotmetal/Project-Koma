@@ -85,6 +85,39 @@ scope is a business-contract interceptor, not a generic MCP security gateway:
 - [ ] Measure false denials, recovery behavior, and added latency before making
   ecosystem claims.
 
+## DeepSeek Harness adapter
+
+DSH is the first post-Claude host experiment because its native lifecycle maps
+directly to Miko without pretending that the approval service can inspect tool
+arguments:
+
+1. `tools/pre-execute` verifies preparation and the proposed native action;
+2. `tools/result` records only the immutable final successful outcome;
+3. `agent/turn-stopping` checks completion and may steer another step.
+
+- [x] Scaffold private `koma-miko-dsh` as a DSH bundle.
+- [x] Keep Cordis and DSH core packages as peers so the plugin cannot introduce
+  duplicate runtime singletons.
+- [x] Map DSH `skill`, filesystem, shell, and Code Mode sub-call events into
+  privacy-minimized Miko evidence.
+- [x] Bound completion steering so an unsatisfied spec cannot loop forever.
+- [x] Compile and run tests against the pinned DSH Developer Preview release.
+- [x] Install the local bundle into a disposable DSH profile, verify
+  `--dump-config`, and boot the Web host without using a model API.
+- [ ] Install a packed artifact after `koma-miko` has a resolvable published
+  version; the experiment currently links the unpublished workspace package.
+- [x] Run one narrow paid session showing blocked action, observed Skill load,
+  successful exact check evidence, and accepted completion.
+- [x] Commit a bounded live-eval runner that validates the DSH session artifact
+  instead of trusting the model's completion text.
+- [ ] Replay Miko state from durable DSH session events before public npm
+  release or make the live-session limitation impossible to miss.
+
+Do not publish or market broad DSH compatibility until these gates pass. DSH is
+still a Developer Preview and its plugin contracts may change between RCs.
+The measured result is recorded in
+[the Miko × DSH alpha evaluation](../evals/miko-dsh-alpha.md).
+
 ## Koma composition
 
 Keep every package standalone. Composition should happen through evidence and

@@ -1,0 +1,9 @@
+- id: koma-miko-dsh
+  name: koma-miko-dsh
+  config:
+    specPath: miko.json
+    checks:
+      - name: targeted-tests
+        tool: bash
+        argument: command
+        equals: npm test -- Hero

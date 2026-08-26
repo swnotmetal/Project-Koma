@@ -1,0 +1,10 @@
+- insert:
+    - id: koma-miko-dsh
+      name: koma-miko-dsh
+      config:
+        specPath: miko.json
+        missingSpec: warn
+        reviewPolicy: ask
+        failureMode: open
+        unknownRisk: high
+        maxCompletionSteers: 2

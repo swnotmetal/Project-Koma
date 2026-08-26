@@ -1,0 +1,65 @@
+{
+  "name": "koma-miko-dsh",
+  "version": "0.0.0-development",
+  "description": "Experimental DeepSeek Harness adapter for Koma Miko Agent Specs.",
+  "author": "Shuang Wu",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "evals",
+    "examples",
+    "cordis.patch.yml",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "eval:dsh-live": "npm run build && node ./evals/live.mjs",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run src/index.test.ts",
+    "prepack": "npm run build"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "koma-miko": "0.1.0-alpha.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-agent": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-tools": "0.1.1-rc.2",
+    "@deepseek-ai/schemastery": "3.18.1"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.0.1",
+    "@deepseek-ai/dsh-agent": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-llm": "0.1.1-rc.2",
+    "@deepseek-ai/dsh-tools": "0.1.1-rc.2",
+    "@deepseek-ai/schemastery": "3.18.1"
+  },
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "ai-agents",
+    "agent-spec",
+    "guardrails"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swnotmetal/Project-Koma",
+    "directory": "packages/koma-miko-dsh"
+  }
+}
