@@ -12,8 +12,13 @@ Miko checks observable evidence at three points:
 2. **Pre-action** — is the proposed tool, risk, and path scope allowed?
 3. **Complete** — did the required tests, reviews, or artifacts actually happen?
 
-This source alpha is not published to npm yet. Its API may change before the
-first public release.
+Install the public alpha with:
+
+```sh
+npm install koma-miko@alpha
+```
+
+Its API may change before the first stable release.
 
 ## Why
 
@@ -173,8 +178,8 @@ Claude `PostCompact` event. The adapter keeps JSONL as the append-only audit
 record and uses a compact materialized snapshot so each Hook only replays events
 written after the latest snapshot. The ledger is auditable, not tamper-proof.
 
-To try the source alpha, build/install the package, copy the example `miko.json`
-to the project root, and merge the example hooks into
+To try the alpha, install the package, copy the example `miko.json` to the
+project root, and merge the example hooks into
 `.claude/settings.json`. The example is intentionally not enabled automatically:
 its enforced `frontend-design` skill must actually exist in the target project.
 Miko writes session metadata under `.miko/state/`, which should stay ignored.

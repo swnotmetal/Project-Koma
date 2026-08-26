@@ -11,7 +11,13 @@ Miko 在三个可观察节点检查证据：
 2. **动作之前** — 工具、风险等级与路径范围是否符合契约；
 3. **完成之前** — 测试、UI 渲染检查或其他交付义务是否真的执行。
 
-当前是源码 alpha，尚未发布到 npm；首次公开发布前 API 仍可能调整。
+公开 alpha 已发布：
+
+```sh
+npm install koma-miko@alpha
+```
+
+首次稳定版之前 API 仍可能调整。
 
 ## 为什么
 
@@ -147,7 +153,7 @@ CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结
 变为缺失。adapter 保留 append-only JSONL 作为审计记录，同时使用紧凑 snapshot，
 每次 Hook 只需回放 snapshot 之后的尾部事件。该账本便于审计，但并非防篡改账本。
 
-试用源码 alpha 时，先构建/安装该包，把示例 `miko.json` 复制到项目根目录，
+试用 alpha 时，安装该包，把示例 `miko.json` 复制到项目根目录，
 再把示例 Hook 合并进 `.claude/settings.json`。
 示例不会自动启用，因为目标项目中必须真实存在被强制要求的
 `frontend-design` Skill。会话元数据写入 `.miko/state/`，该目录应保持忽略。

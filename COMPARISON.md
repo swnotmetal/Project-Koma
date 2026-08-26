@@ -28,7 +28,7 @@ A technical comparison for engineers evaluating AI defense toolkits.
 |---|---|---|---|
 | Intent classification | ✓ (LLM-based) | ✓ (LLM-based) | ✓ (LLM-based) |
 | Multi-provider support | OpenAI, Anthropic, Google, Ollama | OpenAI + custom | OpenAI + custom | 
-| Preset guards | 4 (general, code, support, reference tool) | Custom topics | Custom rails |
+| Preset guards | 3 (general, code, support) | Custom topics | Custom rails |
 | LRU cache | ✓ | — | — |
 | Express/Fastify middleware | ✓ | — | — |
 | Token budget conscious | ✓ (~500 tokens) | — | — |
@@ -72,7 +72,7 @@ A technical comparison for engineers evaluating AI defense toolkits.
 ### ✗ Not a Fit
 
 - **Python-only stacks** — use Guardrails AI or LLM Guard instead.
-- **Monoliths that don't need a defense layer** — if mixing business logic and defense in one function works fine, Koma's modularity is unnecessary overhead.
+- **Fully managed platforms** — if already using Cloudflare + Auth0 + Vault, Koma adds less value.
 - **Real-time WebSocket streaming** — Koma is designed for request/response patterns.
 
 ---
@@ -85,4 +85,4 @@ Koma makes different tradeoffs than most guardrail frameworks:
 2. **Fail-open by default.** A broken classifier should not break the app. Availability > security for middleware.
 3. **Modular, not monolithic.** Each package works standalone. No framework lock-in.
 4. **Agent-readable.** Every package has explicit "AI Agent Quick Read" and "Agent Handoff" sections with input/output/control-point descriptions.
-5. **Verified by smoke test.** `npm run smoke:npm` packs, installs in a temp directory, and verifies every export — the package that ships is the package that was tested.
+5. **Proven by smoke test.** `npm run smoke:npm` packs, installs in a temp dir, and verifies exports — no "it works on my machine" ambiguity.

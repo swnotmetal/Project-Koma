@@ -2,8 +2,9 @@
 
 Date: 2026-08-26
 
-Status: **release candidate passes native adapter tests, no-model host load, and
-three narrow packed-artifact recovery runs**.
+Status: **`koma-miko@0.1.0-alpha.1` and `koma-miko-dsh@0.1.0-alpha.1` are public;
+native tests, registry installation, no-model host load, and three narrow
+packed-artifact recovery runs pass**.
 
 ## Pinned host contract
 
@@ -111,6 +112,12 @@ recovery claim.**
 The restart decision for the first alpha is now explicit: every DSH
 resume/restart begins a fresh Miko evidence epoch. Skills, references, artifact
 changes, and checks must be observed again; durable replay is deferred.
+
+The final public `alpha` tags point to `.1`. The `.1` correction updates release
+metadata and public documentation after `.0` shipped with a stale
+"not published" README; verifier and adapter runtime behavior are unchanged.
+Installing `koma-miko-dsh@alpha` into a fresh registry-only DSH profile resolved
+both `.1` packages and loaded the bundle successfully.
 
 ## Claim boundary
 

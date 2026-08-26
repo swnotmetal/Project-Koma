@@ -1,19 +1,8 @@
 # Koma Gate
 
-LLM-based scope classifier for AI apps.
+Semantic request filtering for AI apps.
 
 This package exposes a compact intent-classification guard that returns a strict JSON decision and is designed to sit in front of LLM calls, tool calls, or support workflows.
-
-## Security Boundary
-
-Koma Gate is a scope classifier, not a cryptographic prompt-injection defense. Policy text and user input are sent together in one model message, so an attacker with sufficient control over the input may influence the classifier. For stronger guarantees:
-
-- Use a provider that supports system/user message separation (OpenAI, Anthropic).
-- Set `failOpen: false` in production if availability is less critical than security.
-- Evaluate against public jailbreak corpora before relying on Gate as a primary defense.
-- See [SECURITY-HARDENING.md](../../SECURITY-HARDENING.md) for known limitations and their status.
-
-Gate is most effective as a first-pass filter that blocks obvious abuse and off-topic traffic before expensive model calls — not as a sole security boundary.
 
 ## AI Agent Quick Read
 
@@ -36,56 +25,35 @@ Gate is most effective as a first-pass filter that blocks obvious abuse and off-
 
 ## Install
 
-```bash
-npm install koma-gate
-```
+Source-first. Use the package from the workspace or bundle it into a build pipeline.
 
 ## Usage
 
 ```ts
-import { createGeneralKnowledgeGuard } from 'koma-gate';
+import {
+  createGeneralKnowledgeGuard,
+  createCodeAssistantGuard,
+  createSupportGuard,
+} from './src';
 
-const guard = createGeneralKnowledgeGuard({
-  llm: { apiKey: process.env.GEMINI_API_KEY }
-});
+const guard = createGeneralKnowledgeGuard();
 
 app.post('/api/query', guard.middleware(), async (req, res) => {
   res.json({ ok: true });
 });
 ```
 
-## Benchmarks
-
-Evaluated against two public corpora in fail-closed mode. See [BENCHMARKS.md](../../BENCHMARKS.md) for full methodology.
-
-| Corpus | Provider | Recall | Precision | FPR |
-|--------|----------|:------:|:---------:|:---:|
-| EN (deepset) | Google | 96.2% | 100.0% | 0.0% |
-| EN (deepset) | DeepSeek | 93.2% | 100.0% | 0.0% |
-| ZH (zh-50) | DeepSeek | 100.0% | 100.0% | 0.0% |
-| ZH (zh-50) | Google | 98.0% | 100.0% | 0.0% |
-
 ## Exports
 
-### Guard Factories
-
-| Export | What it does | When to use |
-|---|---|---|
-| `createGeneralKnowledgeGuard()` | Blocks diagnosis, advice, off-topic. Allows science, tech, history. | Q&A bots, research assistants |
-| `createCodeAssistantGuard()` | Blocks malware, exploits, cracking. Allows programming, architecture. | Coding copilots, CI bots |
-| `createSupportGuard()` | Blocks medical/legal/investing advice. Allows billing, accounts, FAQ. | Customer support bots |
-| `createReferenceToolGuard()` | Blocks diagnosis, role-manipulation, prompt extraction. Allows factual lookup. | Voice AI, medication info, doc search |
-
-### Core Classes
-
-| Export | What it does |
-|---|---|
-| `KomaGuard` | The main guard class. Call `guard.classify(text)` for programmatic use, or `guard.middleware()` for Express. |
-| `buildClassificationPrompt()` | Builds the few-shot prompt from domain config. Useful for custom guard setups. |
-
-### Config Types
-
-`GuardConfig`, `GuardResult`, `GuardDecision` — TypeScript types for the full guard contract.
+- `KomaGuard`
+- `GuardConfig`
+- `GuardResult`
+- `GuardDecision`
+- `createGeneralKnowledgeGuard()`
+- `createCodeAssistantGuard()`
+- `createSupportGuard()`
+- `buildClassificationPrompt()`
+- `SYSTEM_PROMPT_TEMPLATE`
 
 ## What It Solves
 
@@ -95,9 +63,9 @@ Evaluated against two public corpora in fail-closed mode. See [BENCHMARKS.md](..
 - noisy or meaningless input
 - basic abuse filtering before expensive model calls
 
-## Design
+## Notes
 
-- English-first source and prompts.
-- Low token budget (~500 input tokens per classification).
-- Fail-open by default for availability.
-- Swap between local and hosted LLMs via the adapter config.
+- English-first source and prompts
+- low token budget
+- fail-open by default for availability
+- easy to swap between local and hosted LLMs

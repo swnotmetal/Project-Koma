@@ -1,7 +1,7 @@
 # Koma Miko — Alpha Design
 
-Status: **Witness alpha implemented with a narrow Claude Code enforcement demo;
-npm publication pending**.
+Status: **Public alpha implemented with narrow Claude Code and DeepSeek Harness
+enforcement paths; stable API and broad host claims remain pending**.
 
 Miko addresses a narrower, observable problem than general "agent reliability":
 an agent starts work without loading a required skill, forgets a loaded contract as
@@ -317,7 +317,8 @@ Implementation: [`packages/koma-miko`](../../packages/koma-miko/README.md).
 
 ## 6. Alpha Scope and Acceptance Tests
 
-The source alpha implements only the deterministic library and one adapter mapping.
+The public alpha implements the deterministic library plus narrow Claude Code
+and DeepSeek Harness adapter mappings.
 
 ### Included
 

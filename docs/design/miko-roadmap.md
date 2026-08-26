@@ -1,6 +1,6 @@
 # Miko Developer Roadmap
 
-Status: working product memory and TODO for the source alpha.
+Status: working product memory and TODO for the public alpha.
 
 ## Positioning
 
@@ -112,6 +112,8 @@ arguments:
   instead of trusting the model's completion text.
 - [x] Run three packed-artifact Haiku evaluations and record 3/3 recovery,
   request/token usage, and model-phase latency without generalizing the sample.
+- [x] Publish `koma-miko` and `koma-miko-dsh` public alphas, then verify the
+  documented `koma-miko-dsh@alpha` registry install in a fresh DSH profile.
 - [x] Make resume/restart begin a fresh evidence epoch in the first alpha and
   explicitly require Skills, references, changes, and checks to be observed
   again. Durable replay remains a later opt-in design problem.
