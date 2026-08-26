@@ -247,7 +247,7 @@
     .miko-proof span { border: 1px solid var(--border); border-radius: 999px; padding: 5px 10px; background: var(--panel-2); color: var(--muted); font: 600 var(--fs-xs) var(--mono); white-space: nowrap; }
     .miko-proof .verified { border-color: rgba(24,122,82,0.3); color: var(--green); background: rgba(24,122,82,0.08); }
     .miko-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.55fr); gap: var(--sp-4); align-items: stretch; }
-    .miko-terminal-panel { padding: 0; overflow: hidden; background: #17191c; border-color: #292d32; min-height: 610px; }
+    .miko-terminal-panel { display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #17191c; border-color: #292d32; min-height: 610px; }
     .miko-terminal-bar { display: flex; align-items: center; gap: var(--sp-2); padding: 11px 14px; border-bottom: 1px solid #2d3136; background: #202328; color: #aeb5bd; font: var(--fs-xs) var(--mono); }
     .miko-window-dots { display: flex; gap: 6px; margin-right: var(--sp-2); }
     .miko-window-dots i { width: 10px; height: 10px; border-radius: 50%; background: #626870; }
@@ -257,6 +257,7 @@
     .miko-terminal-title { flex: 1; text-align: center; }
     .miko-attached { color: #82d39f; }
     .miko-terminal-body { height: 475px; overflow: auto; padding: 18px; font: 13px/1.65 var(--mono); color: #e5e9ee; scroll-behavior: smooth; }
+    .miko-terminal-panel .miko-terminal-body { flex: 1 1 475px; height: auto; min-height: 475px; }
     .miko-terminal-line { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 10px; white-space: pre-wrap; word-break: break-word; animation: terminal-in 0.18s ease; }
     .miko-terminal-line + .miko-terminal-line { margin-top: 3px; }
     .miko-terminal-line.break { margin-top: 16px; padding-top: 13px; border-top: 1px dashed #333840; }
@@ -275,6 +276,10 @@
     .miko-terminal-line.allow .miko-text { color: #7fd69f; font-weight: 700; }
     .miko-terminal-line.evidence .miko-text { color: #d7b4a2; }
     .miko-terminal-line.dim .miko-text { color: #8d969f; }
+    .miko-scenario-line { display: flex; align-items: center; gap: 10px; margin: 18px 0 11px; padding: 7px 10px; border: 1px solid #3a3f46; border-left: 3px solid #e58a63; border-radius: 6px; background: #202328; color: #e9edf1; }
+    .miko-scenario-line:first-child { margin-top: 0; }
+    .miko-scenario-number { flex: 0 0 auto; color: #f0ad90; font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    .miko-scenario-name { font-weight: 700; }
     .miko-terminal-cursor { display: inline-block; width: 7px; height: 14px; margin: 3px 0 0 90px; background: #d7dbe0; animation: blink 1s steps(1) infinite; vertical-align: top; }
     @keyframes blink { 50% { opacity: 0; } }
     .miko-terminal-footer { display: grid; grid-template-columns: 1fr auto auto; gap: var(--sp-2); align-items: center; padding: 12px 14px; border-top: 1px solid #2d3136; background: #202328; }
@@ -309,6 +314,7 @@
       .miko-grid { grid-template-columns: 1fr; }
       .miko-terminal-panel { min-height: 560px; }
       .miko-terminal-body { height: 430px; }
+      .miko-terminal-panel .miko-terminal-body { min-height: 430px; }
     }
     @media (max-width: 520px) {
       .miko-terminal-body { padding: 14px 11px; font-size: 11.5px; height: 430px; }
@@ -1250,6 +1256,7 @@
       const event = fixture.events;
       return [
         {
+          scenario: 'Unsafe edit attempt',
           eyebrow: '1 · before write',
           title: 'The unsafe edit never reaches the file.',
           copy: 'Claude skipped a required Skill. Miko denies the Edit tool call and returns a concrete recovery instruction instead of relying on another reminder from you.',
@@ -1262,6 +1269,7 @@
           ],
         },
         {
+          scenario: 'Load the missing requirements',
           eyebrow: '2 · guided recovery',
           title: 'Claude gets a repair path, not a dead end.',
           copy: 'The host observes the Skill load. Miko still shows yellow until the design reference is read, making partial preparation visible.',
@@ -1275,6 +1283,7 @@
           ],
         },
         {
+          scenario: 'Retry the protected write',
           eyebrow: '3 · safe retry',
           title: 'The same edit is now allowed.',
           copy: 'Nothing about the user request changed. The difference is that Claude has now produced the preparation evidence your repository requires.',
@@ -1286,6 +1295,7 @@
           ],
         },
         {
+          scenario: 'Agent claims the tests passed',
           eyebrow: '4 · zero-trust completion',
           title: '“Tests passed” is not proof.',
           copy: 'Miko keeps Claude’s claim in the audit trail as asserted evidence, but refuses to treat it as a real test result.',
@@ -1297,6 +1307,7 @@
           ],
         },
         {
+          scenario: 'Runner supplies trusted proof',
           eyebrow: '5 · trusted completion',
           title: 'A real runner turns the light green.',
           copy: 'Observed or external evidence can satisfy the Agent Spec. Developers get a short receipt instead of rereading an entire agent transcript.',
@@ -1309,6 +1320,7 @@
           ],
         },
         {
+          scenario: 'Long context gets compacted',
           eyebrow: '6 · long-session drift',
           title: 'Compaction invalidates stale Skill evidence.',
           copy: 'When Claude compresses a long context, Miko advances the epoch. A Skill loaded before compaction cannot silently authorize a later edit.',
@@ -1321,6 +1333,7 @@
           ],
         },
         {
+          scenario: 'Reload the Skill and retry',
           eyebrow: '7 · current-context proof',
           title: 'Reload, retry, continue working.',
           copy: 'Miko does not replace Claude or write code. It keeps the workflow honest by checking observable boundaries every time they matter.',
@@ -1345,6 +1358,19 @@
       body.className = 'miko-text';
       body.textContent = text;
       line.append(label, body);
+      mikoTerminal.appendChild(line);
+    }
+
+    function appendMikoScenario(step, index) {
+      const line = document.createElement('div');
+      line.className = 'miko-scenario-line';
+      const number = document.createElement('span');
+      number.className = 'miko-scenario-number';
+      number.textContent = 'Scenario ' + (index + 1) + ' / ' + mikoSteps.length;
+      const name = document.createElement('span');
+      name.className = 'miko-scenario-name';
+      name.textContent = step.scenario;
+      line.append(number, name);
       mikoTerminal.appendChild(line);
     }
 
@@ -1404,6 +1430,7 @@
       const cursor = mikoTerminal.querySelector('.miko-terminal-cursor');
       if (cursor) cursor.remove();
       const step = mikoSteps[mikoStepIndex];
+      appendMikoScenario(step, mikoStepIndex);
       step.lines.forEach(appendMikoLine);
       setMikoInspector(step);
       mikoStepIndex += 1;

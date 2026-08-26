@@ -19,6 +19,9 @@ describe('Miko public demo', () => {
     expect(html).toContain('id="miko-terminal"');
     expect(html).toContain('Run 10-sec demo');
     expect(html).toContain("mikoProgress.textContent = '0 / ' + mikoSteps.length");
+    expect(html).toContain("number.textContent = 'Scenario ' + (index + 1) + ' / ' + mikoSteps.length");
+    expect(html).toContain("scenario: 'Unsafe edit attempt'");
+    expect(html).toContain('class="miko-terminal-footer"');
   });
 
   it('keeps the CLI story backed by the privacy-minimized verifier fixture', () => {
