@@ -104,12 +104,14 @@ arguments:
 - [x] Compile and run tests against the pinned DSH Developer Preview release.
 - [x] Install the local bundle into a disposable DSH profile, verify
   `--dump-config`, and boot the Web host without using a model API.
-- [ ] Install a packed artifact after `koma-miko` has a resolvable published
-  version; the experiment currently links the unpublished workspace package.
+- [x] Publish `koma-miko@0.1.0-alpha.0` and install the adapter tarball into
+  disposable DSH profiles without relying on a monorepo workspace link.
 - [x] Run one narrow paid session showing blocked action, observed Skill load,
   successful exact check evidence, and accepted completion.
 - [x] Commit a bounded live-eval runner that validates the DSH session artifact
   instead of trusting the model's completion text.
+- [x] Run three packed-artifact Haiku evaluations and record 3/3 recovery,
+  request/token usage, and model-phase latency without generalizing the sample.
 - [x] Make resume/restart begin a fresh evidence epoch in the first alpha and
   explicitly require Skills, references, changes, and checks to be observed
   again. Durable replay remains a later opt-in design problem.

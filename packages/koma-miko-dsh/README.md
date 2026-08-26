@@ -1,9 +1,9 @@
-# koma-miko-dsh (experimental, private)
+# koma-miko-dsh (alpha)
 
 Native DeepSeek Harness adapter for
-[Koma Miko Agent Specs](../koma-miko/README.md). This package is deliberately
-private while the Developer Preview contract is being verified. Do not publish
-it to npm yet.
+[Koma Miko Agent Specs](../koma-miko/README.md). The first alpha targets the
+exact DSH Developer Preview version verified below; later RC compatibility is
+not implied.
 
 ## What it proves
 
@@ -23,7 +23,15 @@ transport is delegated because each `tools.*` sub-call re-enters
 `tools/pre-execute` and `tools/result`; Miko does not inspect or retain program
 text.
 
-## Current experiment
+## Install the alpha
+
+```sh
+dsh plugin --profile miko-lab add koma-miko-dsh@alpha
+dsh --profile miko-lab --dump-config
+```
+
+For local development, build from the Koma root and install or link the package
+into a disposable DSH profile:
 
 Build from the Koma root, then install or link the package into a disposable DSH
 profile:
@@ -115,11 +123,11 @@ later Developer Preview is not assumed.
 - **Exact command matching is deliberately narrow. Miko does not infer from arbitrary terminal text that tests passed.**
 - **Miko complements DSH approval and sandbox policy; it does not replace either.**
 
-The live host gate now passes: a real bounded Haiku session showed
+The live host gate passes: three bounded Haiku sessions from a packed adapter
+showed
 `blocked write → observed skill/reference → allowed write → observed exact
-check → allowed completion`. npm publication remains blocked until a packed
-artifact can resolve the public `koma-miko` dependency and repeated bounded runs
-pass from that artifact.
+check → allowed completion`. The measured 3/3 result is a narrow integration
+signal, not a general model-reliability claim.
 
 Current measured results are in
 [`docs/evals/miko-dsh-alpha.md`](../../docs/evals/miko-dsh-alpha.md).

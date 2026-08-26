@@ -2,8 +2,8 @@
 
 Date: 2026-08-26
 
-Status: **native adapter, no-model host load, and one narrow paid recovery run
-pass; package remains private**.
+Status: **release candidate passes native adapter tests, no-model host load, and
+three narrow packed-artifact recovery runs**.
 
 ## Pinned host contract
 
@@ -73,19 +73,40 @@ The durable DSH log—not the assistant's final prose—showed this sequence:
 6. the turn ended with zero Miko completion-steer messages.
 
 The final fixture contained the required Skill marker and `After Miko` heading,
-and no other fixture file changed. This proves the native recovery path once; it
-does **not** establish a model recovery rate. The committed `eval:dsh-live`
-runner makes the same experiment repeatable and disables the title request for
-future runs.
+and no other fixture file changed. The committed `eval:dsh-live` runner makes
+the experiment repeatable and disables the title request.
+
+### Three-run packed-artifact result
+
+After `koma-miko@0.1.0-alpha.0` was resolvable from npm, the adapter runtime was
+installed from a tarball into three fresh DSH profiles. Each run used the same
+hard request/token/tool limits.
+
+| Run | Recovery | Model phase | Agent requests | Input | Output | Cache read | Cache write |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1 | pass | 19.832 s | 7 | 11,571 | 1,077 | 14,803 | 5,395 |
+| 2 | pass | 18.719 s | 7 | 7,531 | 1,034 | 19,189 | 5,345 |
+| 3 | pass | 19.723 s | 7 | 11,558 | 1,113 | 14,742 | 5,368 |
+| **Total / mean** | **3/3** | **19.425 s mean** | **7 mean** | **30,660** | **3,224** | **48,734** | **16,108** |
+
+Miko denied the first relevant edit in 3/3 runs, recovery completed in 3/3,
+and no run needed a completion steer. In two runs Haiku performed one harmless
+read before the instructed first edit; that instruction-following miss did not
+bypass the protected action.
+
+Using Anthropic's
+[published Haiku 4.5 pricing](https://www.anthropic.com/claude/haiku) and the
+standard five-minute cache rates, the recorded three-run usage is approximately
+USD 0.072. This is an estimate, not a billing statement. The sample is
+intentionally tiny: **3/3 demonstrates the release path, not a 100% general
+recovery claim.**
 
 ## What remains before npm publication
 
-1. Install a real packed artifact after `koma-miko` itself has a resolvable npm
-   version; the current local bundle links the unpublished workspace package.
-2. Repeat the bounded run enough times to report recovery rate and token/latency
-   overhead instead of presenting one successful trajectory as reliability.
-3. Re-run the matrix before widening the exact DSH peer versions. Developer
+1. Re-run the matrix before widening the exact DSH peer versions. Developer
    Preview compatibility must not be inferred from one RC.
+2. Add a larger, separately budgeted evaluation before making model-reliability
+   or long-context claims.
 
 The restart decision for the first alpha is now explicit: every DSH
 resume/restart begins a fresh Miko evidence epoch. Skills, references, artifact

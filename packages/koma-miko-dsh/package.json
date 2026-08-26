@@ -1,9 +1,8 @@
 {
   "name": "koma-miko-dsh",
-  "version": "0.0.0-development",
-  "description": "Experimental DeepSeek Harness adapter for Koma Miko Agent Specs.",
+  "version": "0.1.0-alpha.0",
+  "description": "DeepSeek Harness adapter for Koma Miko Agent Specs.",
   "author": "Shuang Wu",
-  "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -61,5 +60,9 @@
     "type": "git",
     "url": "https://github.com/swnotmetal/Project-Koma",
     "directory": "packages/koma-miko-dsh"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
   }
 }

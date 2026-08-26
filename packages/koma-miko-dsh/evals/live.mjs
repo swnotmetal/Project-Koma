@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 import { mkdtemp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -174,13 +175,32 @@ async function writeFixture(root) {
 }
 
 function runDsh(dshBin, args, options = {}) {
-  const result = spawnSync(dshBin, args, {
+  let command = dshBin;
+  let commandArgs = args;
+  if (isWindows && /\.(cmd|bat)$/i.test(dshBin)) {
+    const powershellShim = dshBin.replace(/\.(cmd|bat)$/i, '.ps1');
+    if (!existsSync(powershellShim)) {
+      throw new Error(`DSH PowerShell shim is required beside ${dshBin}`);
+    }
+    command = process.env.MIKO_DSH_PWSH_BIN || 'pwsh.exe';
+    commandArgs = [
+      '-NoLogo',
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      powershellShim,
+      ...args,
+    ];
+  }
+  const result = spawnSync(command, commandArgs, {
     cwd: options.cwd,
     env: options.env,
     encoding: 'utf8',
     maxBuffer: 4 * 1024 * 1024,
     timeout: options.timeout ?? timeoutMs,
-    shell: isWindows && /\.(cmd|bat)$/i.test(dshBin),
+    shell: false,
   });
   if (result.error) throw result.error;
   if (result.status !== 0) {
