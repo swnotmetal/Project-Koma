@@ -317,6 +317,8 @@
       .miko-terminal-panel .miko-terminal-body { min-height: 430px; }
     }
     @media (max-width: 520px) {
+      .tabs { flex-wrap: nowrap; gap: 0; }
+      .tab { flex: 1 1 20%; min-width: 0; padding-left: 6px; padding-right: 6px; }
       .miko-terminal-body { padding: 14px 11px; font-size: 11.5px; height: 430px; }
       .miko-terminal-line { grid-template-columns: 52px minmax(0, 1fr); gap: 7px; }
       .miko-terminal-cursor { margin-left: 59px; }
@@ -324,6 +326,36 @@
       .miko-progress-track { grid-column: 1 / -1; }
       .miko-terminal-actions { justify-content: flex-end; flex-wrap: wrap; }
       .miko-terminal-footer button.primary { min-width: 0; }
+    }
+
+    /* FAQ: two audience-first expandable components */
+    .faq-hero { margin-bottom: var(--sp-4); }
+    .faq-hero h2 { margin: 0 0 var(--sp-2); font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.03em; }
+    .faq-hero .lead { max-width: 72ch; margin: 0; font-size: var(--fs-md); }
+    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); align-items: start; }
+    .faq-component { overflow: hidden; border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--panel); }
+    .faq-component[open] { box-shadow: 0 12px 34px rgba(34, 27, 22, 0.06); }
+    .faq-component > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-3); align-items: center; padding: var(--sp-4); cursor: pointer; list-style: none; }
+    .faq-component > summary::-webkit-details-marker { display: none; }
+    .faq-component > summary:hover .faq-audience { color: var(--accent-strong); }
+    .faq-audience { display: block; font-size: var(--fs-lg); font-weight: 750; line-height: 1.25; transition: color var(--t); }
+    .faq-audience-zh { display: block; margin-top: 3px; color: var(--muted); font-size: var(--fs-sm); font-weight: 600; }
+    .faq-summary-copy { display: block; margin-top: var(--sp-2); color: var(--muted); font-size: var(--fs-xs); line-height: 1.55; }
+    .faq-toggle { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--border); border-radius: 50%; color: var(--accent-strong); font: 700 19px/1 var(--mono); }
+    .faq-toggle::before { content: '+'; }
+    .faq-component[open] .faq-toggle::before { content: '−'; }
+    .faq-content { padding: 0 var(--sp-4) var(--sp-4); border-top: 1px solid var(--border); }
+    .faq-item { padding: var(--sp-4) 0; }
+    .faq-item + .faq-item { border-top: 1px solid var(--border); }
+    .faq-question { margin: 0 0 var(--sp-3); font-size: var(--fs-md); line-height: 1.4; }
+    .faq-question [lang="zh-CN"] { display: block; margin-top: 4px; color: var(--accent-strong); font-size: var(--fs-sm); }
+    .faq-answer { color: var(--muted); font-size: var(--fs-sm); line-height: 1.65; }
+    .faq-answer p { margin: 0; }
+    .faq-answer p + p { margin-top: var(--sp-2); }
+    .faq-answer [lang="zh-CN"] { color: var(--text); }
+    .faq-answer a { color: var(--accent-strong); }
+    @media (max-width: 820px) {
+      .faq-grid { grid-template-columns: 1fr; }
     }
 
     footer { border-top: 1px solid var(--border); padding: var(--sp-5) 0; color: var(--muted); font-size: var(--fs-sm); }
@@ -348,6 +380,7 @@
       <button class="tab" role="tab" id="tab-btn-gate" aria-controls="tab-gate" aria-selected="false" tabindex="-1">Gate</button>
       <button class="tab" role="tab" id="tab-btn-scout" aria-controls="tab-scout" aria-selected="false" tabindex="-1">Scout</button>
       <button class="tab" role="tab" id="tab-btn-core" aria-controls="tab-core" aria-selected="false" tabindex="-1">Core</button>
+      <button class="tab" role="tab" id="tab-btn-faq" aria-controls="tab-faq" aria-selected="false" tabindex="-1">FAQ</button>
     </nav>
 
     <!-- GATE -->
@@ -627,10 +660,92 @@
         </aside>
       </div>
     </div>
+
+    <!-- FAQ -->
+    <div class="tabpanel" id="tab-faq" role="tabpanel" aria-labelledby="tab-btn-faq">
+      <div class="faq-hero">
+        <h2>Questions before you add Koma.</h2>
+        <p class="lead">A short, honest FAQ for people shipping their first AI feature and engineers deciding whether these boundaries belong in production. / 给第一次做 AI 功能的人，也给正在判断这些边界能否进入生产环境的工程师。</p>
+      </div>
+
+      <div class="faq-grid">
+        <details class="faq-component">
+          <summary>
+            <span>
+              <span class="faq-audience">For vibe coders</span>
+              <span class="faq-audience-zh" lang="zh-CN">给 Vibe Coders</span>
+              <span class="faq-summary-copy">Pick the right package, understand the demo, and know the trade-offs. / 选对包、看懂 Demo、知道代价。</span>
+            </span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-content">
+            <article class="faq-item">
+              <h3 class="faq-question"><span lang="en">Which Koma package should I try first?</span><span lang="zh-CN">我应该先试哪个 Koma 包？</span></h3>
+              <div class="faq-answer">
+                <p lang="en">Start with the expensive mistake you want to prevent: Miko for coding agents skipping project rules; Gate for prompt injection or off-topic input; Scout for abusive voice/upload traffic; Core for searchable metadata whose payload must stay protected. Each package works alone.</p>
+                <p lang="zh-CN">从你最想避免的昂贵错误开始：Agent 忽略项目规则用 Miko；Prompt 注入或跑题输入用 Gate；恶意语音/上传流量用 Scout；需要“索引可搜索、正文受保护”用 Core。每个包都可以独立使用。</p>
+              </div>
+            </article>
+
+            <article class="faq-item">
+              <h3 class="faq-question"><span lang="en">What does this live demo send or save?</span><span lang="zh-CN">这个在线 Demo 会发送或保存什么？</span></h3>
+              <div class="faq-answer">
+                <p lang="en">Gate sends your prompt to the configured classifier, but saves nothing by default. A wrong-verdict prompt is stored for up to 30 days only after you explicitly opt in. Scout sends simulated metadata, Miko replays privacy-minimized verifier events, and Core uses seeded demo documents. Never paste secrets.</p>
+                <p lang="zh-CN">Gate 会把 Prompt 发给已配置的分类模型，但默认不保存。只有你明确同意提交错误判定时，该 Prompt 才会最多保留 30 天。Scout 发送模拟元数据，Miko 回放经过隐私最小化的验证事件，Core 使用预置演示文档。请勿粘贴秘密信息。<a href="/privacy.html" target="_blank" rel="noopener">查看隐私说明 ↗</a></p>
+              </div>
+            </article>
+
+            <article class="faq-item">
+              <h3 class="faq-question"><span lang="en">Will Miko use more tokens?</span><span lang="zh-CN">Miko 会增加 Token 消耗吗？</span></h3>
+              <div class="faq-answer">
+                <p lang="en">Sometimes. Local verification and the ledger use no model tokens, and a clean ALLOW path adds little or no agent context. A DENY, Skill reload, or retry costs tokens—but may save much more by preventing a wrong implementation. Koma does not yet claim measured token savings.</p>
+                <p lang="zh-CN">有时会。本地验证和账本不消耗模型 Token，正常放行几乎不增加 Agent 上下文；但 DENY、重载 Skill 和重试会产生消耗。它的目标是用可控开销避免更昂贵的错误实现与返工。目前 Koma 不宣称已经实测能够节省 Token。</p>
+              </div>
+            </article>
+          </div>
+        </details>
+
+        <details class="faq-component">
+          <summary>
+            <span>
+              <span class="faq-audience">For experienced engineers</span>
+              <span class="faq-audience-zh" lang="zh-CN">给职业开发者</span>
+              <span class="faq-summary-copy">Inspect determinism, trust boundaries, and production caveats. / 看确定性、信任边界与生产注意事项。</span>
+            </span>
+            <span class="faq-toggle" aria-hidden="true"></span>
+          </summary>
+          <div class="faq-content">
+            <article class="faq-item">
+              <h3 class="faq-question"><span lang="en">Which parts are deterministic, and which still depend on a model?</span><span lang="zh-CN">哪些部分是确定性的，哪些仍依赖模型？</span></h3>
+              <div class="faq-answer">
+                <p lang="en">Gate's semantic verdict depends on the configured LLM. Scout's demo boundary checks, Core's split-store/token derivation, and Miko's contract verification are deterministic once configured. External geo providers, CI evidence, storage, and host adapters remain operational dependencies.</p>
+                <p lang="zh-CN">Gate 的语义判定依赖已配置的 LLM。Scout Demo 的边界检查、Core 的分离存储与 Token 派生、Miko 的契约验证在配置确定后都是确定性的。外部地理位置服务、CI 证据、存储层和宿主适配器仍属于运行依赖。</p>
+              </div>
+            </article>
+
+            <article class="faq-item">
+              <h3 class="faq-question"><span lang="en">Can Miko prove that an agent understood or obeyed a Skill?</span><span lang="zh-CN">Miko 能证明 Agent 理解并遵守了 Skill 吗？</span></h3>
+              <div class="faq-answer">
+                <p lang="en">No. Miko can block observable tool boundaries when the host supports hooks, record Skill/Read/test events, and distinguish asserted evidence from observed or external evidence. It cannot inspect hidden model state, prove comprehension, or protect a path that bypasses the adapter.</p>
+                <p lang="zh-CN">不能。宿主支持 Hook 时，Miko 可以阻断可观察的工具边界，记录 Skill、Read、测试等事件，并区分 Agent 自述与真实观察/外部证据；但它无法查看模型隐藏状态、证明模型真正理解，也无法保护绕过适配器的路径。</p>
+              </div>
+            </article>
+
+            <article class="faq-item">
+              <h3 class="faq-question"><span lang="en">What should I verify before using Koma in production?</span><span lang="zh-CN">在生产环境使用 Koma 前应该确认什么？</span></h3>
+              <div class="faq-answer">
+                <p lang="en">Evaluate packages independently against your threat model. Choose fail-open or fail-closed behavior deliberately; test the real host adapter; use durable rate limits, storage, and key management; and exercise bypass and outage cases. The in-memory stores and scripted fixtures in this demo are demonstrations, not a production architecture.</p>
+                <p lang="zh-CN">请按你的威胁模型分别评估每个包；明确选择 fail-open 或 fail-closed；测试真实宿主适配器；使用持久化的限流、存储和密钥管理；并覆盖绕过与故障场景。本 Demo 的内存存储和脚本化 fixture 只是展示，不是生产架构。</p>
+              </div>
+            </article>
+          </div>
+        </details>
+      </div>
+    </div>
   </main>
 
   <footer class="wrap">
-    <div>Open source — <a href="https://github.com/swnotmetal/Project-Koma" target="_blank" rel="noopener">github.com/swnotmetal/Project-Koma</a> · Miko · Gate · Scout · Core</div>
+    <div>Open source — <a href="https://github.com/swnotmetal/Project-Koma" target="_blank" rel="noopener">github.com/swnotmetal/Project-Koma</a> · Miko · Gate · Scout · Core · FAQ</div>
   </footer>
 
   <script>
