@@ -21,9 +21,13 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "eval:replay": "npm run build && node ./evals/replay.mjs",
+    "eval:audit-demo": "npm run build && node ./evals/audit-demo.mjs",
+    "eval:audit-demo:check": "npm run build && node ./evals/audit-demo.mjs --check",
     "eval:scale": "npm run build && node ./evals/scale.mjs",
     "eval:claude-hook": "npm run build && node ./evals/claude-hook.mjs",
     "eval:claude-live": "npm run build && node ./evals/claude-live.mjs",
+    "eval:claude-scale-live": "npm run build && node ./evals/claude-scale-live.mjs",
+    "eval:claude-scale-dry": "npm run build && node ./evals/claude-scale-live.mjs --dry-run",
     "prepack": "npm run build",
     "prepublishOnly": "npm run build"
   },

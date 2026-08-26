@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "generatedBy": "koma-miko deterministic verifier replay",
+  "privacy": {
+    "containsPrompt": false,
+    "containsCode": false,
+    "containsModelResponse": false
+  },
+  "scenario": {
+    "title": "UI change with a context compaction",
+    "description": "A sanitized replay showing trusted evidence, an untrusted claim, and Skill reload after compaction.",
+    "specIds": [
+      "ui-skill-checkpoint",
+      "design-reference-checkpoint",
+      "targeted-test-checkpoint"
+    ]
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "offsetMs": 0,
+      "kind": "decision",
+      "title": "Agent proposes a UI change",
+      "checkpoint": "PREPARE",
+      "decision": "DENY",
+      "reasonCode": "PREPARATION_EVIDENCE_MISSING",
+      "detail": "Required preparation evidence is missing.",
+      "contractIds": [
+        "ui-skill-checkpoint",
+        "design-reference-checkpoint",
+        "targeted-test-checkpoint"
+      ],
+      "missing": [
+        "ui-skill-checkpoint:skill_loaded:product-design",
+        "design-reference-checkpoint:reference_read:docs/design-system.md"
+      ]
+    },
+    {
+      "sequence": 2,
+      "offsetMs": 850,
+      "kind": "evidence",
+      "title": "Host observes the required Skill",
+      "evidenceType": "skill_loaded",
+      "source": "observed",
+      "value": "product-design",
+      "detail": "Captured from a host event without prompt or file contents."
+    },
+    {
+      "sequence": 3,
+      "offsetMs": 1700,
+      "kind": "decision",
+      "title": "Skill is ready; reference is still missing",
+      "checkpoint": "PREPARE",
+      "decision": "REVIEW",
+      "reasonCode": "PREPARATION_EVIDENCE_MISSING",
+      "detail": "Required preparation evidence is missing.",
+      "contractIds": [
+        "ui-skill-checkpoint",
+        "design-reference-checkpoint",
+        "targeted-test-checkpoint"
+      ],
+      "missing": [
+        "design-reference-checkpoint:reference_read:docs/design-system.md"
+      ]
+    },
+    {
+      "sequence": 4,
+      "offsetMs": 2550,
+      "kind": "evidence",
+      "title": "Host observes the design reference read",
+      "evidenceType": "reference_read",
+      "source": "observed",
+      "value": "docs/design-system.md",
+      "detail": "Captured from a host event without prompt or file contents."
+    },
+    {
+      "sequence": 5,
+      "offsetMs": 3400,
+      "kind": "decision",
+      "title": "Scoped edit reaches the checkpoint",
+      "checkpoint": "PRE_ACTION",
+      "decision": "ALLOW",
+      "reasonCode": "CONTRACT_SATISFIED",
+      "detail": "The proposed action satisfies every applicable contract.",
+      "contractIds": [
+        "ui-skill-checkpoint",
+        "design-reference-checkpoint",
+        "targeted-test-checkpoint"
+      ]
+    },
+    {
+      "sequence": 6,
+      "offsetMs": 4250,
+      "kind": "evidence",
+      "title": "Agent says the targeted test passed",
+      "evidenceType": "check_passed",
+      "source": "asserted",
+      "value": "targeted-tests",
+      "detail": "Retained for audit, but it cannot satisfy an Agent Spec."
+    },
+    {
+      "sequence": 7,
+      "offsetMs": 5100,
+      "kind": "decision",
+      "title": "Claim alone cannot complete the spec",
+      "checkpoint": "COMPLETE",
+      "decision": "DENY",
+      "reasonCode": "COMPLETION_EVIDENCE_MISSING",
+      "detail": "Required completion evidence is missing.",
+      "contractIds": [
+        "ui-skill-checkpoint",
+        "design-reference-checkpoint",
+        "targeted-test-checkpoint"
+      ],
+      "missing": [
+        "targeted-test-checkpoint:check_passed:targeted-tests"
+      ]
+    },
+    {
+      "sequence": 8,
+      "offsetMs": 5950,
+      "kind": "evidence",
+      "title": "Test runner reports a real pass",
+      "evidenceType": "check_passed",
+      "source": "external",
+      "value": "targeted-tests",
+      "detail": "Captured from a host event without prompt or file contents."
+    },
+    {
+      "sequence": 9,
+      "offsetMs": 6800,
+      "kind": "decision",
+      "title": "Agent Spec completes with trusted evidence",
+      "checkpoint": "COMPLETE",
+      "decision": "ALLOW",
+      "reasonCode": "CONTRACT_SATISFIED",
+      "detail": "Completion requirements are satisfied.",
+      "contractIds": [
+        "ui-skill-checkpoint",
+        "design-reference-checkpoint",
+        "targeted-test-checkpoint"
+      ]
+    },
+    {
+      "sequence": 10,
+      "offsetMs": 7650,
+      "kind": "context",
+      "title": "Claude compacts its context",
+      "detail": "Context epoch advanced to 1; stale Skill evidence is no longer accepted.",
+      "epoch": 1
+    },
+    {
+      "sequence": 11,
+      "offsetMs": 8500,
+      "kind": "decision",
+      "title": "The next edit requires a Skill reload",
+      "checkpoint": "PREPARE",
+      "decision": "DENY",
+      "reasonCode": "PREPARATION_EVIDENCE_MISSING",
+      "detail": "Required preparation evidence is missing.",
+      "contractIds": [
+        "ui-skill-checkpoint",
+        "design-reference-checkpoint",
+        "targeted-test-checkpoint"
+      ],
+      "missing": [
+        "ui-skill-checkpoint:skill_loaded:product-design"
+      ]
+    },
+    {
+      "sequence": 12,
+      "offsetMs": 9350,
+      "kind": "evidence",
+      "title": "Host observes the Skill reload",
+      "evidenceType": "skill_loaded",
+      "source": "observed",
+      "value": "product-design",
+      "detail": "Captured from a host event without prompt or file contents."
+    },
+    {
+      "sequence": 13,
+      "offsetMs": 10200,
+      "kind": "decision",
+      "title": "The edit is allowed in the new epoch",
+      "checkpoint": "PRE_ACTION",
+      "decision": "ALLOW",
+      "reasonCode": "CONTRACT_SATISFIED",
+      "detail": "The proposed action satisfies every applicable contract.",
+      "contractIds": [
+        "ui-skill-checkpoint",
+        "design-reference-checkpoint",
+        "targeted-test-checkpoint"
+      ]
+    }
+  ]
+}

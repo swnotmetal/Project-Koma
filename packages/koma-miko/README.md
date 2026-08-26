@@ -213,6 +213,10 @@ ledger privacy.
 `npm run eval:scale -w koma-miko` uses no API key. It benchmarks 100/1,000 Agent
 Specs, 10,000 indexed evidence events, 100 overlapping specs, and snapshot
 restore while checking that terminal output remains bounded.
+`npm run eval:audit-demo -w koma-miko` regenerates the 13-event public audit
+timeline from real Verifier results. `eval:audit-demo:check` detects a stale
+fixture without changing it; the replay contains no prompt, code, or model
+response and needs no backend.
 
 With `ANTHROPIC_API_KEY` set in the parent process,
 `npm run eval:claude-live -w koma-miko` runs one disposable, real Claude Code
@@ -228,12 +232,33 @@ project content, then deleted. The runner never reads an env file. Override the
 defaults with `MIKO_LIVE_MODEL` and `MIKO_LIVE_MAX_BUDGET_USD` (capped by the
 runner at `$1`).
 
+For the 100-Skill long-context fixture, start without spending credits:
+
+```sh
+npm run eval:claude-scale-dry -w koma-miko
+```
+
+Then run one approximately 20k-token Haiku case with a `$0.12` hard cap:
+
+```sh
+MIKO_LIVE_CONTEXT_TOKENS=20000 \
+MIKO_LIVE_MAX_BUDGET_USD=0.12 \
+MIKO_LIVE_CAMPAIGN_BUDGET_USD=0.12 \
+npm run eval:claude-scale-live -w koma-miko
+```
+
+The runner accepts at most three comma-separated context sizes from 1,000 to
+190,000 tokens. It creates exactly 100 project Skills, exposes only
+`Read`/`Edit`/`Skill`, runs in a disposable directory, records cache and cost
+metrics, and never reads an env file. See the
+[alpha evaluation record](../../docs/evals/miko-claude-haiku-alpha.md).
+
 ## Alpha boundaries
 
 - **No LLM call or semantic task classifier**
 - **No planner, router, or agent runtime**
 - **No context-window/token monitoring**
-- **No validated model-behavior claim for near-million-token contexts or 100-skill registries**
+- **One Haiku/100-Skill fixture has passed at approximately 20k tokens; this is not evidence for 100k, 190k, or near-million-token behavior**
 - **No hosted telemetry service** (the Claude adapter uses a local JSONL ledger)
 - **No automatic rewriting of tool calls**
 - **No claim that loading a skill proves the model understood, retained, or followed it**

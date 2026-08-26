@@ -94,6 +94,7 @@ function readLedger() {
   if (!existsSync(stateDir)) return [];
   if (!readdirSync(stateDir, { withFileTypes: true }).some((entry) => entry.isFile())) return [];
   return readdirSync(stateDir)
+    .filter((name) => name.endsWith('.jsonl'))
     .flatMap((name) => readFileSync(path.join(stateDir, name), 'utf8').split(/\r?\n/))
     .filter(Boolean)
     .map((line) => JSON.parse(line));
@@ -112,7 +113,10 @@ try {
     '--max-turns', '6',
     '--max-budget-usd', budget,
     '--output-format', 'json',
-    '--permission-mode', 'acceptEdits',
+    // This disposable fixture exposes no Bash/network tool. Avoid an
+    // interactive edit prompt so the eval measures Miko rather than the TTY.
+    '--permission-mode', 'bypassPermissions',
+    '--dangerously-skip-permissions',
     '--tools', 'Read,Edit,Skill',
     '--allowedTools', 'Read,Edit,Skill',
     '--setting-sources', 'project',

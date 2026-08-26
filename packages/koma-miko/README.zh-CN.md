@@ -180,6 +180,9 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 验证带审计记录的 `DENY → 观察到 Skill → ALLOW`，并确认账本没有保存代码内容。
 `npm run eval:scale -w koma-miko` 不需要 API key；它会测试 100/1,000 份
 Agent Spec、10,000 条索引证据、100 份重叠 Spec、snapshot 恢复和终端输出上限。
+`npm run eval:audit-demo -w koma-miko` 会用真实 Verifier 结果重新生成 13 个事件
+的公开审计时间线；`eval:audit-demo:check` 只检查 fixture 是否过期。回放不包含
+prompt、代码或模型回复，也不需要后端。
 
 父进程设置好 `ANTHROPIC_API_KEY` 后，
 `npm run eval:claude-live -w koma-miko` 会运行一个可自动删除的真实 Claude Code
@@ -194,12 +197,32 @@ fixture 建在包工作区内，使 Claude Code 把它视为项目内容，结�
 不会自行读取任何 env 文件。可用 `MIKO_LIVE_MODEL` 与
 `MIKO_LIVE_MAX_BUDGET_USD` 覆盖默认值（runner 最高只接受 `$1`）。
 
+100 Skills 长上下文 fixture 应先离线检查，不消耗额度：
+
+```sh
+npm run eval:claude-scale-dry -w koma-miko
+```
+
+然后再运行约 20k-token、硬上限 `$0.12` 的单次 Haiku 测试：
+
+```sh
+MIKO_LIVE_CONTEXT_TOKENS=20000 \
+MIKO_LIVE_MAX_BUDGET_USD=0.12 \
+MIKO_LIVE_CAMPAIGN_BUDGET_USD=0.12 \
+npm run eval:claude-scale-live -w koma-miko
+```
+
+runner 最多接受三个以逗号分隔、范围为 1,000–190,000 的上下文档位；它会生成
+恰好 100 个项目 Skills，仅暴露 `Read`/`Edit`/`Skill`，在一次性目录运行并记录
+cache、turn 与成本。runner 不会读取 env 文件。结果见
+[alpha 评估记录](../../docs/evals/miko-claude-haiku-alpha.md)。
+
 ## Alpha 边界
 
 - **不调用 LLM，不做语义任务分类；**
 - **不是 planner、router 或 agent runtime；**
 - **不监控 context window 或 token；**
-- **尚未验证接近百万 token、100 个 Skill 时的模型行为；**
+- **100-Skills fixture 仅在约 20k tokens 的一次 Haiku 测试中通过；这不能代表 100k、190k 或近百万 token 的行为；**
 - **暂无托管遥测和云端策略服务；** Claude 适配器仅使用本地 JSONL 账本；
 - **不自动改写工具调用；**
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**

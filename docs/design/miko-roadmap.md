@@ -29,7 +29,7 @@ append-only JSONL is auditable, not cryptographically immutable.
 - [x] Publish a JSON Schema with editor completion and validation.
 - [x] Add `miko doctor` to report config errors, discovered project Skills,
   required Hook coverage, and Git-ignore readiness before a paid run.
-- [ ] Build a static audit-timeline demo from a sanitized replay; no model backend
+- [x] Build a static audit-timeline demo from a sanitized replay; no model backend
   should be required for the public demo.
 
 ## Evidence ledger
@@ -49,9 +49,12 @@ append-only JSONL is auditable, not cryptographically immutable.
 
 - [x] Zero-API verifier benchmark for 100/1,000 Agent Specs, 10,000 evidence events,
   overlap output, and snapshot restore.
-- [ ] Generate a real 100-Skill Claude fixture and run a budget-capped 20k/100k/
-  190k Haiku smoke matrix.
-- [ ] Record cache usage, model/tool turns, denials, recovery, completion, and
+- [x] Generate a real 100-Skill Claude fixture with offline dry-run and hard
+  per-run/campaign budget caps.
+- [x] Run the approximately 20k Haiku smoke case; keep 100k and 190k pending
+  until the result and campaign budget are reviewed.
+- [ ] Run the budget-capped 100k/190k Haiku smoke cases.
+- [x] Record cache usage, model/tool turns, denials, recovery, completion, and
   cost per run.
 - [ ] Run a paired 850k-900k / 100-Skill Sonnet evaluation only after the harness
   is stable and a separate campaign budget is approved.
