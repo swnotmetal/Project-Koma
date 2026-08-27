@@ -107,7 +107,7 @@
     .examples { margin: var(--sp-3) 0; display: flex; flex-wrap: wrap; gap: var(--sp-2); }
     .chip {
       background: transparent; border: 1px solid var(--border); color: var(--muted);
-      border-radius: 999px; padding: var(--sp-1) var(--sp-2); font-size: var(--fs-sm); cursor: pointer;
+      min-height: 36px; border-radius: 999px; padding: var(--sp-1) var(--sp-2); font-size: var(--fs-sm); cursor: pointer;
       font-family: var(--mono); transition: color var(--t), border-color var(--t);
     }
     .chip:hover { border-color: var(--accent); color: var(--text); }
@@ -128,7 +128,7 @@
     .feedback-actions { display: flex; gap: var(--sp-2); }
     .feedback-button {
       flex: 1; border: 1px solid var(--border); background: var(--panel-2); color: var(--text);
-      border-radius: var(--r-sm); padding: var(--sp-2); cursor: pointer; font-weight: 600;
+      min-height: 40px; border-radius: var(--r-sm); padding: var(--sp-2); cursor: pointer; font-weight: 600;
     }
     .feedback-button:hover { border-color: var(--accent); }
     .feedback-form { margin-top: var(--sp-3); }
@@ -137,7 +137,7 @@
     .feedback-status { margin-top: var(--sp-2); color: var(--muted); font-size: var(--fs-xs); word-break: break-word; }
 
     button.run {
-      width: 100%; padding: var(--sp-2); border: none; border-radius: var(--r-sm); cursor: pointer;
+      width: 100%; min-height: 44px; padding: var(--sp-2); border: none; border-radius: var(--r-sm); cursor: pointer;
       background: var(--accent-strong); color: #fff;
       font-size: var(--fs-md); font-weight: 600; transition: background var(--t), opacity var(--t);
     }
@@ -193,10 +193,16 @@
     .defense-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-4); align-items: end; margin-bottom: var(--sp-3); }
     .defense-hero h2 { margin: 0 0 var(--sp-2); font-size: clamp(22px, 3vw, 32px); letter-spacing: -0.025em; }
     .defense-hero .lead { margin: 0; max-width: 68ch; font-size: var(--fs-md); }
-    .defense-proof { border: 1px solid var(--border); border-radius: 999px; padding: 6px 11px; color: var(--muted); background: var(--panel-2); font: 600 var(--fs-xs) var(--mono); white-space: nowrap; }
+    .demo-evidence { width: min(100%, 430px); justify-self: end; padding-left: var(--sp-3); border-left: 2px solid var(--border); }
+    .demo-evidence-title { display: block; margin-bottom: 7px; color: var(--accent-strong); font: 800 10px/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+    .demo-evidence-list { display: grid; gap: 6px; margin: 0; }
+    .demo-evidence-row { display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; }
+    .demo-evidence-row dt, .demo-evidence-row dd { margin: 0; }
+    .demo-evidence-row dt { color: var(--muted); font: 600 10px/1.35 var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
+    .demo-evidence-row dd { color: var(--text); font: 650 var(--fs-xs)/1.4 var(--mono); }
     .scenario-bar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-3) 0 var(--sp-4); }
     .scenario-label { color: var(--muted); font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-right: var(--sp-1); }
-    .scenario-chip { border: 1px solid var(--border); border-radius: 999px; padding: 6px 11px; background: var(--panel); color: var(--muted); cursor: pointer; font: 600 var(--fs-xs) var(--mono); }
+    .scenario-chip { min-height: 34px; border: 1px solid var(--border); border-radius: 999px; padding: 6px 11px; background: var(--panel); color: var(--muted); cursor: pointer; font: 600 var(--fs-xs) var(--mono); transition: color var(--t), border-color var(--t), background var(--t); }
     .scenario-chip:hover, .scenario-chip[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: rgba(194,94,56,0.07); }
     .scenario-chip.risky[aria-pressed="true"] { border-color: rgba(201,58,58,0.45); color: var(--red); background: rgba(201,58,58,0.06); }
     .defense-grid { display: grid; grid-template-columns: minmax(0, 1.38fr) minmax(290px, 0.62fr); gap: var(--sp-4); align-items: start; }
@@ -204,7 +210,10 @@
     .defense-terminal .miko-terminal-body { height: 385px; }
     .defense-terminal-footer { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 12px 14px; border-top: 1px solid #2d3136; background: #202328; }
     .defense-terminal-footer span { color: #969fa8; font: var(--fs-xs) var(--mono); }
-    .defense-terminal-footer button { border: 1px solid #bf5a38; border-radius: 6px; background: #a7462b; color: white; padding: 8px 13px; cursor: pointer; font-weight: 700; }
+    .defense-terminal-footer button { min-height: 38px; border: 1px solid #bf5a38; border-radius: 6px; background: #a7462b; color: white; padding: 8px 13px; cursor: pointer; font-weight: 700; transition: background var(--t), border-color var(--t), opacity var(--t); }
+    .defense-terminal-footer button:hover { background: #8f3924; border-color: #cf6a47; }
+    .defense-terminal-footer button:focus-visible { outline: 3px solid rgba(229,138,99,0.42); outline-offset: 2px; }
+    .defense-terminal-footer button:disabled { opacity: 0.58; cursor: wait; }
     .defense-inspector { display: flex; flex-direction: column; }
     .defense-verdict { display: inline-flex; align-self: flex-start; border-radius: 999px; padding: 5px 10px; margin-bottom: var(--sp-2); font: 800 var(--fs-xs) var(--mono); }
     .defense-verdict.idle { background: var(--panel-2); color: var(--muted); }
@@ -229,7 +238,7 @@
     .core-path strong { color: var(--text); }
     @media (max-width: 900px) {
       .defense-hero { grid-template-columns: 1fr; align-items: start; }
-      .defense-proof { justify-self: start; }
+      .demo-evidence { justify-self: start; width: 100%; }
       .defense-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
@@ -243,13 +252,6 @@
     .miko-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-4); align-items: end; margin-bottom: var(--sp-4); }
     .miko-hero h2 { margin: 0 0 var(--sp-2); font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.03em; }
     .miko-hero .lead { margin: 0; max-width: 68ch; font-size: var(--fs-md); }
-    .miko-proof { width: min(100%, 430px); justify-self: end; padding-left: var(--sp-3); border-left: 2px solid var(--border); }
-    .miko-proof-title { display: block; margin-bottom: 7px; color: var(--accent-strong); font: 800 10px/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
-    .miko-proof-list { display: grid; gap: 6px; margin: 0; }
-    .miko-proof-row { display: grid; grid-template-columns: 94px minmax(0, 1fr); gap: var(--sp-2); align-items: baseline; }
-    .miko-proof-row dt, .miko-proof-row dd { margin: 0; }
-    .miko-proof-row dt { color: var(--muted); font: 600 10px/1.35 var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
-    .miko-proof-row dd { color: var(--text); font: 650 var(--fs-xs)/1.4 var(--mono); }
     .miko-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.55fr); gap: var(--sp-4); align-items: stretch; }
     .miko-terminal-panel { display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #17191c; border-color: #292d32; min-height: 610px; }
     .miko-terminal-bar { display: flex; align-items: center; gap: var(--sp-2); padding: 11px 14px; border-bottom: 1px solid #2d3136; background: #202328; color: #aeb5bd; font: var(--fs-xs) var(--mono); }
@@ -318,7 +320,6 @@
     .miko-reality a { color: var(--accent-strong); }
     @media (max-width: 900px) {
       .miko-hero { grid-template-columns: 1fr; align-items: start; }
-      .miko-proof { justify-self: start; width: 100%; }
       .miko-grid { grid-template-columns: 1fr; }
       .miko-terminal-panel { min-height: 560px; }
       .miko-terminal-body { height: 430px; }
@@ -393,9 +394,23 @@
 
     <!-- GATE -->
     <div class="tabpanel" id="tab-gate" role="tabpanel" aria-labelledby="tab-btn-gate">
+      <div class="defense-hero">
+        <div>
+          <h2>Try to sneak a bad prompt past Gate.</h2>
+          <p class="lead">Choose an assistant scene, load an example or write your own prompt, then see the verdict Gate returns before your application calls its model.</p>
+        </div>
+        <aside class="demo-evidence" aria-labelledby="gate-evidence-title">
+          <span class="demo-evidence-title" id="gate-evidence-title">Demo evidence</span>
+          <dl class="demo-evidence-list">
+            <div class="demo-evidence-row"><dt>Classifier</dt><dd>Real koma-gate verdict</dd></div>
+            <div class="demo-evidence-row"><dt>Timing</dt><dd>Before the app model</dd></div>
+            <div class="demo-evidence-row"><dt>Storage</dt><dd>Off by default</dd></div>
+          </dl>
+        </aside>
+      </div>
       <div class="grid">
         <section class="panel">
-          <h2>User input</h2>
+          <h2>Try a prompt</h2>
           <label class="field-label" for="gate-domain">Assistant scene</label>
           <select id="gate-domain">
             <option value="general">General assistant</option>
@@ -411,12 +426,12 @@
           <div class="hint" aria-live="polite"><span id="input-count">0</span> / 1000 chars — oversized pastes are rejected before they reach the server.</div>
           <div class="privacy-note">Your prompt is sent to the configured classifier provider to produce a verdict. It is <strong>not saved by default</strong>. If you explicitly share a wrong verdict, Koma stores only the prompt for up to 30 days — not the scene, verdict, account, or network details. Do not submit personal data or secrets. <a href="/privacy.html" target="_blank" rel="noopener">Privacy details ↗</a></div>
 
-          <div class="chipgroup-label">In scope — should pass</div>
+          <div class="chipgroup-label">Load a passing example</div>
           <div class="examples" id="inscope" aria-label="In-scope examples"></div>
-          <div class="chipgroup-label">Injection / off-topic — should block</div>
+          <div class="chipgroup-label">Load a blocked example</div>
           <div class="examples" id="blocked" aria-label="Injection and off-topic examples"></div>
 
-          <button class="run" id="run">Run classifier</button>
+          <button class="run" id="run" type="button">Classify this prompt</button>
           <div class="hint">Write your own injection and see if it slips through — that's the point. Runs the real <code>koma-gate</code> classifier.</div>
           <a class="report-link" href="https://github.com/swnotmetal/Project-Koma/issues/new" target="_blank" rel="noopener">Found a wrong verdict? Report it ↗</a>
         </section>
@@ -427,7 +442,7 @@
           <div class="state" id="idle">
             <div>
               <div class="big">Waiting for input</div>
-              <div>Paste anything on the left and hit run.</div>
+              <div>Enter a prompt on the left, then classify it.</div>
             </div>
           </div>
 
@@ -460,17 +475,17 @@
             <div class="feedback-card hidden" id="feedback-card">
               <div class="feedback-question">Was this verdict correct?</div>
               <div class="feedback-actions">
-                <button class="feedback-button" id="feedback-correct" type="button">Correct — save nothing</button>
-                <button class="feedback-button" id="feedback-wrong" type="button">Wrong verdict</button>
+                <button class="feedback-button" id="feedback-correct" type="button">Mark verdict correct</button>
+                <button class="feedback-button" id="feedback-wrong" type="button">Report wrong verdict</button>
               </div>
               <div class="feedback-form hidden" id="feedback-form">
                 <label class="consent-row" for="feedback-consent">
                   <input id="feedback-consent" type="checkbox" />
                   <span>Share only this prompt with the Koma maintainer. Koma does not save the scene, verdict, correction, account, or network details. Delete automatically after 30 days.</span>
                 </label>
-                <button class="run" id="feedback-submit" type="button" disabled>Share wrong verdict</button>
+                <button class="run" id="feedback-submit" type="button" disabled>Share this prompt</button>
               </div>
-              <button class="feedback-button hidden" id="feedback-delete" type="button">Delete my saved feedback</button>
+              <button class="feedback-button hidden" id="feedback-delete" type="button">Delete saved prompt</button>
               <div class="feedback-status" id="feedback-status" aria-live="polite"></div>
             </div>
           </div>
@@ -485,11 +500,18 @@
           <h2>Stop bad voice uploads before they burn an AI call.</h2>
           <p class="lead">Pick a real failure mode. Scout checks the cheap request boundary first, then either blocks immediately or hands the request to your expensive transcription and LLM pipeline.</p>
         </div>
-        <span class="defense-proof">real deterministic Scout checks · 0 LLM calls</span>
+        <aside class="demo-evidence" aria-labelledby="scout-evidence-title">
+          <span class="demo-evidence-title" id="scout-evidence-title">Demo evidence</span>
+          <dl class="demo-evidence-list">
+            <div class="demo-evidence-row"><dt>Checks</dt><dd>Real Scout validators</dd></div>
+            <div class="demo-evidence-row"><dt>Model calls</dt><dd>0 at the boundary</dd></div>
+            <div class="demo-evidence-row"><dt>Input</dt><dd>Simulated metadata</dd></div>
+          </dl>
+        </aside>
       </div>
 
       <div class="scenario-bar" aria-label="Scout scenarios">
-        <span class="scenario-label">Try a request</span>
+        <span class="scenario-label">Select a request</span>
         <button class="scenario-chip risky" type="button" data-scout-scenario="oversized" aria-pressed="true">6 MB upload bomb</button>
         <button class="scenario-chip" type="button" data-scout-scenario="legit" aria-pressed="false">Normal voice note</button>
         <button class="scenario-chip risky" type="button" data-scout-scenario="badformat" aria-pressed="false">Text disguised as audio</button>
@@ -508,14 +530,14 @@
           <div class="miko-terminal-body" id="scout-terminal" aria-live="polite"></div>
           <div class="defense-terminal-footer">
             <span id="scout-request-summary">6.0 MB · audio/mp4 · 60.0s · US</span>
-            <button id="run-scout" type="button">Send this request</button>
+            <button id="run-scout" type="button">Check this request</button>
           </div>
         </section>
 
         <aside class="panel defense-inspector" aria-live="polite">
           <span class="defense-verdict idle" id="scout-verdict">READY</span>
           <h3 class="defense-title" id="scout-title">The expensive pipeline has not started.</h3>
-          <p class="defense-copy" id="scout-copy">Send the 6 MB upload bomb. You will see exactly which cheap checks fail before a single byte reaches transcription or an LLM.</p>
+          <p class="defense-copy" id="scout-copy">Check the 6 MB upload bomb. You will see exactly which cheap checks fail before a single byte reaches transcription or an LLM.</p>
 
           <div class="miko-receipts" aria-label="Scout outcome">
             <div class="miko-receipt"><span>Downstream AI call</span><strong id="scout-downstream">not started</strong></div>
@@ -549,13 +571,20 @@
           <h2>Let a scraper steal the whole index—and still get zero content.</h2>
           <p class="lead">Core separates searchable metadata from protected payloads. Run the attack first, then compare it with the legitimate backend path that can derive the missing content address.</p>
         </div>
-        <span class="defense-proof">real koma-core split store · no model call</span>
+        <aside class="demo-evidence" aria-labelledby="core-evidence-title">
+          <span class="demo-evidence-title" id="core-evidence-title">Demo evidence</span>
+          <dl class="demo-evidence-list">
+            <div class="demo-evidence-row"><dt>Store</dt><dd>Real Core split store</dd></div>
+            <div class="demo-evidence-row"><dt>Routes</dt><dd>Real demo endpoints</dd></div>
+            <div class="demo-evidence-row"><dt>Model calls</dt><dd>0</dd></div>
+          </dl>
+        </aside>
       </div>
 
       <div class="scenario-bar" aria-label="Core scenarios">
-        <span class="scenario-label">Choose a path</span>
-        <button class="scenario-chip risky" type="button" data-core-scenario="attack" aria-pressed="true">Run scraper attack</button>
-        <button class="scenario-chip" type="button" data-core-scenario="legit" aria-pressed="false">Run legitimate app path</button>
+        <span class="scenario-label">Select a path</span>
+        <button class="scenario-chip risky" type="button" data-core-scenario="attack" aria-pressed="true">Scraper attack</button>
+        <button class="scenario-chip" type="button" data-core-scenario="legit" aria-pressed="false">Legitimate app path</button>
       </div>
 
       <div class="defense-grid">
@@ -603,12 +632,12 @@
           <h2>See Miko catch an AI agent cutting corners.</h2>
           <p class="lead">You ask Claude to change a UI. It tries to write before loading your design Skill. Miko blocks the write, tells Claude exactly what is missing, and lets it retry—inside the CLI you already use.</p>
         </div>
-        <aside class="miko-proof" aria-labelledby="miko-proof-title">
-          <span class="miko-proof-title" id="miko-proof-title">Demo evidence</span>
-          <dl class="miko-proof-list">
-            <div class="miko-proof-row"><dt>Replay source</dt><dd>Real Verifier output</dd></div>
-            <div class="miko-proof-row"><dt>Scale smoke</dt><dd>100 Skills · ~20k-token context</dd></div>
-            <div class="miko-proof-row"><dt>Ledger</dt><dd>No prompt or code stored</dd></div>
+        <aside class="demo-evidence" aria-labelledby="miko-evidence-title">
+          <span class="demo-evidence-title" id="miko-evidence-title">Demo evidence</span>
+          <dl class="demo-evidence-list">
+            <div class="demo-evidence-row"><dt>Replay source</dt><dd>Real Verifier output</dd></div>
+            <div class="demo-evidence-row"><dt>Scale smoke</dt><dd>100 Skills · ~20k-token context</dd></div>
+            <div class="demo-evidence-row"><dt>Ledger</dt><dd>No prompt or code stored</dd></div>
           </dl>
         </aside>
       </div>
@@ -853,12 +882,13 @@
 
       function addChip(container, text, kind) {
         const b = document.createElement('button');
+        b.type = 'button';
         b.className = 'chip' + (kind === 'bad' ? ' bad' : '');
         b.textContent = text;
         b.addEventListener('click', () => {
           inputEl.value = text;
           updateCount();
-          run(text);
+          inputEl.focus();
         });
         container.appendChild(b);
       }
@@ -1096,7 +1126,7 @@
         requestSummary.textContent = formatRequest(item);
         setDefenseVerdict(verdict, 'READY', 'idle');
         title.textContent = 'The expensive pipeline has not started.';
-        copy.textContent = 'Send this request to see which deterministic boundary checks run before transcription or an LLM.';
+        copy.textContent = 'Check this request to see which deterministic boundary checks run before transcription or an LLM.';
         downstream.textContent = 'not started';
         downstream.className = '';
         boundary.textContent = 'not checked';
