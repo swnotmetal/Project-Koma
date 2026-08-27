@@ -1,12 +1,17 @@
 # Koma（狛犬）
 
-### Node.js 的提示注入防火墙。
-狛犬立，百邪散。
-在恶意 prompt 到达你的 LLM、工具或 RAG 管道之前阻止它。
+### 验证编程 agent 真实做过什么，也保护它们构建的 AI 应用。
+
+Koma 是一套面向可观察 AI 边界的 TypeScript 工具。**Miko** 根据本地 Agent
+Spec 检查 coding agent 的 Skill、工具动作与完成证据；**Gate、Scout 和 Core**
+分别保护 prompt 输入、外围资源与检索边界。
 
 ```bash
-npm install koma-gate
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
 ```
+
+如果你正在构建 LLM endpoint，可以从 `npm install koma-gate` 开始。
 
 <p align="center">
   <img src="logo/logobanner.png" alt="Koma" width="600" />
@@ -15,16 +20,15 @@ npm install koma-gate
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
   <img alt="CI" src="https://github.com/swnotmetal/Project-Koma/actions/workflows/ci.yml/badge.svg" />
+  <a href="https://www.npmjs.com/package/koma-miko"><img alt="koma-miko" src="https://img.shields.io/npm/v/koma-miko/alpha?label=koma-miko%20alpha&color=C25E38&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/koma-miko"><img alt="koma-miko" src="https://img.shields.io/npm/v/koma-miko/alpha?label=koma-miko%20alpha&color=C25E38&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-miko-dsh"><img alt="koma-miko-dsh" src="https://img.shields.io/npm/v/koma-miko-dsh/alpha?label=DSH%20adapter&color=C25E38&style=flat-square" /></a>
   <br />
-  <img alt="benchmark" src="https://img.shields.io/badge/实测-98.8%25_召回率_0%25_误拦-6e3abe?style=flat-square" />
-  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=下载量&color=blue&style=flat-square" />
-  <img alt="visitors" src="https://hits.dwyl.com/swnotmetal/Project-Koma.svg?style=flat-square" />
-  <a href="https://koma-demo.swbuilds.workers.dev"><img alt="live demo" src="https://img.shields.io/badge/live_demo-try_it_now-C25E38?style=flat-square" /></a>
+  <a href="https://koma-demo.swbuilds.workers.dev"><img alt="Miko live demo" src="https://img.shields.io/badge/Miko_demo-10--sec_replay-C25E38?style=flat-square" /></a>
+  <img alt="Gate benchmark" src="https://img.shields.io/badge/Gate实测-98.8%25召回_0%25误拦-6e3abe?style=flat-square" />
+  <img alt="koma-gate downloads" src="https://img.shields.io/npm/dt/koma-gate?label=gate%20下载量&color=blue&style=flat-square" />
   <a href="https://glama.ai/mcp/servers/swnotmetal/Project-Koma"><img alt="MCP server" src="https://glama.ai/mcp/servers/swnotmetal/Project-Koma/badges/score.svg" /></a>
 </p>
 
@@ -33,19 +37,40 @@ npm install koma-gate
 </p>
 
 <p align="center">
-  <strong>▶ <a href="https://koma-demo.swbuilds.workers.dev">在线体验 Demo</a></strong> —— Gate、Scout、Core 三合一页面，无需注册。
+  <strong>▶ <a href="https://koma-demo.swbuilds.workers.dev">体验 Miko 终端引导回放</a></strong> —— 同页还有 Gate、Scout、Core，无需注册。
 </p>
 
 ---
 
-### 它挡什么
+### 当前主推：Miko Alpha
 
-| 你的应用 | 攻击方式 | 如何防御 | 安装 |
+Coding agent 可以声称自己加载了必需 Skill 或运行了测试，但 Miko 不把自述当作
+证据。在宿主提供的本地 Hook 上，它会把观察到的 Skill 加载、参考文档读取、
+工具动作和完成检查，与项目维护的 `miko.json` 比对。
+
+如果 agent 尚未满足 Spec 就尝试修改文件，Miko 可以返回拒绝和简短的恢复提示。
+它无法读取隐藏模型上下文、证明模型真正理解了 Skill，也无法验证宿主没有暴露的
+事件。
+
+```bash
+npx --yes koma-miko@alpha demo       # 确定性回放；无需 API key
+npx koma-miko init --host claude     # 本地安装后自动配置
+```
+
+[Miko README →](./packages/koma-miko/README.zh-CN.md) ·
+[10 秒网页回放 →](https://koma-demo.swbuilds.workers.dev) ·
+[DeepSeek Harness adapter →](./packages/koma-miko-dsh/README.md)
+
+---
+
+### 四种边界
+
+| 边界 | 失败方式 | Koma 检查什么 | Package |
 |---|---|---|---|
-| AI 聊天 | 提示注入 / 越狱 | 语义过滤器在模型前拦截攻击 | `koma-gate` |
-| 语音 AI | 音频滥用 / 洪水攻击 | 校验 + 限流 + 地理限制 | `koma-scout` |
-| RAG / 搜索 | 数据遍历 / 爬取 | 索引内容分离，token 控制检索 | `koma-core` |
-| AI 编程 agent | Skill 漏调用 / 合规漂移 | 验证准备、动作和完成证据 | `koma-miko@alpha` |
+| Coding agent | 必需 Skill 或完成检查被跳过 | 宿主观察到的准备、动作范围与证据 | `koma-miko@alpha` |
+| 用户 → LLM | 提示注入 / 越狱 | 应用模型之前的语义范围 | `koma-gate` |
+| 请求外围 | 音频滥用 / 洪水攻击 | 校验、限流与地理规则 | `koma-scout` |
+| 检索 | 数据遍历 / 爬取 | 索引与内容分离，token 控制检索 | `koma-core` |
 
 ---
 
@@ -87,7 +112,7 @@ curl http://localhost:8080/self-test
 
 ---
 
-### 三层防御
+### 应用侧 Packages
 
 **`koma-gate`** — 提示注入防火墙。基于 LLM 的范围分类器，拦截越狱、越界请求和指令覆盖。支持 OpenAI、Anthropic、Google、DeepSeek 和本地 Ollama。[README →](./packages/koma-gate/README.md)
 
@@ -103,22 +128,6 @@ curl http://localhost:8080/self-test
 
 每层独立使用。叠加：Gate 过滤 → Scout 控流 → Core 存数据。
 
-**Alpha：`koma-miko`** — 验证 agent 是否加载了必需 skill、动作是否符合契约，
-以及测试或 UI 渲染检查等完成证据是否真实存在。在 Claude Code 项目中安装并
-自动配置：
-
-```sh
-npm install -D koma-miko@alpha
-npx koma-miko init --host claude
-```
-
-无需 API key 即可运行 `npx koma-miko@alpha demo`。DeepSeek Harness 用户可运行
-`dsh plugin --profile miko add koma-miko-dsh@alpha`。
-[核心 README →](./packages/koma-miko/README.zh-CN.md) ·
-[DSH adapter →](./packages/koma-miko-dsh/README.md) ·
-[Codex/Gemini Hook 示例 →](./packages/koma-miko/examples) ·
-[研究与设计 →](./docs/design/miko.md)
-
 ---
 
 ### 使用 AI 编程助手？
@@ -127,14 +136,18 @@ npx koma-miko init --host claude
 
 > *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
 
+对于 coding-agent 项目，安装 Miko 后运行
+`npx koma-miko init --host claude`，再在生成的 `miko.json` 中填写项目真正关心的
+Skill、路径与完成证据。
+
 Koma 同时为人类和 AI agent 的可发现性而设计。参见 [llms.txt](./llms.txt)。
 
 ---
 
 ### 信任与安全
 
-- **最小依赖面。** Gate 与 Core 没有第三方运行时依赖；Scout 仅将 Express 声明为 peer dependency。
-- **不执行代码。** 分类、限流、存储——绝不执行 AI 输出。
+- **最小依赖面。** Miko、Gate 与 Core 没有第三方运行时依赖；Scout 仅将 Express 声明为 peer dependency。
+- **不执行模型输出。** Miko 观察宿主事件；Gate、Scout、Core 负责分类、限流或存储，均不执行生成代码。
 - **默认 fail-open。** 可选守卫故障时不拖垮应用；安全优先的部署可设置 `failOpen: false`。
 - **每次推送 CodeQL。** 覆盖 OWASP LLM01。
 - **MIT 协议。**

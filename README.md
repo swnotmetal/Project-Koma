@@ -1,12 +1,18 @@
 # Koma
 
-### A prompt-injection firewall for Node.js.
+### Verify what coding agents actually did. Protect the AI apps they build.
 
-Stop malicious prompts before they reach your LLM, tools, or RAG pipeline.
+Koma is a TypeScript toolkit for observable AI boundaries. **Miko** checks
+coding-agent Skills, tool actions, and completion evidence against local Agent
+Specs. **Gate, Scout, and Core** protect prompt input, perimeter resources, and
+retrieval.
 
 ```bash
-npm install koma-gate
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
 ```
+
+Building an LLM endpoint instead? Start with `npm install koma-gate`.
 
 <p align="center">
   <img src="logo/logobanner.png" alt="Koma" width="600" />
@@ -15,16 +21,15 @@ npm install koma-gate
 <p align="center">
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
   <img alt="CI" src="https://github.com/swnotmetal/Project-Koma/actions/workflows/ci.yml/badge.svg" />
+  <a href="https://www.npmjs.com/package/koma-miko"><img alt="koma-miko" src="https://img.shields.io/npm/v/koma-miko/alpha?label=koma-miko%20alpha&color=C25E38&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/koma-miko"><img alt="koma-miko" src="https://img.shields.io/npm/v/koma-miko/alpha?label=koma-miko%20alpha&color=C25E38&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-miko-dsh"><img alt="koma-miko-dsh" src="https://img.shields.io/npm/v/koma-miko-dsh/alpha?label=DSH%20adapter&color=C25E38&style=flat-square" /></a>
   <br />
-  <img alt="benchmark" src="https://img.shields.io/badge/benchmark-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" />
-  <img alt="total downloads" src="https://img.shields.io/npm/dt/koma-gate?label=downloads&color=blue&style=flat-square" />
-  <img alt="visitors" src="https://hits.dwyl.com/swnotmetal/Project-Koma.svg?style=flat-square" />
-  <a href="https://koma-demo.swbuilds.workers.dev"><img alt="live demo" src="https://img.shields.io/badge/live_demo-try_it_now-C25E38?style=flat-square" /></a>
+  <a href="https://koma-demo.swbuilds.workers.dev"><img alt="Miko live demo" src="https://img.shields.io/badge/Miko_demo-10--sec_replay-C25E38?style=flat-square" /></a>
+  <img alt="Gate benchmark" src="https://img.shields.io/badge/Gate_eval-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" />
+  <img alt="koma-gate downloads" src="https://img.shields.io/npm/dt/koma-gate?label=gate%20downloads&color=blue&style=flat-square" />
   <a href="https://glama.ai/mcp/servers/swnotmetal/Project-Koma"><img alt="MCP server" src="https://glama.ai/mcp/servers/swnotmetal/Project-Koma/badges/score.svg" /></a>
 </p>
 
@@ -33,19 +38,41 @@ npm install koma-gate
 </p>
 
 <p align="center">
-  <strong>▶ <a href="https://koma-demo.swbuilds.workers.dev">Try the live demo</a></strong> — Gate, Scout &amp; Core in one page, no signup.
+  <strong>▶ <a href="https://koma-demo.swbuilds.workers.dev">Try Miko's guided terminal replay</a></strong> — plus Gate, Scout &amp; Core, no signup.
 </p>
 
 ---
 
-### What It Stops
+### Featured Alpha: Miko
 
-| Your app | Attack | Fix | Install |
+Coding agents can say they loaded a required Skill or ran a test. Miko does not
+treat that claim as evidence. At supported local host Hooks, it compares
+observed Skill loads, reference reads, tool actions, and completion checks with
+a project-owned `miko.json`.
+
+If an agent tries to edit before satisfying the spec, Miko can return a denial
+and a short recovery instruction. It cannot inspect hidden model context, prove
+that a model understood a Skill, or verify events the host never exposes.
+
+```bash
+npx --yes koma-miko@alpha demo       # deterministic; no API key
+npx koma-miko init --host claude     # after local installation
+```
+
+[Miko README →](./packages/koma-miko/README.md) ·
+[10-second web replay →](https://koma-demo.swbuilds.workers.dev) ·
+[DeepSeek Harness adapter →](./packages/koma-miko-dsh/README.md)
+
+---
+
+### Four Boundaries
+
+| Boundary | Failure mode | What Koma checks | Package |
 |---|---|---|---|
-| AI chatbot | Prompt injection / jailbreak | Semantic filter blocks attacks before the model | `koma-gate` |
-| Voice AI | Audio abuse / flooding | Validation + rate limiting + geo | `koma-scout` |
-| RAG / search | Data enumeration / scraping | Split index from content, token-gate retrieval | `koma-core` |
-| AI coding agent | Skill omission / compliance drift | Verify preparation, actions, and completion evidence | `koma-miko@alpha` |
+| Coding agent | Required Skill or completion check skipped | Host-observed preparation, action scope, and evidence | `koma-miko@alpha` |
+| User → LLM | Prompt injection / jailbreak | Semantic scope before the application model | `koma-gate` |
+| Request perimeter | Audio abuse / flooding | Validation, rate limits, and geo rules | `koma-scout` |
+| Retrieval | Data enumeration / scraping | Split index from content; token-gate retrieval | `koma-core` |
 
 Different attacks cross different boundaries. Koma provides a small primitive for each one.
 
@@ -53,9 +80,12 @@ Different attacks cross different boundaries. Koma provides a small primitive fo
 
 ### What Koma Is — and Isn't
 
-**Is**: composable security primitives · defense-in-depth · usable independently · sits outside the model's authority · An engineering quick solution rooted from real production environment
+**Is**: small composable packages · usable independently · explicit failure
+modes · deterministic checks where the host exposes evidence
 
-**Isn't**: a model · an agent framework · a replacement for authorization · a magic prompt-injection detector · a complete security boundary by itself · "Use one LLM to guard another"
+**Isn't**: a model · an agent framework · proof that a model understood its
+instructions · a replacement for authorization · a complete security boundary
+by itself
 
 ---
 
@@ -97,7 +127,7 @@ curl http://localhost:8080/self-test
 
 ---
 
-### Three Defenses
+### Application-Side Packages
 
 **`koma-gate`** — Prompt injection firewall. LLM-based scope classifier that blocks jailbreaks, off-topic requests, and instruction overrides. Supports OpenAI, Anthropic, Google, DeepSeek, and local Ollama models. [README →](./packages/koma-gate/README.md)
 
@@ -112,22 +142,6 @@ curl http://localhost:8080/self-test
 <img src="logo/core-diagram.svg" alt="Koma Core split-store" width="480" />
 
 Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
-
-**Alpha: `koma-miko`** — verifies that an agent loaded the required skill,
-stayed within its action contract, and produced completion evidence such as
-tests or rendered UI review. Install and initialize a Claude Code project with:
-
-```sh
-npm install -D koma-miko@alpha
-npx koma-miko init --host claude
-```
-
-Try its no-API replay with `npx koma-miko@alpha demo`.
-DeepSeek Harness users can add the native adapter with
-`dsh plugin --profile miko add koma-miko-dsh@alpha`. [Core README →](./packages/koma-miko/README.md) ·
-[DSH adapter →](./packages/koma-miko-dsh/README.md) ·
-[Codex/Gemini Hook examples →](./packages/koma-miko/examples) ·
-[research and design →](./docs/design/miko.md)
 
 **MCP servers** — expose Koma to AI agents directly:
 
@@ -151,14 +165,18 @@ Tell it:
 
 > *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
 
+For a coding-agent repository, install Miko and run
+`npx koma-miko init --host claude`; then edit the generated `miko.json` to name
+the Skills, paths, and completion evidence that matter to the project.
+
 Koma is designed for both human and agent discoverability — including two [MCP servers](./packages/koma-gate-mcp/README.md). See [llms.txt](./llms.txt).
 
 ---
 
 ### Trust & Safety
 
-- **Minimal dependency surface.** Gate and Core have no third-party runtime dependencies; Scout declares Express as a peer.
-- **No code execution.** Classifies, rate-limits, stores — never executes AI output.
+- **Minimal dependency surface.** Miko, Gate, and Core have no third-party runtime dependencies; Scout declares Express as a peer.
+- **No model-output execution.** Miko observes host events; Gate, Scout, and Core classify, rate-limit, or store. None executes generated code.
 - **Fail-open by default.** A broken optional guard does not take down the app; security-first deployments can set `failOpen: false`.
 - **CodeQL on every push.** Targets OWASP LLM01.
 - **MIT licensed.**

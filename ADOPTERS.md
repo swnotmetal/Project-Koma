@@ -51,6 +51,6 @@ Core separates the index from the content. Search returns lightweight metadata �
 - [Koma Gate](packages/koma-gate/README.md) — semantic request filter
 - [Koma Scout](packages/koma-scout/README.md) — perimeter checks
 - [Koma Core](packages/koma-core/README.md) — split-store storage
-- [Koma Miko](packages/koma-miko/README.md) — experimental agent contract verification (source alpha)
+- [Koma Miko](packages/koma-miko/README.md) — public-alpha Agent Spec verification for observable coding-agent workflows
 
 *Stories are based on real development and testing experiences. Specific platforms and individuals are not named. If you have a Koma story to share, PRs welcome.*
