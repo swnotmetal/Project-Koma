@@ -5,7 +5,7 @@ import type { LoadedMikoConfig } from './config.js';
 import type { SkillRequirementInput } from './index.js';
 
 export type DoctorStatus = 'pass' | 'warn' | 'fail';
-export type DoctorHost = 'claude' | 'codex' | 'gemini';
+export type DoctorHost = 'claude' | 'codex' | 'gemini' | 'vscode';
 
 export interface DoctorCheck {
   id: 'config' | 'skills' | 'hooks' | 'state-ignore';
@@ -45,30 +45,49 @@ function requiresPostCompact(config: LoadedMikoConfig): boolean {
   );
 }
 
-function hostSkillsDirectory(projectRoot: string, host: DoctorHost): string {
+function hostSkillsDirectories(projectRoot: string, host: DoctorHost): string[] {
+  if (host === 'vscode') {
+    return ['.github', '.agents', '.claude'].map((directory) =>
+      path.join(projectRoot, directory, 'skills'),
+    );
+  }
   const directory = host === 'codex' ? '.agents' : host === 'gemini' ? '.gemini' : '.claude';
-  return path.join(projectRoot, directory, 'skills');
+  return [path.join(projectRoot, directory, 'skills')];
 }
 
 function projectSkills(projectRoot: string, host: DoctorHost): Set<string> {
-  const skillsRoot = hostSkillsDirectory(projectRoot, host);
-  if (!existsSync(skillsRoot)) return new Set();
-  return new Set(readdirSync(skillsRoot, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory() &&
-      existsSync(path.join(skillsRoot, entry.name, 'SKILL.md')))
-    .map((entry) => entry.name));
+  const discovered = new Set<string>();
+  for (const skillsRoot of hostSkillsDirectories(projectRoot, host)) {
+    if (!existsSync(skillsRoot)) continue;
+    for (const entry of readdirSync(skillsRoot, { withFileTypes: true })) {
+      if (entry.isDirectory() && existsSync(path.join(skillsRoot, entry.name, 'SKILL.md'))) {
+        discovered.add(entry.name);
+      }
+    }
+  }
+  return discovered;
 }
 
 function settingsWithMiko(
   projectRoot: string,
   host: DoctorHost,
 ): Array<{ pathname: string; value: unknown }> {
-  const candidates = host === 'claude'
-    ? [
+  let candidates: string[];
+  if (host === 'claude') {
+    candidates = [
         path.join(projectRoot, '.claude', 'settings.json'),
         path.join(projectRoot, '.claude', 'settings.local.json'),
-      ]
-    : [path.join(projectRoot, host === 'codex' ? '.codex/hooks.json' : '.gemini/settings.json')];
+      ];
+  } else if (host === 'vscode') {
+    const hooksRoot = path.join(projectRoot, '.github', 'hooks');
+    candidates = existsSync(hooksRoot)
+      ? readdirSync(hooksRoot, { withFileTypes: true })
+          .filter((entry) => entry.isFile() && entry.name.endsWith('.json'))
+          .map((entry) => path.join(hooksRoot, entry.name))
+      : [];
+  } else {
+    candidates = [path.join(projectRoot, host === 'codex' ? '.codex/hooks.json' : '.gemini/settings.json')];
+  }
   return candidates.filter(existsSync).map((pathname) => ({
     pathname,
     value: JSON.parse(readFileSync(pathname, 'utf8')) as unknown,
@@ -84,7 +103,9 @@ function hookEvents(
     ? ['claude-hook-cli', 'koma-miko-claude-hook']
     : host === 'codex'
       ? ['codex-hook-cli', 'koma-miko-codex-hook']
-      : ['gemini-hook-cli', 'koma-miko-gemini-hook'];
+      : host === 'gemini'
+        ? ['gemini-hook-cli', 'koma-miko-gemini-hook']
+        : ['vscode-hook-cli', 'koma-miko-vscode-hook'];
   for (const { value } of settings) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) continue;
     const hooks = (value as Record<string, unknown>).hooks;
@@ -131,30 +152,35 @@ export function doctorProject(projectRootInput: string, options: DoctorOptions =
 
   const required = requiredSkills(config);
   const discovered = projectSkills(projectRoot, host);
-  const skillsRoot = path.relative(projectRoot, hostSkillsDirectory(projectRoot, host)).replace(/\\/g, '/');
+  const skillsRoots = hostSkillsDirectories(projectRoot, host)
+    .map((directory) => path.relative(projectRoot, directory).replace(/\\/g, '/'));
   const missingSkills = required.filter((name) => !discovered.has(name));
   checks.push({
     id: 'skills',
     status: missingSkills.length === 0 ? 'pass' : 'warn',
     message: missingSkills.length === 0
       ? `${required.length} required project Skill(s) discovered.`
-      : `Required Skills not found under ${skillsRoot}: ${missingSkills.join(', ')}.`,
+      : `Required Skills not found under ${skillsRoots.join(', ')}: ${missingSkills.join(', ')}.`,
   });
 
   try {
     const settings = settingsWithMiko(projectRoot, host);
     const foundEvents = hookEvents(settings, host);
-    const requiredEvents = host === 'claude'
+    const requiredEvents = host === 'claude' || host === 'codex' || host === 'vscode'
       ? ['PreToolUse', 'PostToolUse']
-      : host === 'codex'
-        ? ['PreToolUse', 'PostToolUse']
-        : ['BeforeTool', 'AfterTool'];
-    if (requiresPostCompact(config)) requiredEvents.push(host === 'gemini' ? 'PreCompress' : 'PostCompact');
+      : ['BeforeTool', 'AfterTool'];
+    if (requiresPostCompact(config)) {
+      requiredEvents.push(host === 'gemini' ? 'PreCompress' : host === 'vscode' ? 'PreCompact' : 'PostCompact');
+    }
     const missingEvents = requiredEvents.filter((event) => !foundEvents.has(event));
+    const claudeConflict = host === 'vscode' &&
+      hookEvents(settingsWithMiko(projectRoot, 'claude'), 'claude').size > 0;
     checks.push({
       id: 'hooks',
-      status: missingEvents.length === 0 ? 'pass' : 'warn',
-      message: missingEvents.length === 0
+      status: missingEvents.length === 0 && !claudeConflict ? 'pass' : 'warn',
+      message: claudeConflict
+        ? 'VS Code also discovers a Miko Claude Hook. Disable the Claude hook location in chat.hookFilesLocations to avoid duplicate enforcement.'
+        : missingEvents.length === 0
         ? `Miko ${host} Hooks found for ${requiredEvents.join(', ')}.`
         : `Miko ${host} Hook coverage missing: ${missingEvents.join(', ')}.`,
     });

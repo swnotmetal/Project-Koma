@@ -76,6 +76,28 @@ npx koma-miko init --host claude     # 本地安装后自动配置
 
 ### 实测数据
 
+#### Miko alpha 评估
+
+Miko 本身是确定性验证器，因此这里衡量的是验证开销和端到端 Hook 行为，
+而不是给模型“智力”打一个笼统分数。
+
+| 信号 | 实测结果 |
+|---|---|
+| 离线宿主一致性 | Claude、Codex、Gemini 与 VS Code Copilot 均复现 `DENY → 观察到 Skill → ALLOW`；账本夹具确认不保存 prompt、代码或工具响应 |
+| 本地 verifier 规模测试 | 1,000 份 Agent Spec：每次动作 **p95 1.34 ms**；10,001 条索引证据：**p95 0.0041 ms**；恢复 1,000 条证据：**p95 1.52 ms** |
+| Claude Code smoke | 一次 100-Skill / 约 20k context 测试通过；另一次单 Skill 恢复完成 `DENY → Skill → edit` |
+| DeepSeek Harness smoke | 窄范围 packed-artifact 恢复 **3/3** 通过；模型阶段平均 19.425 秒 |
+
+规模数据来自 2026-08-27 的 Node 24.19 / Windows 参考运行；可用
+`npm run eval:scale -w koma-miko` 在自己的机器复现。Context token 不会进入
+verifier。付费样本刻意保持很小，**不能证明普遍的模型、长上下文或编辑器可靠性**。
+参见 [scale 记录](./docs/evals/miko-scale-alpha.md)、
+[Claude 记录](./docs/evals/miko-claude-haiku-alpha.md)、
+[宿主适配器记录](./docs/evals/miko-host-adapters-alpha.md) 与
+[DSH 记录](./docs/evals/miko-dsh-alpha.md)。
+
+#### Koma Gate 真实模型 benchmark
+
 我用 **1,769 条真实提示注入攻击** 在 fail-closed 模式下测试了 Koma Gate，使用真实商用模型——非 mock 适配器。
 
 | 供应商 | 召回率 | 精确率 | 误拦 |

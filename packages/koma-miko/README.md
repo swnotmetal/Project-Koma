@@ -192,8 +192,9 @@ up an existing settings file before changing it, and adds `.miko/state/` to
 `.gitignore`. Run it again safely; it is idempotent. Use `--skill <name>` and
 `--path <prefix>` to tailor the starter spec, or `--enforce` when you are ready
 to block missing evidence. Start a new Claude session after changing Hooks.
-Use `--dry-run` to preview changes. Codex and Gemini layouts can be initialized
-with `--host codex` or `--host gemini`.
+Use `--dry-run` to preview changes. Codex, Gemini, and VS Code Copilot layouts
+can be initialized with `--host codex`, `--host gemini`, or `--host vscode`
+(`--host copilot` is an alias).
 
 The initializer does not overwrite an existing `miko.json`; edit that file to
 match your project. Miko writes session metadata under `.miko/state/`, which
@@ -207,12 +208,13 @@ npx koma-miko doctor
 npx koma-miko doctor --strict --json
 npx koma-miko doctor --host codex
 npx koma-miko doctor --host gemini --strict
+npx koma-miko doctor --host vscode --strict
 ```
 
 Doctor validates Agent Specs and reports host-specific Skill discovery, required
 Hook coverage, and whether `.miko/state/` is ignored. It defaults to Claude;
-select `codex` or `gemini` when checking those host layouts. It never calls a
-model or reads an API key.
+select the matching host when checking another layout. It never calls a model
+or reads an API key.
 
 Claude Code's local CLI, Desktop Code tab, and VS Code/Cursor extension share
 settings, hooks, and skills. Cloud/remote sessions have different configuration
@@ -222,9 +224,9 @@ See the official [platform overview](https://code.claude.com/docs/en/platforms),
 [Desktop shared configuration](https://code.claude.com/docs/en/desktop), and
 [VS Code settings](https://code.claude.com/docs/en/ide-integrations).
 
-## Codex and Gemini host adapters
+## Codex, Gemini, and VS Code Copilot host adapters
 
-The alpha also ships narrow host adapters for the two text-first Hook surfaces:
+The alpha also ships narrow adapters for these host Hook surfaces:
 
 - `koma-miko-codex-hook` consumes Codex `SessionStart`, `PreToolUse`,
   `PostToolUse`, `PostCompact`, and `Stop` events. It maps `DENY` to Codex's
@@ -238,12 +240,44 @@ The alpha also ships narrow host adapters for the two text-first Hook surfaces:
   Project-level Gemini hooks may require the user to trust the hook fingerprint;
   headless automation should install the command in a trusted user settings
   layer, as the live runner does.
+- `koma-miko-vscode-hook` consumes VS Code `SessionStart`, `PreToolUse`,
+  `PostToolUse`, `PreCompact`, and `Stop`. It uses the documented nested deny
+  and stop outputs, splits multi-file edits into separately scoped paths, and
+  never returns an explicit allow over VS Code's own approval policy. The
+  initializer writes `.github/hooks/miko.json`; no extension or Miko API key is
+  required.
+
+For a small Copilot Agent-mode trial, point Miko at one existing project Skill:
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host vscode --skill product-design --path src --enforce
+npx koma-miko doctor --host vscode --strict
+```
+
+Start a new Copilot chat, then request an edit under `src`. The expected first
+pass is a Miko denial, followed by an explicit read of
+`.github/skills/product-design/SKILL.md` (or the same Skill under `.agents` or
+`.claude`) and a successful retry. Inspect **GitHub Copilot Chat Hooks** or run
+**Developer: Show Agent Debug Logs** to capture the real `tool_name` values.
+VS Code Agent Hooks are currently Preview and can be disabled by organization
+policy. Also, VS Code loads `.claude/settings*.json` by default; `doctor` warns
+when it sees a Miko Claude Hook that could execute alongside the dedicated
+adapter.
+
+The integration follows the official [VS Code Agent Hooks guide](https://code.visualstudio.com/docs/agent-customization/hooks),
+[Hook schemas](https://code.visualstudio.com/docs/agents/reference/hooks-reference),
+and [Copilot Agent Skills locations](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills).
 
 These are host adapters, not a promise that every editor, hosted session, or
 specialized tool path emits the same events. Hosted tools can remain outside the
 local ledger, and host response formats can only provide best-effort success
-signals. See [`examples/codex`](./examples/codex) and
-[`examples/gemini`](./examples/gemini).
+signals. In particular, a native Copilot Skill injection that produces no
+documented tool event cannot count as observed evidence; the alpha recovery
+path requires an observable `read_file` or narrowly recognized read-only
+terminal command. See [`examples/codex`](./examples/codex),
+[`examples/gemini`](./examples/gemini), and
+[`examples/vscode`](./examples/vscode).
 
 ## Automated replay
 
@@ -265,16 +299,21 @@ enforcement demo; the other nine remain review-only.
 `npm run eval:claude-hook -w koma-miko` additionally spawns three independent
 hook processes and verifies an audited `DENY → observed Skill → ALLOW` plus
 ledger privacy.
-`npm run eval:codex-hook -w koma-miko` and `npm run eval:gemini-hook -w koma-miko`
-run the same conformance flow through independent Hook processes without an API
-key. `npm run eval:codex-live -w koma-miko` uses an existing Codex CLI login
-(`MIKO_CODEX_BIN`) and no OpenAI API key; `npm run eval:gemini-live -w koma-miko`
-uses a parent-process `GEMINI_API_KEY` or `GOOGLE_API_KEY` and an official
-Gemini CLI entry point (`MIKO_GEMINI_ENTRY`). Both live runners use disposable
-fixtures and never read an env file.
+`npm run eval:codex-hook -w koma-miko`, `npm run eval:gemini-hook -w koma-miko`,
+and `npm run eval:vscode-hook -w koma-miko` run the same conformance flow
+through independent Hook processes without an API key. The VS Code run covers
+the documented Hook schema, not a live editor session. The Codex live runner
+(`npm run eval:codex-live -w koma-miko`) uses an existing Codex CLI login
+(`MIKO_CODEX_BIN`) and no OpenAI API key. The Gemini live runner
+(`npm run eval:gemini-live -w koma-miko`) uses a parent-process
+`GEMINI_API_KEY` or `GOOGLE_API_KEY` and an official Gemini CLI entry point
+(`MIKO_GEMINI_ENTRY`). Both runners use disposable fixtures and never read an
+env file.
 `npm run eval:scale -w koma-miko` uses no API key. It benchmarks 100/1,000 Agent
 Specs, 10,000 indexed evidence events, 100 overlapping specs, and snapshot
-restore while checking that terminal output remains bounded.
+restore while checking that terminal output remains bounded. See the dated
+[scale reference](../../docs/evals/miko-scale-alpha.md); it is a local verifier
+measurement, not a model benchmark.
 `npm run eval:audit-demo -w koma-miko` regenerates the 13-event fixture behind
 the public guided CLI simulation from real Verifier results.
 `eval:audit-demo:check` detects a stale fixture without changing it; the replay
@@ -328,6 +367,8 @@ metrics, and never reads an env file. See the
 - **No hosted telemetry service** (the Claude adapter uses a local JSONL ledger)
 - **Cannot observe hosted tools, editor wrappers, or remote sessions that do not
   emit the configured host Hook events**
+- **VS Code Agent Hooks are Preview; the adapter has offline schema conformance
+  but still needs a live Copilot editor pass on the tester's tool set**
 - **No automatic rewriting of tool calls**
 - **No claim that loading a skill proves the model understood, retained, or followed it**
 

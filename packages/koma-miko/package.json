@@ -1,6 +1,6 @@
 {
   "name": "koma-miko",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "Deterministic skill and action contract verification for AI agent workflows.",
   "author": "Shuang Wu",
   "type": "module",
@@ -11,6 +11,7 @@
     "./claude-code": "./dist/claude-code.js",
     "./codex": "./dist/codex.js",
     "./gemini": "./dist/gemini.js",
+    "./vscode": "./dist/vscode.js",
     "./host-adapter": "./dist/host-adapter.js",
     "./config": "./dist/config.js",
     "./doctor": "./dist/doctor.js",
@@ -20,7 +21,8 @@
     "koma-miko": "./dist/cli.js",
     "koma-miko-claude-hook": "./dist/claude-hook-cli.js",
     "koma-miko-codex-hook": "./dist/codex-hook-cli.js",
-    "koma-miko-gemini-hook": "./dist/gemini-hook-cli.js"
+    "koma-miko-gemini-hook": "./dist/gemini-hook-cli.js",
+    "koma-miko-vscode-hook": "./dist/vscode-hook-cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -33,6 +35,7 @@
     "eval:codex-hook": "npm run build && node ./evals/codex-hook.mjs",
     "eval:codex-live": "npm run build && node ./evals/codex-live.mjs",
     "eval:gemini-hook": "npm run build && node ./evals/gemini-hook.mjs",
+    "eval:vscode-hook": "npm run build && node ./evals/vscode-hook.mjs",
     "eval:gemini-live": "npm run build && node ./evals/gemini-live.mjs",
     "eval:claude-live": "npm run build && node ./evals/claude-live.mjs",
     "eval:claude-scale-live": "npm run build && node ./evals/claude-scale-live.mjs",
@@ -56,7 +59,9 @@
     "contracts",
     "guardrails",
     "hooks",
-    "typescript"
+    "typescript",
+    "vscode",
+    "copilot"
   ],
   "license": "MIT",
   "repository": {

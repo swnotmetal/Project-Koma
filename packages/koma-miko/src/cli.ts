@@ -10,8 +10,8 @@ import { initProject } from './init.js';
 function help(): string {
   return [
     'koma-miko demo',
-    'koma-miko init [--project <path>] [--host claude|codex|gemini] [--skill <name>] [--path <prefix>] [--mode review|enforce] [--enforce] [--dry-run]',
-    'koma-miko doctor [--project <path>] [--host claude|codex|gemini] [--json] [--strict]',
+    'koma-miko init [--project <path>] [--host claude|codex|gemini|vscode] [--skill <name>] [--path <prefix>] [--mode review|enforce] [--enforce] [--dry-run]',
+    'koma-miko doctor [--project <path>] [--host claude|codex|gemini|vscode] [--json] [--strict]',
     '',
     'Runs a deterministic, no-API Agent Spec replay.',
     'Initializes a starter Agent Spec and host Hooks without overwriting existing settings.',
@@ -28,8 +28,12 @@ function hasFlag(args: string[], name: string): boolean {
   return args.includes(name);
 }
 
-function validHost(value: string | undefined): value is DoctorHost {
-  return value === 'claude' || value === 'codex' || value === 'gemini';
+function normalizedHost(value: string | undefined): DoctorHost | undefined {
+  if (value === 'copilot') return 'vscode';
+  if (value === 'claude' || value === 'codex' || value === 'gemini' || value === 'vscode') {
+    return value;
+  }
+  return undefined;
 }
 
 const args = process.argv.slice(2);
@@ -46,8 +50,9 @@ if (args[0] === 'demo') {
 } else if (args[0] === 'init') {
   const projectRoot = path.resolve(option(args, '--project') ?? process.cwd());
   const requestedHost = option(args, '--host') ?? 'claude';
-  if (!validHost(requestedHost)) {
-    process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, or gemini.\n`);
+  const host = normalizedHost(requestedHost);
+  if (!host) {
+    process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, gemini, or vscode.\n`);
     process.exitCode = 1;
   } else {
     const requestedMode = option(args, '--mode');
@@ -58,7 +63,7 @@ if (args[0] === 'demo') {
     } else {
       try {
         const result = initProject(projectRoot, {
-          host: requestedHost,
+          host,
           skill: option(args, '--skill'),
           pathPrefix: option(args, '--path'),
           mode,
@@ -91,11 +96,12 @@ if (args[0] === 'demo') {
 } else {
   const projectRoot = path.resolve(option(args, '--project') ?? process.cwd());
   const requestedHost = option(args, '--host') ?? 'claude';
-  if (!validHost(requestedHost)) {
-    process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, or gemini.\n`);
+  const host = normalizedHost(requestedHost);
+  if (!host) {
+    process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, gemini, or vscode.\n`);
     process.exitCode = 1;
   } else {
-    const report = doctorProject(projectRoot, { host: requestedHost as DoctorHost });
+    const report = doctorProject(projectRoot, { host });
     process.stdout.write(args.includes('--json')
       ? `${JSON.stringify(report, null, 2)}\n`
       : `${formatDoctorReport(report)}\n`);

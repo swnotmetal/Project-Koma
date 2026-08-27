@@ -5,17 +5,32 @@ versions, not reliability claims about any model or editor.
 
 ## Offline conformance
 
-Both adapters pass the independent-process test without an API key:
+The non-Claude adapters pass their independent-process tests without an API key:
 
 ```text
 Codex  PASS · DENY → exact Skill reload → observed evidence → ALLOW · 6 steps
 Gemini PASS · DENY → activate_skill → observed evidence → ALLOW · 6 steps
+VS Code PASS · DENY → explicit SKILL.md read → observed evidence → ALLOW · 6 steps
 ```
 
 The assertions include a privacy check: patch text, file contents, and tool
 responses do not appear in the Miko JSONL ledger. The host-specific Hook output
 is checked separately from the verifier decision so a host cannot silently
 turn a deny into an allow.
+
+## VS Code Copilot
+
+The adapter targets the documented VS Code Agent Hooks Preview surface rather
+than the Language Model Tool extension API. Its offline fixture covers
+`PreToolUse`, successful `PostToolUse`, `PreCompact`, and the nested `Stop`
+decision shape. It also splits `editFiles` arrays into independently checked
+paths and verifies that edit content and `tool_response` are absent from the
+ledger.
+
+This is not yet a live-editor pass. VS Code tool names can vary by model and
+request, and native Copilot Skill injection might not emit an observable read.
+The first tester run should capture Agent Debug Logs and confirm the exact tool
+names plus an explicit `SKILL.md` recovery read before widening the profile.
 
 ## DeepSeek Harness
 
@@ -58,7 +73,7 @@ in an isolated trusted user settings layer via `GEMINI_CLI_HOME`.
 - The local append-only ledger can preserve decisions and evidence without
   persisting prompt, code, or model-output content.
 - It does **not** prove that a model understood or followed the Skill.
-- It does **not** cover hosted tools, editor-specific wrappers, or future host
-  event schemas.
+- It does **not** cover hosted tools, unobserved native Skill injection,
+  editor-specific wrappers, or future host event schemas.
 - It does **not** validate near-million-token context behavior or 100-Skill
   selection.

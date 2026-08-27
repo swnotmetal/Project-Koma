@@ -118,8 +118,88 @@ async function geminiCase(root, stateDir) {
   return { host: 'gemini', steps: 6 };
 }
 
+async function vscodeCase(root, stateDir) {
+  const spec = {
+    version: 1,
+    specs: [{
+      id: 'vscode-conformance-v1',
+      appliesWhen: {
+        action: {
+          tools: ['replace_string_in_file'],
+          pathPrefixes: ['src/ui'],
+          argumentNames: ['filePath'],
+        },
+      },
+      requires: { skills: [{ name: 'product-design', reloadAfterCompaction: true }] },
+      actions: {
+        allow: ['read_file', 'replace_string_in_file'],
+        scope: {
+          tools: ['replace_string_in_file'],
+          allowedPathPrefixes: ['src/ui'],
+          argumentNames: ['filePath'],
+        },
+      },
+      completion: { evidence: [{ type: 'artifact_changed', path: 'src/ui/Hero.tsx' }] },
+      mode: 'enforce',
+    }],
+  };
+  await writeFile(join(root, 'miko.json'), `${JSON.stringify(spec, null, 2)}\n`);
+  const env = { ...process.env, MIKO_STATE_DIR: stateDir };
+  const bin = join(packageRoot, 'dist', 'vscode-hook-cli.js');
+  const base = {
+    session_id: 'vscode-conformance',
+    cwd: root,
+    timestamp: new Date(0).toISOString(),
+  };
+  const edit = {
+    ...base,
+    hook_event_name: 'PreToolUse',
+    tool_name: 'replace_string_in_file',
+    tool_input: {
+      filePath: 'src/ui/Hero.tsx',
+      oldString: 'private-old',
+      newString: 'private-new',
+    },
+  };
+
+  assertThat(runHook(bin, edit, env, root)?.hookSpecificOutput?.permissionDecision === 'deny',
+    'Expected VS Code edit denial');
+  const read = {
+    ...base,
+    hook_event_name: 'PreToolUse',
+    tool_name: 'read_file',
+    tool_input: { filePath: '.github/skills/product-design/SKILL.md' },
+  };
+  assertThat(runHook(bin, read, env, root) === undefined, 'Expected VS Code Skill read remediation');
+  runHook(bin, {
+    ...read,
+    hook_event_name: 'PostToolUse',
+    tool_response: 'private-skill-body',
+  }, env, root);
+  assertThat(runHook(bin, edit, env, root) === undefined, 'Expected VS Code edit after Skill evidence');
+  runHook(bin, {
+    ...edit,
+    hook_event_name: 'PostToolUse',
+    tool_response: 'private-tool-response',
+  }, env, root);
+  assertThat(runHook(bin, {
+    ...base,
+    hook_event_name: 'Stop',
+    stop_hook_active: false,
+  }, env, root) === undefined, 'Expected VS Code completion');
+
+  const ledger = await ledgerText(stateDir);
+  assertThat(ledger.includes('PREPARATION_EVIDENCE_MISSING'), 'Expected audited VS Code denial');
+  assertThat(ledger.includes('skill_loaded'), 'Expected VS Code Skill evidence');
+  assertThat(!ledger.includes('private-old') && !ledger.includes('private-new'), 'VS Code edit content leaked');
+  assertThat(!ledger.includes('private-skill-body') && !ledger.includes('private-tool-response'),
+    'VS Code tool response leaked');
+  return { host: 'vscode', steps: 6 };
+}
+
 export async function runConformance(host) {
-  assertThat(host === 'codex' || host === 'gemini', 'Host must be codex or gemini');
+  assertThat(host === 'codex' || host === 'gemini' || host === 'vscode',
+    'Host must be codex, gemini, or vscode');
   const temporary = await mkdtemp(join(tmpdir(), `koma-miko-${host}-hook-`));
   const root = join(temporary, 'fixture');
   const stateDir = join(temporary, 'state');
@@ -127,7 +207,9 @@ export async function runConformance(host) {
     await mkdir(join(root, 'src', 'ui'), { recursive: true });
     await mkdir(stateDir, { recursive: true });
     await writeFile(join(root, 'src', 'ui', 'Hero.tsx'), 'export const Hero = "Before";\n');
-    return host === 'codex' ? codexCase(root, stateDir) : geminiCase(root, stateDir);
+    if (host === 'codex') return codexCase(root, stateDir);
+    if (host === 'gemini') return geminiCase(root, stateDir);
+    return vscodeCase(root, stateDir);
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }

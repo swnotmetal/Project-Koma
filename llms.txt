@@ -6,7 +6,7 @@
 
 Koma is a modular toolkit for coding-agent and AI application boundaries:
 
-- **koma-miko** *(public alpha)* — local Agent Specs for required Skills, proposed actions, and completion evidence. Claude, Codex, Gemini, and DeepSeek Harness adapters are intentionally host-limited.
+- **koma-miko** *(public alpha)* — local Agent Specs for required Skills, proposed actions, and completion evidence. Claude, Codex, Gemini, VS Code Copilot, and DeepSeek Harness adapters are intentionally host-limited.
 - **koma-gate** — semantic prompt-injection filter. Classifies input scope before the application's model call. Four presets: general, code, support, reference-tool. Fail-open by default.
 - **koma-scout** — perimeter checks. Token-bucket rate limiting (in-memory or Firestore), audio validation (size/duration/MIME), geographic allowlisting, cooldown enforcement.
 - **koma-core** — zero-trust split-store. Public search index + private content store linked by HKDF-derived opaque tokens. Prevents data scraping via search enumeration.
@@ -17,6 +17,7 @@ Koma is a modular toolkit for coding-agent and AI application boundaries:
 npm install koma-gate koma-scout koma-core
 npm install -D koma-miko@alpha
 npx koma-miko init --host claude
+# or: npx koma-miko init --host vscode
 ```
 
 ## Key features

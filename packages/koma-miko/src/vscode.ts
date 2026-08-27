@@ -1,0 +1,207 @@
+import type { EvidenceEvent, Miko, VerificationResult } from './index.js';
+import { formatMikoDecision } from './index.js';
+import {
+  evidenceFromSuccessfulHostTool,
+  toProjectRelativePath,
+  verifyBeforeHostTool,
+  type HostHookHandlingResult,
+  type HostToolCall,
+  type HostToolProfile,
+} from './host-adapter.js';
+
+interface VSCodeHookBase {
+  session_id: string;
+  cwd: string;
+  hook_event_name: string;
+  timestamp?: string;
+  transcript_path?: string;
+}
+
+export interface VSCodePreToolUseInput extends VSCodeHookBase {
+  hook_event_name: 'PreToolUse';
+  tool_name: string;
+  tool_input: Record<string, unknown>;
+  tool_use_id?: string;
+}
+
+export interface VSCodePostToolUseInput extends VSCodeHookBase {
+  hook_event_name: 'PostToolUse';
+  tool_name: string;
+  tool_input: Record<string, unknown>;
+  tool_response?: unknown;
+  tool_use_id?: string;
+}
+
+export interface VSCodeSessionStartInput extends VSCodeHookBase {
+  hook_event_name: 'SessionStart';
+  source: 'new';
+}
+
+export interface VSCodePreCompactInput extends VSCodeHookBase {
+  hook_event_name: 'PreCompact';
+  trigger: 'auto' | string;
+}
+
+export interface VSCodeStopInput extends VSCodeHookBase {
+  hook_event_name: 'Stop';
+  stop_hook_active: boolean;
+}
+
+export type VSCodeHookInput =
+  | VSCodePreToolUseInput
+  | VSCodePostToolUseInput
+  | VSCodeSessionStartInput
+  | VSCodePreCompactInput
+  | VSCodeStopInput
+  | VSCodeHookBase;
+
+const VSCODE_PROFILE: HostToolProfile = {
+  skillTools: [],
+  readTools: ['read_file', 'readFile'],
+  writeTools: [
+    'apply_patch',
+    'create_file',
+    'createFile',
+    'editFiles',
+    'insert_edit_into_file',
+    'replace_string_in_file',
+  ],
+  shellTools: ['run_in_terminal', 'runInTerminal'],
+  lowRiskTools: ['file_search', 'grep_search', 'list_dir', 'semantic_search'],
+  pathArgumentNames: ['filePath', 'path', 'file_path'],
+  unknownRisk: 'high',
+};
+
+function nonEmptyString(value: unknown): value is string {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function pathsFromVSCodeInput(input: Record<string, unknown>, cwd: string): string[] {
+  const values: string[] = [];
+  for (const key of ['filePath', 'path', 'file_path']) {
+    if (nonEmptyString(input[key])) values.push(input[key]);
+  }
+  for (const key of ['files', 'filePaths']) {
+    const candidates = input[key];
+    if (Array.isArray(candidates)) values.push(...candidates.filter(nonEmptyString));
+  }
+  return [...new Set(values.map((value) => toProjectRelativePath(value, cwd)))];
+}
+
+/** Recognize only a single read-only terminal command that reloads SKILL.md. */
+export function skillReadPathFromVSCodeTerminal(
+  command: unknown,
+  cwd: string,
+): string | undefined {
+  if (!nonEmptyString(command) || /[;&|><`\r\n]/.test(command)) return undefined;
+  const candidate = command.trim();
+  const powerShell = candidate.match(
+    /^Get-Content(?:\s+-Raw)?\s+-LiteralPath\s+(['"])([^'"]+[\\/]SKILL\.md)\1$/i,
+  );
+  const posix = candidate.match(/^cat\s+(['"]?)([^'"]+[\\/]SKILL\.md)\1$/i);
+  const pathname = powerShell?.[2] ?? posix?.[2];
+  return pathname ? toProjectRelativePath(pathname, cwd) : undefined;
+}
+
+/**
+ * VS Code exposes both single-path and multi-file editing tools. Split the
+ * latter so every target is checked independently and only path metadata is
+ * retained.
+ */
+export function canonicalVSCodeCalls(
+  tool: string,
+  input: Record<string, unknown>,
+  cwd: string,
+): HostToolCall[] {
+  if (VSCODE_PROFILE.shellTools.includes(tool)) {
+    const skillPath = skillReadPathFromVSCodeTerminal(input.command, cwd);
+    if (skillPath) {
+      return [{ tool: 'read_file', arguments: { filePath: skillPath }, cwd }];
+    }
+  }
+
+  const paths = pathsFromVSCodeInput(input, cwd);
+  if (paths.length > 0) {
+    return paths.map((filePath) => ({ tool, arguments: { filePath }, cwd }));
+  }
+  return [{ tool, arguments: {}, cwd }];
+}
+
+function blockVSCodeTool(result: VerificationResult): object {
+  const message = formatMikoDecision(result);
+  return {
+    systemMessage: message,
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      permissionDecision: 'deny',
+      permissionDecisionReason: message,
+      additionalContext: message,
+    },
+  };
+}
+
+function evidenceFromVSCodeEvent(input: VSCodeHookInput): EvidenceEvent[] {
+  // VS Code documents PostToolUse as firing only after successful tool completion.
+  if (input.hook_event_name !== 'PostToolUse') return [];
+  const event = input as VSCodePostToolUseInput;
+  return canonicalVSCodeCalls(event.tool_name, event.tool_input, event.cwd).flatMap((call) =>
+    evidenceFromSuccessfulHostTool(call, VSCODE_PROFILE),
+  );
+}
+
+export function handleVSCodeHookEvent(
+  miko: Miko,
+  taskId: string,
+  input: VSCodeHookInput,
+): HostHookHandlingResult {
+  const evidence = evidenceFromVSCodeEvent(input);
+  for (const event of evidence) miko.record({ taskId, ...event });
+
+  if (input.hook_event_name === 'PreCompact') {
+    return {
+      evidence,
+      contextAdvance: miko.advanceContext(taskId, 'compaction'),
+      contextAdvanceReason: 'compaction',
+    };
+  }
+
+  if (input.hook_event_name === 'PreToolUse') {
+    const event = input as VSCodePreToolUseInput;
+    for (const call of canonicalVSCodeCalls(event.tool_name, event.tool_input, event.cwd)) {
+      const checked = verifyBeforeHostTool(miko, taskId, call, VSCODE_PROFILE);
+      if (checked.remediation) continue;
+      if (checked.verification.decision !== 'ALLOW') {
+        return {
+          output: blockVSCodeTool(checked.verification),
+          evidence,
+          verification: checked.verification,
+        };
+      }
+    }
+    // Keep VS Code's own approval policy authoritative when Miko has no objection.
+    return { evidence };
+  }
+
+  if (input.hook_event_name === 'Stop') {
+    const event = input as VSCodeStopInput;
+    const verification = miko.verifyCompletion(taskId);
+    if (verification.decision !== 'ALLOW' && !event.stop_hook_active) {
+      const message = formatMikoDecision(verification);
+      return {
+        output: {
+          systemMessage: message,
+          hookSpecificOutput: {
+            hookEventName: 'Stop',
+            decision: 'block',
+            reason: message,
+          },
+        },
+        evidence,
+        verification,
+      };
+    }
+    return { evidence, verification };
+  }
+
+  return { evidence };
+}

@@ -91,6 +91,29 @@ by itself
 
 ### Benchmarks
 
+#### Miko alpha evaluation
+
+Miko is deterministic, so its useful numbers are verifier cost and end-to-end
+Hook behavior—not a generic score for model intelligence.
+
+| Signal | Observed result |
+|---|---|
+| Offline host conformance | Claude, Codex, Gemini, and VS Code Copilot each reproduce `DENY → observed Skill → ALLOW`; ledger fixtures reject prompt/code/tool-response persistence |
+| Local verifier scale | 1,000 Agent Specs: **1.34 ms p95** per action; 10,001 indexed evidence events: **0.0041 ms p95**; restore 1,000 evidence events: **1.52 ms p95** |
+| Claude Code smoke | One 100-Skill / ~20k-context run passed; a separate one-Skill recovery run completed `DENY → Skill → edit` |
+| DeepSeek Harness smoke | **3/3** narrow packed-artifact recovery runs passed; 19.425 s mean model phase |
+
+The scale row is a 2026-08-27 reference run on Node 24.19 / Windows; rerun it
+with `npm run eval:scale -w koma-miko`. Context tokens never enter the verifier.
+The paid samples are deliberately small and **do not establish general model,
+long-context, or editor reliability**. See the
+[scale record](./docs/evals/miko-scale-alpha.md),
+[Claude record](./docs/evals/miko-claude-haiku-alpha.md),
+[host-adapter record](./docs/evals/miko-host-adapters-alpha.md), and
+[DSH record](./docs/evals/miko-dsh-alpha.md).
+
+#### Koma Gate live-model benchmark
+
 I threw **1,769 real prompt-injection attacks** at Koma Gate in fail-closed mode, using real providers — not mock adapters.
 
 | Provider | Recall | Precision | False Positives |

@@ -142,4 +142,59 @@ describe('miko doctor', () => {
       rmSync(project, { recursive: true, force: true });
     }
   });
+
+  it('checks VS Code Copilot Skills across supported roots and flat Hook files', () => {
+    const project = mkdtempSync(path.join(tmpdir(), 'miko-doctor-vscode-'));
+    try {
+      mkdirSync(path.join(project, '.github', 'skills', 'product-design'), { recursive: true });
+      mkdirSync(path.join(project, '.github', 'hooks'), { recursive: true });
+      writeFileSync(
+        path.join(project, '.github', 'skills', 'product-design', 'SKILL.md'),
+        '# Product design',
+      );
+      writeFileSync(path.join(project, 'miko.json'), JSON.stringify({
+        version: 1,
+        specs: [{
+          id: 'vscode-check',
+          appliesWhen: {
+            action: {
+              tools: ['replace_string_in_file'],
+              pathPrefixes: ['src'],
+              argumentNames: ['filePath'],
+            },
+          },
+          requires: { skills: [{ name: 'product-design', reloadAfterCompaction: true }] },
+        }],
+      }));
+      const hook = {
+        type: 'command',
+        command: 'node ./node_modules/koma-miko/dist/vscode-hook-cli.js',
+      };
+      writeFileSync(path.join(project, '.github', 'hooks', 'miko.json'), JSON.stringify({
+        hooks: {
+          PreToolUse: [hook],
+          PostToolUse: [hook],
+          PreCompact: [hook],
+        },
+      }));
+      writeFileSync(path.join(project, '.gitignore'), '.miko/state/\n');
+
+      const report = doctorProject(project, { host: 'vscode' });
+      expect(report.host).toBe('vscode');
+      expect(report.checks.every((check) => check.status === 'pass')).toBe(true);
+
+      mkdirSync(path.join(project, '.claude'), { recursive: true });
+      writeFileSync(path.join(project, '.claude', 'settings.json'), JSON.stringify({
+        hooks: {
+          PreToolUse: [{ hooks: [{ command: 'koma-miko-claude-hook' }] }],
+        },
+      }));
+      const conflicted = doctorProject(project, { host: 'vscode' });
+      expect(conflicted.checks.find((check) => check.id === 'hooks')).toMatchObject({
+        status: 'warn',
+      });
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
 });

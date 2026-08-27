@@ -29,6 +29,7 @@ type JsonObject = Record<string, unknown>;
 
 const HOST_DETAILS: Record<InitHost, {
   settingsRelativePath: string;
+  layout?: 'grouped' | 'flat';
   events: Record<string, { matcher?: string; hook: JsonObject }>;
 }> = {
   claude: {
@@ -102,6 +103,20 @@ const HOST_DETAILS: Record<InitHost, {
       },
     }])),
   },
+  vscode: {
+    settingsRelativePath: path.join('.github', 'hooks', 'miko.json'),
+    layout: 'flat',
+    events: Object.fromEntries([
+      'SessionStart', 'PreToolUse', 'PostToolUse', 'PreCompact', 'Stop',
+    ].map((event) => [event, {
+      hook: {
+        type: 'command',
+        command: 'node ./node_modules/koma-miko/dist/vscode-hook-cli.js',
+        cwd: '.',
+        timeout: 10,
+      },
+    }])),
+  },
 };
 
 function isObject(value: unknown): value is JsonObject {
@@ -121,7 +136,28 @@ function readObject(pathname: string): JsonObject | undefined {
   return parsed;
 }
 
-function starterConfig(skill: string, pathPrefix: string, mode: 'review' | 'enforce'): JsonObject {
+function starterTools(host: InitHost): string[] {
+  if (host === 'codex') return ['apply_patch', 'Edit', 'Write'];
+  if (host === 'gemini') return ['replace', 'write_file'];
+  if (host === 'vscode') {
+    return [
+      'apply_patch',
+      'create_file',
+      'createFile',
+      'editFiles',
+      'insert_edit_into_file',
+      'replace_string_in_file',
+    ];
+  }
+  return ['Edit', 'Write'];
+}
+
+function starterConfig(
+  host: InitHost,
+  skill: string,
+  pathPrefix: string,
+  mode: 'review' | 'enforce',
+): JsonObject {
   return {
     $schema: './node_modules/koma-miko/schema/miko.schema.json',
     version: 1,
@@ -129,8 +165,9 @@ function starterConfig(skill: string, pathPrefix: string, mode: 'review' | 'enfo
       id: 'example-ui-change',
       appliesWhen: {
         action: {
-          tools: ['Edit', 'Write'],
+          tools: starterTools(host),
           pathPrefixes: [pathPrefix],
+          ...(host === 'vscode' ? { argumentNames: ['filePath'] } : {}),
         },
       },
       requires: {
@@ -147,7 +184,9 @@ function hookContainsMiko(value: unknown, host: InitHost): boolean {
     ? ['koma-miko-claude-hook', 'claude-hook-cli']
     : host === 'codex'
       ? ['koma-miko-codex-hook', 'codex-hook-cli']
-      : ['koma-miko-gemini-hook', 'gemini-hook-cli'];
+      : host === 'gemini'
+        ? ['koma-miko-gemini-hook', 'gemini-hook-cli']
+        : ['koma-miko-vscode-hook', 'vscode-hook-cli'];
   return needles.some((needle) => serialized.includes(needle));
 }
 
@@ -179,10 +218,12 @@ function mergeHooks(settings: JsonObject, host: InitHost): { settings: JsonObjec
       return matcherCovers(group.matcher, definition.matcher);
     });
     if (alreadyConfigured) continue;
-    groups.push({
-      ...(definition.matcher === undefined ? {} : { matcher: definition.matcher }),
-      hooks: [definition.hook],
-    });
+    groups.push(details.layout === 'flat'
+      ? definition.hook
+      : {
+          ...(definition.matcher === undefined ? {} : { matcher: definition.matcher }),
+          hooks: [definition.hook],
+        });
     hooks[event] = groups;
     changed = true;
   }
@@ -252,7 +293,7 @@ export function initProject(projectRootInput: string, options: InitOptions = {})
 
   let savedBackup: string | undefined;
   if (!options.dryRun) {
-    if (configCreated) writeJson(configPath, starterConfig(skill, pathPrefix, mode));
+    if (configCreated) writeJson(configPath, starterConfig(host, skill, pathPrefix, mode));
     if (settingsChanged) {
       if (!settingsCreated) {
         savedBackup = backupPath(settingsPath);

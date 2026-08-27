@@ -1,0 +1,44 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "node ./node_modules/koma-miko/dist/vscode-hook-cli.js",
+        "cwd": ".",
+        "timeout": 10
+      }
+    ],
+    "PreToolUse": [
+      {
+        "type": "command",
+        "command": "node ./node_modules/koma-miko/dist/vscode-hook-cli.js",
+        "cwd": ".",
+        "timeout": 10
+      }
+    ],
+    "PostToolUse": [
+      {
+        "type": "command",
+        "command": "node ./node_modules/koma-miko/dist/vscode-hook-cli.js",
+        "cwd": ".",
+        "timeout": 10
+      }
+    ],
+    "PreCompact": [
+      {
+        "type": "command",
+        "command": "node ./node_modules/koma-miko/dist/vscode-hook-cli.js",
+        "cwd": ".",
+        "timeout": 10
+      }
+    ],
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node ./node_modules/koma-miko/dist/vscode-hook-cli.js",
+        "cwd": ".",
+        "timeout": 10
+      }
+    ]
+  }
+}

@@ -63,14 +63,21 @@ describe('miko init', () => {
     }
   });
 
-  it('supports Codex and Gemini hook layouts', () => {
-    for (const host of ['codex', 'gemini'] as const) {
+  it('supports Codex, Gemini, and VS Code hook layouts', () => {
+    for (const host of ['codex', 'gemini', 'vscode'] as const) {
       const project = temporaryProject();
       try {
         const result = initProject(project, { host });
         const settings = readJson(result.settingsPath);
         expect(Object.keys(settings.hooks).length).toBeGreaterThan(0);
         expect(JSON.stringify(settings)).toContain(`${host}-hook-cli.js`);
+        if (host === 'vscode') {
+          expect(result.settingsPath.replace(/\\/g, '/')).toContain('.github/hooks/miko.json');
+          expect(settings.hooks.PreToolUse[0]).toMatchObject({ type: 'command' });
+          expect(settings.hooks.PreToolUse[0]).not.toHaveProperty('hooks');
+          expect(readJson(path.join(project, 'miko.json')).specs[0].appliesWhen.action.tools)
+            .toContain('replace_string_in_file');
+        }
       } finally {
         rmSync(project, { recursive: true, force: true });
       }

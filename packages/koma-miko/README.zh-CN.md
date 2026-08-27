@@ -165,7 +165,8 @@ Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已
 备份，并把 `.miko/state/` 加入 `.gitignore`。命令可以安全重复运行。使用
 `--skill <name>` 和 `--path <prefix>` 定制 starter spec；准备好阻止缺失证据
 后再加 `--enforce`。修改 Hook 后请重新启动 Claude 会话；使用 `--dry-run`
-可只预览改动。Codex 和 Gemini 可分别使用 `--host codex` 或 `--host gemini`。
+可只预览改动。Codex、Gemini 与 VS Code Copilot 可分别使用 `--host codex`、
+`--host gemini` 或 `--host vscode`（`--host copilot` 是别名）。
 
 初始化器不会覆盖已有的 `miko.json`；请按项目实际情况编辑它。会话元数据写入
 `.miko/state/`，该目录应保持忽略。旧 `.miko/contracts.json` 数组仍可读取，
@@ -178,11 +179,12 @@ npx koma-miko doctor
 npx koma-miko doctor --strict --json
 npx koma-miko doctor --host codex
 npx koma-miko doctor --host gemini --strict
+npx koma-miko doctor --host vscode --strict
 ```
 
 Doctor 会验证 Agent Spec，并报告所选宿主的 Skill、Hook 覆盖范围以及
-`.miko/state/` 是否已忽略。默认检查 Claude；检查 Codex 或 Gemini 时使用
-对应的 `--host`。它不会调用模型，也不会读取 API key。
+`.miko/state/` 是否已忽略。默认检查 Claude；检查其他宿主时选择对应的
+`--host`。它不会调用模型，也不会读取 API key。
 
 Claude Code 本地 CLI、Desktop Code tab 与 VS Code/Cursor 扩展共享 settings、
 Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可能禁用项目 Hook，
@@ -191,9 +193,9 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 [Desktop 共享配置](https://code.claude.com/docs/en/desktop) 与
 [VS Code 配置](https://code.claude.com/docs/en/ide-integrations)。
 
-## Codex 与 Gemini 宿主适配器
+## Codex、Gemini 与 VS Code Copilot 宿主适配器
 
-alpha 也提供两个面向文字终端的窄范围 Hook 适配器：
+alpha 也提供以下窄范围 Hook 适配器：
 
 - `koma-miko-codex-hook` 消费 Codex 的 `SessionStart`、`PreToolUse`、
   `PostToolUse`、`PostCompact` 与 `Stop` 事件。`DENY` 映射到 Codex 原生的
@@ -205,11 +207,38 @@ alpha 也提供两个面向文字终端的窄范围 Hook 适配器：
   原生的 `decision: deny`，只记录成功工具的元数据。Gemini 项目级 Hook 首次
   可能需要用户信任 Hook 指纹；无交互自动化应把命令安装到受信任的用户设置层，
   活体验证 runner 就采用此方式。
+- `koma-miko-vscode-hook` 消费 VS Code 的 `SessionStart`、`PreToolUse`、
+  `PostToolUse`、`PreCompact` 与 `Stop`。它使用官方文档中的嵌套 deny/stop
+  输出，把多文件编辑拆成逐路径校验，并且不会用显式 allow 覆盖 VS Code 自己的
+  审批策略。初始化器会写入 `.github/hooks/miko.json`；不需要安装扩展，也不需要
+  Miko API key。
 
-这两个适配器只是宿主连接层，并不承诺所有编辑器、云端会话或特殊工具路径都会
+可以让 Copilot Agent mode 针对一个已有项目 Skill 做小范围测试：
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host vscode --skill product-design --path src --enforce
+npx koma-miko doctor --host vscode --strict
+```
+
+新开 Copilot chat 后，请它修改 `src` 下的文件。预期第一次被 Miko 拒绝；随后
+agent 明确读取 `.github/skills/product-design/SKILL.md`（也支持 `.agents` 或
+`.claude` 下同名 Skill），再重试成功。可查看 **GitHub Copilot Chat Hooks**
+输出，或运行 **Developer: Show Agent Debug Logs** 记录真实 `tool_name`。VS Code
+Agent Hooks 目前仍是 Preview，且组织策略可以禁用。VS Code 默认还会加载
+`.claude/settings*.json`；如果其中已有 Miko Claude Hook，`doctor` 会提示潜在的
+重复执行。
+
+实现依据官方 [VS Code Agent Hooks 指南](https://code.visualstudio.com/docs/agent-customization/hooks)、
+[Hook schema](https://code.visualstudio.com/docs/agents/reference/hooks-reference) 与
+[Copilot Agent Skills 目录约定](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills)。
+
+这些适配器只是宿主连接层，并不承诺所有编辑器、云端会话或特殊工具路径都会
 发出相同事件。云端工具可能不进入本地账本，宿主返回值也只能提供尽力而为的
-成功信号。配置示例见 [`examples/codex`](./examples/codex) 与
-[`examples/gemini`](./examples/gemini)。
+成功信号。尤其是 Copilot 原生 Skill 注入如果没有产生文档化工具事件，就不能
+算作 observed evidence；当前 alpha 的恢复路径要求可观察的 `read_file` 或极窄
+的只读终端读取命令。配置示例见 [`examples/codex`](./examples/codex)、
+[`examples/gemini`](./examples/gemini) 与 [`examples/vscode`](./examples/vscode)。
 
 ## 自动化回放
 
@@ -228,14 +257,18 @@ npx koma-miko@alpha demo
 第一个 UI 案例是窄范围强制演示，其余九个保持 review-only。
 `npm run eval:claude-hook -w koma-miko` 还会启动三个彼此独立的 Hook 进程，
 验证带审计记录的 `DENY → 观察到 Skill → ALLOW`，并确认账本没有保存代码内容。
-`npm run eval:codex-hook -w koma-miko` 与 `npm run eval:gemini-hook -w koma-miko`
-会在无需 API key 的情况下走同一套独立 Hook 一致性测试。`npm run eval:codex-live
--w koma-miko` 使用现有 Codex CLI 登录态（`MIKO_CODEX_BIN`），不需要 OpenAI API
-key；`npm run eval:gemini-live -w koma-miko` 使用父进程中的 `GEMINI_API_KEY` 或
-`GOOGLE_API_KEY` 与官方 Gemini CLI 入口（`MIKO_GEMINI_ENTRY`）。两个 live runner 都使用一次性
-夹具，且不会读取 env 文件。
+`npm run eval:codex-hook -w koma-miko`、`npm run eval:gemini-hook -w koma-miko`
+与 `npm run eval:vscode-hook -w koma-miko` 会在无需 API key 的情况下走同一套
+独立 Hook 一致性测试；VS Code 这一步覆盖文档化 Hook schema，不代表真实编辑器
+活体验证。Codex live runner（`npm run eval:codex-live -w koma-miko`）使用现有
+Codex CLI 登录态（`MIKO_CODEX_BIN`），不需要 OpenAI API key。Gemini live
+runner（`npm run eval:gemini-live -w koma-miko`）使用父进程中的
+`GEMINI_API_KEY` 或 `GOOGLE_API_KEY` 与官方 Gemini CLI 入口
+（`MIKO_GEMINI_ENTRY`）。两个 runner 都使用一次性夹具，且不会读取 env 文件。
 `npm run eval:scale -w koma-miko` 不需要 API key；它会测试 100/1,000 份
 Agent Spec、10,000 条索引证据、100 份重叠 Spec、snapshot 恢复和终端输出上限。
+带环境信息的结果见 [scale 参考记录](../../docs/evals/miko-scale-alpha.md)；它衡量
+本地 verifier，不是模型 benchmark。
 `npm run eval:audit-demo -w koma-miko` 会用真实 Verifier 结果重新生成公开 CLI
 引导演示背后的 13 个事件；`eval:audit-demo:check` 只检查 fixture 是否过期。
 回放不包含 prompt、代码或模型回复，也不需要后端。终端故事只是展示层；可展开
@@ -283,6 +316,8 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
 - **100-Skills fixture 仅在约 20k tokens 的一次 Haiku 测试中通过；这不能代表 100k、190k 或近百万 token 的行为；**
 - **暂无托管遥测和云端策略服务；** Claude 适配器仅使用本地 JSONL 账本；
 - **无法观察没有发出已配置宿主 Hook 事件的云端工具、编辑器包装层或远程会话；**
+- **VS Code Agent Hooks 仍是 Preview；适配器已通过离线 schema 一致性测试，
+  但仍需在测试者的真实 Copilot 工具集上完成编辑器活测；**
 - **不自动改写工具调用；**
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**
 
