@@ -9,13 +9,18 @@
   "exports": {
     ".": "./dist/index.js",
     "./claude-code": "./dist/claude-code.js",
+    "./codex": "./dist/codex.js",
+    "./gemini": "./dist/gemini.js",
+    "./host-adapter": "./dist/host-adapter.js",
     "./config": "./dist/config.js",
     "./doctor": "./dist/doctor.js",
     "./schema": "./schema/miko.schema.json"
   },
   "bin": {
     "koma-miko": "./dist/cli.js",
-    "koma-miko-claude-hook": "./dist/claude-hook-cli.js"
+    "koma-miko-claude-hook": "./dist/claude-hook-cli.js",
+    "koma-miko-codex-hook": "./dist/codex-hook-cli.js",
+    "koma-miko-gemini-hook": "./dist/gemini-hook-cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -25,6 +30,10 @@
     "eval:audit-demo:check": "npm run build && node ./evals/audit-demo.mjs --check",
     "eval:scale": "npm run build && node ./evals/scale.mjs",
     "eval:claude-hook": "npm run build && node ./evals/claude-hook.mjs",
+    "eval:codex-hook": "npm run build && node ./evals/codex-hook.mjs",
+    "eval:codex-live": "npm run build && node ./evals/codex-live.mjs",
+    "eval:gemini-hook": "npm run build && node ./evals/gemini-hook.mjs",
+    "eval:gemini-live": "npm run build && node ./evals/gemini-live.mjs",
     "eval:claude-live": "npm run build && node ./evals/claude-live.mjs",
     "eval:claude-scale-live": "npm run build && node ./evals/claude-scale-live.mjs",
     "eval:claude-scale-dry": "npm run build && node ./evals/claude-scale-live.mjs --dry-run",

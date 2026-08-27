@@ -80,4 +80,66 @@ describe('miko doctor', () => {
       rmSync(project, { recursive: true, force: true });
     }
   });
+
+  it('checks Codex Skills and Hook coverage when the host is selected', () => {
+    const project = mkdtempSync(path.join(tmpdir(), 'miko-doctor-codex-'));
+    try {
+      mkdirSync(path.join(project, '.agents', 'skills', 'product-design'), { recursive: true });
+      mkdirSync(path.join(project, '.codex'), { recursive: true });
+      writeFileSync(path.join(project, '.agents', 'skills', 'product-design', 'SKILL.md'), '# Product design');
+      writeFileSync(path.join(project, 'miko.json'), JSON.stringify({
+        version: 1,
+        specs: [{
+          id: 'codex-check',
+          appliesWhen: { action: { tools: ['apply_patch'], pathPrefixes: ['src'] } },
+          requires: { skills: ['product-design'] },
+        }],
+      }));
+      writeFileSync(path.join(project, '.codex', 'hooks.json'), JSON.stringify({
+        hooks: {
+          PreToolUse: [{ hooks: [{ type: 'command', command: 'koma-miko-codex-hook' }] }],
+          PostToolUse: [{ hooks: [{ type: 'command', command: 'koma-miko-codex-hook' }] }],
+        },
+      }));
+      writeFileSync(path.join(project, '.gitignore'), '.miko/state/\n');
+
+      const report = doctorProject(project, { host: 'codex' });
+      expect(report.host).toBe('codex');
+      expect(report.ok).toBe(true);
+      expect(report.checks.every((check) => check.status === 'pass')).toBe(true);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+
+  it('checks Gemini Skills and compaction Hook coverage when the host is selected', () => {
+    const project = mkdtempSync(path.join(tmpdir(), 'miko-doctor-gemini-'));
+    try {
+      mkdirSync(path.join(project, '.gemini', 'skills', 'product-design'), { recursive: true });
+      writeFileSync(path.join(project, '.gemini', 'skills', 'product-design', 'SKILL.md'), '# Product design');
+      writeFileSync(path.join(project, 'miko.json'), JSON.stringify({
+        version: 1,
+        specs: [{
+          id: 'gemini-check',
+          appliesWhen: { action: { tools: ['replace'], pathPrefixes: ['src'] } },
+          requires: { skills: [{ name: 'product-design', reloadAfterCompaction: true }] },
+        }],
+      }));
+      writeFileSync(path.join(project, '.gemini', 'settings.json'), JSON.stringify({
+        hooks: {
+          BeforeTool: [{ hooks: [{ type: 'command', command: 'koma-miko-gemini-hook' }] }],
+          AfterTool: [{ hooks: [{ type: 'command', command: 'koma-miko-gemini-hook' }] }],
+          PreCompress: [{ hooks: [{ type: 'command', command: 'koma-miko-gemini-hook' }] }],
+        },
+      }));
+      writeFileSync(path.join(project, '.gitignore'), '.miko/state/\n');
+
+      const report = doctorProject(project, { host: 'gemini' });
+      expect(report.host).toBe('gemini');
+      expect(report.ok).toBe(true);
+      expect(report.checks.every((check) => check.status === 'pass')).toBe(true);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
 });

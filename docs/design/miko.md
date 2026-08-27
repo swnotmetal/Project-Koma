@@ -1,7 +1,8 @@
 # Koma Miko — Alpha Design
 
-Status: **Public alpha implemented with narrow Claude Code and DeepSeek Harness
-enforcement paths; stable API and broad host claims remain pending**.
+Status: **Public alpha implemented with narrow Claude Code, Codex, Gemini, and
+DeepSeek Harness enforcement paths; stable API and broad host claims remain
+pending**.
 
 Miko addresses a narrower, observable problem than general "agent reliability":
 an agent starts work without loading a required skill, forgets a loaded contract as
@@ -124,6 +125,19 @@ Official references: [platform comparison](https://code.claude.com/docs/en/platf
 [VS Code/Cursor integration](https://code.claude.com/docs/en/ide-integrations), and
 [Hook configuration scopes](https://code.claude.com/docs/en/hooks).
 
+### Other alpha host surfaces
+
+| Host | Hook path implemented | Alpha caveat |
+|---|---|---|
+| Codex CLI | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostCompact`, `Stop` | Live fixture awaits account quota; hosted/specialized tools may not emit local events |
+| Gemini CLI | `SessionStart`, `BeforeTool`, `AfterTool`, `PreCompress`, `AfterAgent` | Project Hook fingerprint needs trust; full headless live fixture timed out and needs a shorter-model rerun |
+| DeepSeek Harness | Native DSH tool/turn lifecycle | Pinned Developer Preview and peer-install workaround; not a broad future-version guarantee |
+
+The adapters share the Miko verifier and privacy rules, but their host-native
+outputs are intentionally different. A successful offline conformance test
+means the mapping is deterministic; it does not mean every surface has equal
+Hook coverage.
+
 ### Evidence trust
 
 Every evidence event has a source:
@@ -136,6 +150,11 @@ Every evidence event has a source:
 
 Miko can prove that a skill load event occurred. **It cannot prove that the model
 understood, retained, or correctly applied the skill's guidance.**
+
+**Miko cannot force a model to call a Skill from below the model layer.** When a
+model skips or falsely claims a Skill, a host adapter can deny the observable
+action, show a recovery instruction, and record the violation; it cannot
+silently select the correct Skill on the model's behalf.
 
 ---
 
@@ -317,13 +336,14 @@ Implementation: [`packages/koma-miko`](../../packages/koma-miko/README.md).
 
 ## 6. Alpha Scope and Acceptance Tests
 
-The public alpha implements the deterministic library plus narrow Claude Code
-and DeepSeek Harness adapter mappings.
+The public alpha implements the deterministic library plus narrow Claude Code,
+Codex, Gemini, and DeepSeek Harness adapter mappings.
 
 ### Included
 
 - Contract schema validation
-- Root `miko.json` Agent Specs, JSON Schema, and offline `miko doctor`
+- Root `miko.json` Agent Specs, JSON Schema, and offline `miko doctor` with
+  Claude/Codex/Gemini host selection
 - Required-skill/reference checks
 - Pre-action allow/deny/risk/scope checks
 - Completion evidence checks
@@ -334,6 +354,8 @@ and DeepSeek Harness adapter mappings.
 - `ALLOW`, `DENY`, and `REVIEW` with stable reason codes
 - A Claude Code adapter covering `UserPromptExpansion`, `PreToolUse`,
   `PostToolUse`, `PostCompact`, and `Stop`
+- Codex and Gemini Hook adapters with independent-process JSONL state and
+  host-native denial/recovery mappings
 - A native text/approval interaction (`ALLOW / DENY / REVIEW` to
   `allow / deny / ask`)
 - Ten deterministic skill-contract replay profiles
@@ -369,6 +391,10 @@ and DeepSeek Harness adapter mappings.
     observed again.
 11. One hundred overlapping Agent Specs keep their full machine-readable result
     while the developer-facing terminal summary remains bounded.
+12. Codex and Gemini Hook processes preserve the same deny/recovery/evidence
+    semantics without persisting patch, prompt, or tool-response content.
+13. A host quota, timeout, trust prompt, or missing Hook is reported as a host
+    evaluation failure rather than being counted as model compliance.
 
 ---
 

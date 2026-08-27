@@ -191,10 +191,13 @@ Run an entirely offline preflight before spending model credits:
 ```sh
 npx koma-miko doctor
 npx koma-miko doctor --strict --json
+npx koma-miko doctor --host codex
+npx koma-miko doctor --host gemini --strict
 ```
 
-Doctor validates Agent Specs and reports project Skill discovery, required
-Claude Hook coverage, and whether `.miko/state/` is ignored. It never calls a
+Doctor validates Agent Specs and reports host-specific Skill discovery, required
+Hook coverage, and whether `.miko/state/` is ignored. It defaults to Claude;
+select `codex` or `gemini` when checking those host layouts. It never calls a
 model or reads an API key.
 
 Claude Code's local CLI, Desktop Code tab, and VS Code/Cursor extension share
@@ -204,6 +207,29 @@ their detected capabilities rather than promise identical behavior everywhere.
 See the official [platform overview](https://code.claude.com/docs/en/platforms),
 [Desktop shared configuration](https://code.claude.com/docs/en/desktop), and
 [VS Code settings](https://code.claude.com/docs/en/ide-integrations).
+
+## Codex and Gemini host adapters
+
+The alpha also ships narrow host adapters for the two text-first Hook surfaces:
+
+- `koma-miko-codex-hook` consumes Codex `SessionStart`, `PreToolUse`,
+  `PostToolUse`, `PostCompact`, and `Stop` events. It maps `DENY` to Codex's
+  native `permissionDecision: deny`; it deliberately does not emit `allow`, so
+  Codex's own permission policy remains authoritative. `apply_patch` targets
+  are recorded as path metadata only, and the adapter recognizes a tiny,
+  read-only `Get-Content`/`cat` subset for Skill reloads.
+- `koma-miko-gemini-hook` consumes Gemini `BeforeTool`, `AfterTool`,
+  `SessionStart`, `PreCompress`, and `AfterAgent` events. It maps `DENY` to
+  Gemini's native `decision: deny` and records only successful tool metadata.
+  Project-level Gemini hooks may require the user to trust the hook fingerprint;
+  headless automation should install the command in a trusted user settings
+  layer, as the live runner does.
+
+These are host adapters, not a promise that every editor, hosted session, or
+specialized tool path emits the same events. Hosted tools can remain outside the
+local ledger, and host response formats can only provide best-effort success
+signals. See [`examples/codex`](./examples/codex) and
+[`examples/gemini`](./examples/gemini).
 
 ## Automated replay
 
@@ -215,6 +241,13 @@ enforcement demo; the other nine remain review-only.
 `npm run eval:claude-hook -w koma-miko` additionally spawns three independent
 hook processes and verifies an audited `DENY → observed Skill → ALLOW` plus
 ledger privacy.
+`npm run eval:codex-hook -w koma-miko` and `npm run eval:gemini-hook -w koma-miko`
+run the same conformance flow through independent Hook processes without an API
+key. `npm run eval:codex-live -w koma-miko` uses an existing Codex CLI login
+(`MIKO_CODEX_BIN`) and no OpenAI API key; `npm run eval:gemini-live -w koma-miko`
+uses a parent-process `GEMINI_API_KEY` or `GOOGLE_API_KEY` and an official
+Gemini CLI entry point (`MIKO_GEMINI_ENTRY`). Both live runners use disposable
+fixtures and never read an env file.
 `npm run eval:scale -w koma-miko` uses no API key. It benchmarks 100/1,000 Agent
 Specs, 10,000 indexed evidence events, 100 overlapping specs, and snapshot
 restore while checking that terminal output remains bounded.
@@ -265,12 +298,17 @@ metrics, and never reads an env file. See the
 - **No LLM call or semantic task classifier**
 - **No planner, router, or agent runtime**
 - **No context-window/token monitoring**
+- **Cannot force a model to invoke or follow a Skill; it can only deny an
+  observable action, return recovery text, and record the violation**
 - **One Haiku/100-Skill fixture has passed at approximately 20k tokens; this is not evidence for 100k, 190k, or near-million-token behavior**
 - **No hosted telemetry service** (the Claude adapter uses a local JSONL ledger)
+- **Cannot observe hosted tools, editor wrappers, or remote sessions that do not
+  emit the configured host Hook events**
 - **No automatic rewriting of tool calls**
 - **No claim that loading a skill proves the model understood, retained, or followed it**
 
 See the [design and discovery notes](../../docs/design/miko.md), including the
 first-hand failure case, public reports used as test discovery data, and the
-post-alpha questions. Product positioning and executable follow-up work live in
-the [developer roadmap](../../docs/design/miko-roadmap.md).
+post-alpha questions. See the [recovery playbook](../../docs/design/miko-recovery-playbook.md)
+for recommended developer actions. Product positioning and executable follow-up
+work live in the [developer roadmap](../../docs/design/miko-roadmap.md).

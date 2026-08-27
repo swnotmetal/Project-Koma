@@ -1,4 +1,3 @@
-import path from 'node:path';
 import type {
   AdvanceContextResult,
   EvidenceEvent,
@@ -7,6 +6,13 @@ import type {
   VerificationResult,
 } from './index.js';
 import { formatMikoDecision, toClaudePreToolUseDecision } from './index.js';
+import {
+  evidenceFromSuccessfulHostTool,
+  normalizedHostArguments,
+  riskForHostTool,
+  type HostToolProfile,
+} from './host-adapter.js';
+export { toProjectRelativePath } from './host-adapter.js';
 
 interface ClaudeHookBase {
   session_id: string;
@@ -52,62 +58,21 @@ export interface ClaudeHookHandlingResult {
 }
 
 const PATH_KEYS = ['file_path', 'path', 'filePath'];
+const CLAUDE_PROFILE: HostToolProfile = {
+  skillTools: ['Skill'],
+  readTools: ['Read'],
+  writeTools: ['Edit', 'Write'],
+  shellTools: ['Bash'],
+  pathArgumentNames: PATH_KEYS,
+  unknownRisk: 'low',
+};
 
 function nonEmptyString(value: unknown): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
 
-export function toProjectRelativePath(value: string, cwd: string): string {
-  const normalizedValue = value.replace(/\\/g, '/');
-  const normalizedCwd = cwd.replace(/\\/g, '/').replace(/\/$/, '');
-  if (normalizedValue === normalizedCwd) return '.';
-  if (normalizedValue.startsWith(`${normalizedCwd}/`)) {
-    return normalizedValue.slice(normalizedCwd.length + 1);
-  }
-  if (path.isAbsolute(value)) {
-    const relative = path.relative(cwd, value).replace(/\\/g, '/');
-    return relative.startsWith('../') || relative === '..' ? normalizedValue : relative;
-  }
-  return normalizedValue.replace(/^\.\//, '');
-}
-
-function relativeToolInput(input: Record<string, unknown>, cwd: string): Record<string, unknown> {
-  const next = { ...input };
-  for (const key of PATH_KEYS) {
-    if (nonEmptyString(next[key])) next[key] = toProjectRelativePath(next[key], cwd);
-  }
-  return next;
-}
-
-function privacySafeArguments(input: Record<string, unknown>, cwd: string): Record<string, unknown> | undefined {
-  const safe: Record<string, unknown> = {};
-  for (const key of PATH_KEYS) {
-    if (nonEmptyString(input[key])) safe[key] = toProjectRelativePath(input[key], cwd);
-  }
-  return Object.keys(safe).length > 0 ? safe : undefined;
-}
-
-function pathFromInput(input: Record<string, unknown>, cwd: string): string | undefined {
-  const value = PATH_KEYS.map((key) => input[key]).find(nonEmptyString);
-  return value ? toProjectRelativePath(value, cwd) : undefined;
-}
-
-function skillFromToolInput(input: Record<string, unknown>): string | undefined {
-  return ['skill', 'name', 'command_name']
-    .map((key) => input[key])
-    .find(nonEmptyString);
-}
-
-function skillFromReadPath(filePath: string): string | undefined {
-  const parts = filePath.replace(/\\/g, '/').split('/').filter(Boolean);
-  if (parts.at(-1)?.toLowerCase() !== 'skill.md' || parts.length < 2) return undefined;
-  return parts.at(-2);
-}
-
 export function riskForClaudeTool(tool: string): RiskLevel {
-  if (tool === 'Bash' || tool.startsWith('mcp__')) return 'high';
-  if (tool === 'Edit' || tool === 'Write') return 'medium';
-  return 'low';
+  return riskForHostTool(tool, CLAUDE_PROFILE);
 }
 
 export function evidenceFromClaudeEvent(input: ClaudeHookInput): EvidenceEvent[] {
@@ -121,32 +86,11 @@ export function evidenceFromClaudeEvent(input: ClaudeHookInput): EvidenceEvent[]
 
   if (input.hook_event_name !== 'PostToolUse') return [];
   const event = input as ClaudePostToolUseInput;
-  const evidence: EvidenceEvent[] = [];
-
-  if (event.tool_name === 'Skill') {
-    const skill = skillFromToolInput(event.tool_input);
-    if (skill) evidence.push({ type: 'skill_loaded', name: skill, source: 'observed' });
-  }
-
-  const filePath = pathFromInput(event.tool_input, event.cwd);
-  if (event.tool_name === 'Read' && filePath) {
-    evidence.push({ type: 'reference_read', path: filePath, source: 'observed' });
-    const skill = skillFromReadPath(filePath);
-    if (skill) evidence.push({ type: 'skill_loaded', name: skill, source: 'observed' });
-  }
-  if ((event.tool_name === 'Edit' || event.tool_name === 'Write') && filePath) {
-    evidence.push({ type: 'artifact_changed', path: filePath, source: 'observed' });
-  }
-
-  evidence.push({
-    type: 'tool_succeeded',
+  return evidenceFromSuccessfulHostTool({
     tool: event.tool_name,
-    ...(privacySafeArguments(event.tool_input, event.cwd)
-      ? { arguments: privacySafeArguments(event.tool_input, event.cwd) }
-      : {}),
-    source: 'observed',
-  });
-  return evidence;
+    arguments: event.tool_input,
+    cwd: event.cwd,
+  }, CLAUDE_PROFILE);
 }
 
 /**
@@ -175,7 +119,7 @@ export function handleClaudeHookEvent(
       taskId,
       tool: event.tool_name,
       risk: riskForClaudeTool(event.tool_name),
-      arguments: relativeToolInput(event.tool_input, event.cwd),
+      arguments: normalizedHostArguments(event.tool_input, event.cwd, PATH_KEYS),
     });
     return { output: toClaudePreToolUseDecision(verification), evidence, verification };
   }

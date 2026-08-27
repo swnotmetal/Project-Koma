@@ -109,6 +109,7 @@ curl http://localhost:8080/self-test
 `dsh plugin --profile miko add koma-miko-dsh@alpha`。
 [核心 README →](./packages/koma-miko/README.zh-CN.md) ·
 [DSH adapter →](./packages/koma-miko-dsh/README.md) ·
+[Codex/Gemini Hook 示例 →](./packages/koma-miko/examples) ·
 [研究与设计 →](./docs/design/miko.md)
 
 ---

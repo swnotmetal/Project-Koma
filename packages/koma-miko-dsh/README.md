@@ -65,6 +65,23 @@ Set `MIKO_DSH_PLUGIN_SOURCE` to an absolute `.tgz` path to test the exact packed
 artifact rather than the workspace directory. A passing report includes the
 observed tool sequence, request count, token usage, and model-run latency.
 
+The same runner can exercise DSH's native DeepSeek provider without an Anthropic
+account:
+
+```sh
+MIKO_DSH_PROVIDER=deepseek-official \
+MIKO_DSH_MODEL=deepseek-v4-flash \
+npm run eval:dsh-live -w koma-miko-dsh
+```
+
+Set `DEEPSEEK_API_KEY` in the parent process. The pinned DSH RC currently ships
+some boot/runtime packages as peer dependencies even though the CLI imports
+them at startup; a clean `pnpm dlx` may therefore fail with
+`ERR_MODULE_NOT_FOUND`. Install the CLI and its official peer closure in a
+disposable runtime, or use a host-provided DSH installation, before setting
+`MIKO_DSH_BIN`. This is an upstream packaging limitation and does not change
+Miko's peer-only dependency rule.
+
 To turn an exact successful command into completion evidence, override the
 bundle row in the profile's `cordis.patch.yml`:
 
@@ -125,6 +142,10 @@ showed
 `blocked write → observed skill/reference → allowed write → observed exact
 check → allowed completion`. The measured 3/3 result is a narrow integration
 signal, not a general model-reliability claim.
+
+The DeepSeek-provider smoke case also passed once with six requests and no
+completion steering; that result is recorded alongside the packaging caveat in
+[`docs/evals/miko-host-adapters-alpha.md`](../../docs/evals/miko-host-adapters-alpha.md).
 
 Current measured results are in
 [`docs/evals/miko-dsh-alpha.md`](../../docs/evals/miko-dsh-alpha.md).

@@ -1,0 +1,60 @@
+{
+  "hooksConfig": {
+    "enabled": true,
+    "notifications": true
+  },
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "koma-miko",
+            "type": "command",
+            "command": "node ./node_modules/koma-miko/dist/gemini-hook-cli.js",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "AfterTool": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "koma-miko",
+            "type": "command",
+            "command": "node ./node_modules/koma-miko/dist/gemini-hook-cli.js",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "PreCompress": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "koma-miko",
+            "type": "command",
+            "command": "node ./node_modules/koma-miko/dist/gemini-hook-cli.js",
+            "timeout": 10000
+          }
+        ]
+      }
+    ],
+    "AfterAgent": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "name": "koma-miko",
+            "type": "command",
+            "command": "node ./node_modules/koma-miko/dist/gemini-hook-cli.js",
+            "timeout": 10000
+          }
+        ]
+      }
+    ]
+  }
+}

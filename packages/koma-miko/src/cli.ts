@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 import path from 'node:path';
 import { doctorProject, formatDoctorReport } from './doctor.js';
+import type { DoctorHost } from './doctor.js';
 
 function help(): string {
   return [
-    'koma-miko doctor [--project <path>] [--json] [--strict]',
+    'koma-miko doctor [--project <path>] [--host claude|codex|gemini] [--json] [--strict]',
     '',
-    'Runs offline checks for miko.json, project Skills, Claude Hooks, and Git ignore.',
+    'Runs offline checks for miko.json, host Skills, Hooks, and Git ignore.',
   ].join('\n');
 }
 
@@ -21,10 +22,16 @@ if (args[0] !== 'doctor') {
   process.exitCode = args.length === 0 || args.includes('--help') ? 0 : 1;
 } else {
   const projectRoot = path.resolve(option(args, '--project') ?? process.cwd());
-  const report = doctorProject(projectRoot);
-  process.stdout.write(args.includes('--json')
-    ? `${JSON.stringify(report, null, 2)}\n`
-    : `${formatDoctorReport(report)}\n`);
-  const warningsFail = args.includes('--strict') && report.checks.some((check) => check.status === 'warn');
-  process.exitCode = report.ok && !warningsFail ? 0 : 1;
+  const requestedHost = option(args, '--host') ?? 'claude';
+  if (requestedHost !== 'claude' && requestedHost !== 'codex' && requestedHost !== 'gemini') {
+    process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, or gemini.\n`);
+    process.exitCode = 1;
+  } else {
+    const report = doctorProject(projectRoot, { host: requestedHost as DoctorHost });
+    process.stdout.write(args.includes('--json')
+      ? `${JSON.stringify(report, null, 2)}\n`
+      : `${formatDoctorReport(report)}\n`);
+    const warningsFail = args.includes('--strict') && report.checks.some((check) => check.status === 'warn');
+    process.exitCode = report.ok && !warningsFail ? 0 : 1;
+  }
 }

@@ -10,6 +10,12 @@ const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const maxRequests = 8;
 const maxOutputTokens = 768;
 const timeoutMs = 180_000;
+const provider = process.env.MIKO_DSH_PROVIDER || 'anthropic';
+const model = process.env.MIKO_DSH_MODEL ||
+  (provider === 'deepseek-official' ? 'deepseek-v4-flash' : 'claude-haiku-4-5');
+const apiKeyEnvironmentVariable = provider === 'deepseek-official'
+  ? 'DEEPSEEK_API_KEY'
+  : 'ANTHROPIC_API_KEY';
 const isWindows = process.platform === 'win32';
 const shellTool = isWindows ? 'pwsh' : 'bash';
 const exactCheck = isWindows
@@ -114,26 +120,40 @@ function yamlQuote(value) {
 }
 
 function profilePatch(budgetPath) {
-  return `- id: session-title-llm
-  name: '@deepseek-ai/dsh-session-title-first-prompt-llm'
-  disabled: true
-- id: agent-default-model
-  name: '@deepseek-ai/dsh-agent-default-model'
+  const providerEntry = provider === 'deepseek-official'
+    ? `- id: llm-deepseek
+  name: '@deepseek-ai/dsh-llm-deepseek'
   config:
-    provider: anthropic
-    model: claude-haiku-4-5
-- id: llm-pi-ai
+    apiKeyEnv: DEEPSEEK_API_KEY
+    thinking: disabled
+    reasoningEffort: off
+    maxTokens: ${maxOutputTokens}
+    retryPolicy:
+      mode: normal
+      maxRetries: 0
+`
+    : `- id: llm-pi-ai
   name: '@deepseek-ai/dsh-llm-pi-ai'
   config:
     providers:
       anthropic:
         apiKeyEnv: ANTHROPIC_API_KEY
         models:
-          - id: claude-haiku-4-5
+          - id: ${model}
             maxTokens: ${maxOutputTokens}
         retryPolicy:
           mode: normal
           maxRetries: 0
+`;
+  return `- id: session-title-llm
+  name: '@deepseek-ai/dsh-session-title-first-prompt-llm'
+  disabled: true
+- id: agent-default-model
+  name: '@deepseek-ai/dsh-agent-default-model'
+  config:
+    provider: ${provider}
+    model: ${model}
+${providerEntry}- id: koma-miko-dsh
 - id: koma-miko-dsh
   name: koma-miko-dsh
   config:
@@ -176,7 +196,15 @@ async function writeFixture(root) {
 
 function runDsh(dshBin, args, options = {}) {
   let command = dshBin;
-  let commandArgs = args;
+  let commandArgs = process.env.MIKO_DSH_PNPM_DLX === '1'
+    ? [
+        'dlx',
+        '--package',
+        process.env.MIKO_DSH_PACKAGE || '@deepseek-ai/dsh@0.1.1-rc.2',
+        'dsh',
+        ...args,
+      ]
+    : args;
   if (isWindows && /\.(cmd|bat)$/i.test(dshBin)) {
     const powershellShim = dshBin.replace(/\.(cmd|bat)$/i, '.ps1');
     if (!existsSync(powershellShim)) {
@@ -404,7 +432,14 @@ async function latestSessionFile(home) {
 }
 
 async function runLive() {
-  assertThat(process.env.ANTHROPIC_API_KEY, 'Set ANTHROPIC_API_KEY in the parent process');
+  assertThat(
+    process.env[apiKeyEnvironmentVariable],
+    `Set ${apiKeyEnvironmentVariable} in the parent process`,
+  );
+  assertThat(
+    provider === 'anthropic' || provider === 'deepseek-official',
+    'MIKO_DSH_PROVIDER must be anthropic or deepseek-official',
+  );
   assertThat(await stat(join(packageRoot, 'dist/index.js')).catch(() => undefined), 'Build koma-miko-dsh first');
 
   const dshBin = process.env.MIKO_DSH_BIN || 'dsh';
@@ -441,7 +476,7 @@ async function runLive() {
 
     const sessionPath = await latestSessionFile(home);
     const report = await analyze(sessionPath, fixtureRoot, expectedFiles);
-    console.log(JSON.stringify({ status: 'PASS', model: 'claude-haiku-4-5', durationMs, ...report }, null, 2));
+    console.log(JSON.stringify({ status: 'PASS', provider, model, durationMs, ...report }, null, 2));
   } finally {
     if (keep) console.error(`Kept disposable eval directory: ${root}`);
     else await rm(root, { recursive: true, force: true });

@@ -119,6 +119,7 @@ tests or rendered UI review. Install the core with `npm install koma-miko@alpha`
 DeepSeek Harness users can add the native adapter with
 `dsh plugin --profile miko add koma-miko-dsh@alpha`. [Core README →](./packages/koma-miko/README.md) ·
 [DSH adapter →](./packages/koma-miko-dsh/README.md) ·
+[Codex/Gemini Hook examples →](./packages/koma-miko/examples) ·
 [research and design →](./docs/design/miko.md)
 
 **MCP servers** — expose Koma to AI agents directly:

@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/koma-miko/schema/miko.schema.json",
+  "version": 1,
+  "specs": [
+    {
+      "id": "ui-change-v1",
+      "appliesWhen": {
+        "action": {
+          "tools": ["replace", "write_file"],
+          "pathPrefixes": ["src/ui"],
+          "argumentNames": ["file_path"]
+        }
+      },
+      "requires": {
+        "skills": ["product-design"],
+        "references": ["docs/design-system.md"]
+      },
+      "actions": {
+        "allow": ["activate_skill", "read_file", "replace", "write_file"],
+        "maxRisk": "medium",
+        "scope": {
+          "tools": ["replace", "write_file"],
+          "allowedPathPrefixes": ["src/ui"],
+          "argumentNames": ["file_path"]
+        }
+      },
+      "completion": {
+        "evidence": [
+          { "type": "artifact_changed", "path": "src/ui/Hero.tsx" }
+        ]
+      },
+      "mode": "enforce"
+    }
+  ]
+}

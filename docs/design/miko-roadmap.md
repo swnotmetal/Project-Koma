@@ -11,7 +11,7 @@ traffic-light result while an agent works.
 
 Preferred product sentence:
 
-> Miko is a local contract verifier for Claude Code and, later, MCP agent tools.
+> Miko is a local contract verifier for Claude Code, Codex, Gemini, and later MCP agent tools.
 > It checks observable preparation, action, and completion evidence.
 
 Do not claim "first", "tamper-proof", "100% compliant", or that Miko eliminates
@@ -27,10 +27,12 @@ append-only JSONL is auditable, not cryptographically immutable.
 - [x] Expose the contract file as a root-level `miko.json` Agent Spec while
   retaining `.miko/contracts.json` compatibility.
 - [x] Publish a JSON Schema with editor completion and validation.
-- [x] Add `miko doctor` to report config errors, discovered project Skills,
+- [x] Add `miko doctor` to report config errors, host-specific project Skills,
   required Hook coverage, and Git-ignore readiness before a paid run.
 - [x] Build a guided CLI simulation from a sanitized deterministic replay; keep
   raw events and the Agent Spec expandable, with no model backend required.
+- [x] Publish a developer recovery playbook for common PREPARE, PRE_ACTION, and
+  COMPLETE denials.
 
 ## Evidence ledger
 
@@ -40,7 +42,8 @@ append-only JSONL is auditable, not cryptographically immutable.
   model-response persistence.
 - [x] Materialized snapshot plus ledger-tail replay for long local sessions.
 - [x] Context epochs and optional Skill reload after compaction.
-- [ ] Ledger rotation, maximum size, and checkpoint recovery tests.
+- [ ] Ledger rotation and maximum-size policy.
+- [x] Checkpoint recovery tests for ledger tails and corrupt snapshots.
 - [ ] Optional hash chaining for tamper evidence; do not describe plain JSONL as
   tamper-proof.
 - [ ] A signed external-evidence envelope for CI attestations.
@@ -67,6 +70,47 @@ The paid model eval must distinguish:
 4. compliance failure — the Skill was loaded but its rule was not followed;
 5. host failure — permissions or missing Hook capability blocked progress.
 
+## Codex and Gemini adapters
+
+The first cross-host slice is intentionally small: keep the verifier protocol
+shared, but let each host own its permission and text surface.
+
+- [x] Define a host-neutral before/after tool mapping with privacy-safe path
+  metadata and explicit Skill/reference recovery exceptions.
+- [x] Add persistent Codex Hook handling for `PreToolUse`, `PostToolUse`,
+  `PostCompact`, `SessionStart`, and `Stop`.
+- [x] Add persistent Gemini Hook handling for `BeforeTool`, `AfterTool`,
+  `PreCompress`, `SessionStart`, and `AfterAgent`.
+- [x] Run zero-API independent-process conformance tests for both adapters.
+- [ ] Re-run the Codex live fixture after the account usage limit resets; the
+  first attempt reached the CLI but stopped before completion because the
+  existing Codex login had no remaining usage quota.
+- [ ] Repeat the Gemini live fixture with a short, low-latency model after the
+  CLI/service latency issue is understood; the flash-lite attempt authenticated
+  successfully but still hit the 180-second runner timeout.
+
+The current Codex and Gemini adapters are alpha-level host bridges, not a
+compatibility guarantee for every editor, hosted session, or future CLI version.
+Their completion evidence is limited to events the host actually exposes.
+
+## Post-alpha trust and operations
+
+These are deliberately second/third-stage items from the product review, not
+alpha prerequisites:
+
+- [ ] Run a one-week pilot with a real developer or 2–3 person team and record
+  how they act on each denial before adding automation.
+- [ ] Freeze a v1 verifier signature and publish a compatibility policy after
+  the pilot, not before host feedback.
+- [ ] Add optional OpenTelemetry/Datadog exporters that emit decision metadata
+  without prompt, source, or tool-output content.
+- [ ] Add hash-chain or signed external-evidence options if teams need tamper
+  evidence; do not call the local JSONL ledger tamper-proof.
+- [ ] Design organization-owned base Specs with explicit developer overrides
+  only after the local developer workflow is stable.
+- [ ] Add a second-eyes audit or model-assisted review only as an opt-in layer;
+  it must never replace deterministic observed evidence.
+
 ## MCP adapter
 
 MCP is the next adapter candidate, not part of the current alpha. The valuable
@@ -79,7 +123,8 @@ scope is a business-contract interceptor, not a generic MCP security gateway:
 4. record successful tool results as privacy-minimized evidence;
 5. check completion obligations after the call.
 
-- [ ] Define a host-neutral `beforeTool` / `afterTool` adapter protocol.
+- [x] Define a host-neutral `beforeTool` / `afterTool` adapter protocol (used by
+  the Codex and Gemini bridges).
 - [ ] Build one narrow deploy-tool fixture requiring `deploy-guide.md` and a
   trusted test result.
 - [ ] Measure false denials, recovery behavior, and added latency before making

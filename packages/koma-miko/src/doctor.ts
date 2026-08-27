@@ -5,6 +5,7 @@ import type { LoadedMikoConfig } from './config.js';
 import type { SkillRequirementInput } from './index.js';
 
 export type DoctorStatus = 'pass' | 'warn' | 'fail';
+export type DoctorHost = 'claude' | 'codex' | 'gemini';
 
 export interface DoctorCheck {
   id: 'config' | 'skills' | 'hooks' | 'state-ignore';
@@ -15,9 +16,15 @@ export interface DoctorCheck {
 export interface DoctorReport {
   ok: boolean;
   projectRoot: string;
+  host: DoctorHost;
   configPath?: string;
   specCount: number;
   checks: DoctorCheck[];
+}
+
+export interface DoctorOptions {
+  /** Select the host-specific Skill and Hook conventions to inspect. */
+  host?: DoctorHost;
 }
 
 function skillName(requirement: SkillRequirementInput): string {
@@ -38,8 +45,13 @@ function requiresPostCompact(config: LoadedMikoConfig): boolean {
   );
 }
 
-function projectSkills(projectRoot: string): Set<string> {
-  const skillsRoot = path.join(projectRoot, '.claude', 'skills');
+function hostSkillsDirectory(projectRoot: string, host: DoctorHost): string {
+  const directory = host === 'codex' ? '.agents' : host === 'gemini' ? '.gemini' : '.claude';
+  return path.join(projectRoot, directory, 'skills');
+}
+
+function projectSkills(projectRoot: string, host: DoctorHost): Set<string> {
+  const skillsRoot = hostSkillsDirectory(projectRoot, host);
   if (!existsSync(skillsRoot)) return new Set();
   return new Set(readdirSync(skillsRoot, { withFileTypes: true })
     .filter((entry) => entry.isDirectory() &&
@@ -47,26 +59,39 @@ function projectSkills(projectRoot: string): Set<string> {
     .map((entry) => entry.name));
 }
 
-function settingsWithMiko(projectRoot: string): Array<{ pathname: string; value: unknown }> {
-  const candidates = [
-    path.join(projectRoot, '.claude', 'settings.json'),
-    path.join(projectRoot, '.claude', 'settings.local.json'),
-  ];
+function settingsWithMiko(
+  projectRoot: string,
+  host: DoctorHost,
+): Array<{ pathname: string; value: unknown }> {
+  const candidates = host === 'claude'
+    ? [
+        path.join(projectRoot, '.claude', 'settings.json'),
+        path.join(projectRoot, '.claude', 'settings.local.json'),
+      ]
+    : [path.join(projectRoot, host === 'codex' ? '.codex/hooks.json' : '.gemini/settings.json')];
   return candidates.filter(existsSync).map((pathname) => ({
     pathname,
     value: JSON.parse(readFileSync(pathname, 'utf8')) as unknown,
   }));
 }
 
-function hookEvents(settings: Array<{ pathname: string; value: unknown }>): Set<string> {
+function hookEvents(
+  settings: Array<{ pathname: string; value: unknown }>,
+  host: DoctorHost,
+): Set<string> {
   const found = new Set<string>();
+  const needles = host === 'claude'
+    ? ['claude-hook-cli', 'koma-miko-claude-hook']
+    : host === 'codex'
+      ? ['codex-hook-cli', 'koma-miko-codex-hook']
+      : ['gemini-hook-cli', 'koma-miko-gemini-hook'];
   for (const { value } of settings) {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) continue;
     const hooks = (value as Record<string, unknown>).hooks;
     if (typeof hooks !== 'object' || hooks === null || Array.isArray(hooks)) continue;
     for (const [event, groups] of Object.entries(hooks as Record<string, unknown>)) {
       const serialized = JSON.stringify(groups);
-      if (serialized.includes('claude-hook-cli') || serialized.includes('koma-miko-claude-hook')) {
+      if (needles.some((needle) => serialized.includes(needle))) {
         found.add(event);
       }
     }
@@ -83,8 +108,9 @@ function stateIsIgnored(projectRoot: string): boolean {
   });
 }
 
-export function doctorProject(projectRootInput: string): DoctorReport {
+export function doctorProject(projectRootInput: string, options: DoctorOptions = {}): DoctorReport {
   const projectRoot = path.resolve(projectRootInput);
+  const host = options.host ?? 'claude';
   const checks: DoctorCheck[] = [];
   let config: LoadedMikoConfig;
 
@@ -100,36 +126,41 @@ export function doctorProject(projectRootInput: string): DoctorReport {
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Unknown config error';
     checks.push({ id: 'config', status: 'fail', message: `Cannot load Miko config: ${reason}` });
-    return { ok: false, projectRoot, specCount: 0, checks };
+    return { ok: false, projectRoot, host, specCount: 0, checks };
   }
 
   const required = requiredSkills(config);
-  const discovered = projectSkills(projectRoot);
+  const discovered = projectSkills(projectRoot, host);
+  const skillsRoot = path.relative(projectRoot, hostSkillsDirectory(projectRoot, host)).replace(/\\/g, '/');
   const missingSkills = required.filter((name) => !discovered.has(name));
   checks.push({
     id: 'skills',
     status: missingSkills.length === 0 ? 'pass' : 'warn',
     message: missingSkills.length === 0
       ? `${required.length} required project Skill(s) discovered.`
-      : `Required Skills not found under .claude/skills: ${missingSkills.join(', ')}.`,
+      : `Required Skills not found under ${skillsRoot}: ${missingSkills.join(', ')}.`,
   });
 
   try {
-    const settings = settingsWithMiko(projectRoot);
-    const foundEvents = hookEvents(settings);
-    const requiredEvents = ['PreToolUse', 'PostToolUse'];
-    if (requiresPostCompact(config)) requiredEvents.push('PostCompact');
+    const settings = settingsWithMiko(projectRoot, host);
+    const foundEvents = hookEvents(settings, host);
+    const requiredEvents = host === 'claude'
+      ? ['PreToolUse', 'PostToolUse']
+      : host === 'codex'
+        ? ['PreToolUse', 'PostToolUse']
+        : ['BeforeTool', 'AfterTool'];
+    if (requiresPostCompact(config)) requiredEvents.push(host === 'gemini' ? 'PreCompress' : 'PostCompact');
     const missingEvents = requiredEvents.filter((event) => !foundEvents.has(event));
     checks.push({
       id: 'hooks',
       status: missingEvents.length === 0 ? 'pass' : 'warn',
       message: missingEvents.length === 0
-        ? `Miko Hooks found for ${requiredEvents.join(', ')}.`
-        : `Miko Hook coverage missing: ${missingEvents.join(', ')}.`,
+        ? `Miko ${host} Hooks found for ${requiredEvents.join(', ')}.`
+        : `Miko ${host} Hook coverage missing: ${missingEvents.join(', ')}.`,
     });
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Unknown settings error';
-    checks.push({ id: 'hooks', status: 'fail', message: `Cannot inspect Claude settings: ${reason}` });
+    checks.push({ id: 'hooks', status: 'fail', message: `Cannot inspect ${host} settings: ${reason}` });
   }
 
   checks.push({
@@ -143,6 +174,7 @@ export function doctorProject(projectRootInput: string): DoctorReport {
   return {
     ok: checks.every((check) => check.status !== 'fail'),
     projectRoot,
+    host,
     configPath: config.path,
     specCount: config.contracts.length,
     checks,
@@ -152,7 +184,7 @@ export function doctorProject(projectRootInput: string): DoctorReport {
 export function formatDoctorReport(report: DoctorReport): string {
   const marker: Record<DoctorStatus, string> = { pass: 'PASS', warn: 'WARN', fail: 'FAIL' };
   return [
-    `Miko Doctor — ${report.projectRoot}`,
+    `Miko Doctor (${report.host}) — ${report.projectRoot}`,
     ...report.checks.map((check) => `[${marker[check.status]}] ${check.message}`),
   ].join('\n');
 }

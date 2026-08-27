@@ -164,10 +164,13 @@ CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结
 ```sh
 npx koma-miko doctor
 npx koma-miko doctor --strict --json
+npx koma-miko doctor --host codex
+npx koma-miko doctor --host gemini --strict
 ```
 
-Doctor 会验证 Agent Spec，并报告项目 Skill、Claude Hook 覆盖范围以及
-`.miko/state/` 是否已忽略；它不会调用模型，也不会读取 API key。
+Doctor 会验证 Agent Spec，并报告所选宿主的 Skill、Hook 覆盖范围以及
+`.miko/state/` 是否已忽略。默认检查 Claude；检查 Codex 或 Gemini 时使用
+对应的 `--host`。它不会调用模型，也不会读取 API key。
 
 Claude Code 本地 CLI、Desktop Code tab 与 VS Code/Cursor 扩展共享 settings、
 Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可能禁用项目 Hook，
@@ -175,6 +178,26 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 [平台概览](https://code.claude.com/docs/en/platforms)、
 [Desktop 共享配置](https://code.claude.com/docs/en/desktop) 与
 [VS Code 配置](https://code.claude.com/docs/en/ide-integrations)。
+
+## Codex 与 Gemini 宿主适配器
+
+alpha 也提供两个面向文字终端的窄范围 Hook 适配器：
+
+- `koma-miko-codex-hook` 消费 Codex 的 `SessionStart`、`PreToolUse`、
+  `PostToolUse`、`PostCompact` 与 `Stop` 事件。`DENY` 映射到 Codex 原生的
+  `permissionDecision: deny`；它刻意不发出 `allow`，让 Codex 自己的权限策略
+  保持最终权威。`apply_patch` 只记录路径元数据，并且只识别极窄的只读
+  `Get-Content`/`cat` Skill 重载命令。
+- `koma-miko-gemini-hook` 消费 Gemini 的 `BeforeTool`、`AfterTool`、
+  `SessionStart`、`PreCompress` 与 `AfterAgent` 事件。`DENY` 映射到 Gemini
+  原生的 `decision: deny`，只记录成功工具的元数据。Gemini 项目级 Hook 首次
+  可能需要用户信任 Hook 指纹；无交互自动化应把命令安装到受信任的用户设置层，
+  活体验证 runner 就采用此方式。
+
+这两个适配器只是宿主连接层，并不承诺所有编辑器、云端会话或特殊工具路径都会
+发出相同事件。云端工具可能不进入本地账本，宿主返回值也只能提供尽力而为的
+成功信号。配置示例见 [`examples/codex`](./examples/codex) 与
+[`examples/gemini`](./examples/gemini)。
 
 ## 自动化回放
 
@@ -184,6 +207,12 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 第一个 UI 案例是窄范围强制演示，其余九个保持 review-only。
 `npm run eval:claude-hook -w koma-miko` 还会启动三个彼此独立的 Hook 进程，
 验证带审计记录的 `DENY → 观察到 Skill → ALLOW`，并确认账本没有保存代码内容。
+`npm run eval:codex-hook -w koma-miko` 与 `npm run eval:gemini-hook -w koma-miko`
+会在无需 API key 的情况下走同一套独立 Hook 一致性测试。`npm run eval:codex-live
+-w koma-miko` 使用现有 Codex CLI 登录态（`MIKO_CODEX_BIN`），不需要 OpenAI API
+key；`npm run eval:gemini-live -w koma-miko` 使用父进程中的 `GEMINI_API_KEY` 或
+`GOOGLE_API_KEY` 与官方 Gemini CLI 入口（`MIKO_GEMINI_ENTRY`）。两个 live runner 都使用一次性
+夹具，且不会读取 env 文件。
 `npm run eval:scale -w koma-miko` 不需要 API key；它会测试 100/1,000 份
 Agent Spec、10,000 条索引证据、100 份重叠 Spec、snapshot 恢复和终端输出上限。
 `npm run eval:audit-demo -w koma-miko` 会用真实 Verifier 结果重新生成公开 CLI
@@ -229,11 +258,14 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
 - **不调用 LLM，不做语义任务分类；**
 - **不是 planner、router 或 agent runtime；**
 - **不监控 context window 或 token；**
+- **无法强迫模型调用或遵守 Skill；只能拒绝可观察的动作、返回恢复提示并记录违约；**
 - **100-Skills fixture 仅在约 20k tokens 的一次 Haiku 测试中通过；这不能代表 100k、190k 或近百万 token 的行为；**
 - **暂无托管遥测和云端策略服务；** Claude 适配器仅使用本地 JSONL 账本；
+- **无法观察没有发出已配置宿主 Hook 事件的云端工具、编辑器包装层或远程会话；**
 - **不自动改写工具调用；**
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**
 
 研究案例、契约模型和 alpha 后问题见
-[设计文档](../../docs/design/miko.md)；产品定位与可执行 TODO 见
+[设计文档](../../docs/design/miko.md)；常见违约处理见
+[恢复手册](../../docs/design/miko-recovery-playbook.md)；产品定位与可执行 TODO 见
 [开发者路线图](../../docs/design/miko-roadmap.md)。
