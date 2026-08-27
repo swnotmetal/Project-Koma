@@ -10,10 +10,12 @@ import { initProject } from './init.js';
 function help(): string {
   return [
     'koma-miko demo',
+    'koma-miko probe [--host claude|codex|gemini|vscode] [--json]',
     'koma-miko init [--project <path>] [--host claude|codex|gemini|vscode] [--skill <name>] [--path <prefix>] [--mode review|enforce] [--enforce] [--dry-run]',
     'koma-miko doctor [--project <path>] [--host claude|codex|gemini|vscode] [--json] [--strict]',
     '',
     'Runs a deterministic, no-API Agent Spec replay.',
+    'Runs an isolated, no-model host-adapter conformance probe and removes its fixture.',
     'Initializes a starter Agent Spec and host Hooks without overwriting existing settings.',
     'Runs offline checks for miko.json, host Skills, Hooks, and Git ignore.',
   ].join('\n');
@@ -46,6 +48,25 @@ if (args[0] === 'demo') {
     process.exitCode = 1;
   } else if (result.status !== 0) {
     process.exitCode = result.status ?? 1;
+  }
+} else if (args[0] === 'probe') {
+  const packageRoot = path.resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const probe = path.join(packageRoot, 'evals', 'probe.mjs');
+  const requestedHost = option(args, '--host') ?? 'claude';
+  const host = normalizedHost(requestedHost);
+  if (!host) {
+    process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, gemini, or vscode.\n`);
+    process.exitCode = 1;
+  } else {
+    const result = spawnSync(process.execPath, [probe, '--host', host, ...(hasFlag(args, '--json') ? ['--json'] : [])], {
+      stdio: 'inherit',
+    });
+    if (result.error) {
+      process.stderr.write(`Unable to run Miko probe: ${result.error.message}\n`);
+      process.exitCode = 1;
+    } else if (result.status !== 0) {
+      process.exitCode = result.status ?? 1;
+    }
   }
 } else if (args[0] === 'init') {
   const projectRoot = path.resolve(option(args, '--project') ?? process.cwd());

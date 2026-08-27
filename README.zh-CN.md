@@ -44,6 +44,10 @@ npx koma-miko init --host claude
 
 ### 当前主推：Miko Alpha
 
+<p align="center">
+  <img src="packages/koma-miko/assets/miko-lockup.png" alt="Koma Miko" width="420" />
+</p>
+
 Coding agent 可以声称自己加载了必需 Skill 或运行了测试，但 Miko 不把自述当作
 证据。在宿主提供的本地 Hook 上，它会把观察到的 Skill 加载、参考文档读取、
 工具动作和完成检查，与项目维护的 `miko.json` 比对。
@@ -54,6 +58,7 @@ Coding agent 可以声称自己加载了必需 Skill 或运行了测试，但 Mi
 
 ```bash
 npx --yes koma-miko@alpha demo       # 确定性回放；无需 API key
+npx --yes koma-miko@alpha probe --host claude  # 隔离式 adapter 检查；不调用模型
 npx koma-miko init --host claude     # 本地安装后自动配置
 ```
 

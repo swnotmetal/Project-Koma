@@ -40,6 +40,9 @@ reproducible probe and one small result bundle to return.
   raw events and the Agent Spec expandable, with no model backend required.
 - [x] Publish a developer recovery playbook for common PREPARE, PRE_ACTION, and
   COMPLETE denials.
+- [x] Add one privacy-safe, no-model `probe --host` interface for Claude,
+  Codex, Gemini, and VS Code adapter conformance; use a separate zero-credit
+  `koma-miko-dsh probe` package preflight and reserve `--live` for paid DSH.
 - [ ] Add a one-command VS Code Copilot probe that creates an isolated Skill,
   Agent Spec, Hook configuration, and disposable `src/miko-probe` fixture.
 - [ ] Emit a privacy-safe probe report containing only host/version metadata,

@@ -1,5 +1,9 @@
 # koma-miko (alpha)
 
+<p align="center">
+  <img src="./assets/miko-lockup.png" alt="Koma Miko" width="420" />
+</p>
+
 Deterministic skill and action contract verification for AI agent workflows.
 
 Think of each contract as an **Agent Spec**: a developer-owned executable test
@@ -204,12 +208,23 @@ are no longer the preferred developer interface.
 Run an entirely offline preflight before spending model credits:
 
 ```sh
+npx koma-miko probe --host claude
+npx koma-miko probe --host codex
+npx koma-miko probe --host gemini
+npx koma-miko probe --host vscode
 npx koma-miko doctor
 npx koma-miko doctor --strict --json
 npx koma-miko doctor --host codex
 npx koma-miko doctor --host gemini --strict
 npx koma-miko doctor --host vscode --strict
 ```
+
+`probe` runs the selected adapter through an isolated `DENY -> evidence ->
+ALLOW` conformance fixture, checks that prompt, source, and tool output content
+stay out of the JSONL ledger, and removes the fixture. It never invokes a model
+or modifies the current project. Use `--json` for the same privacy-safe report
+in machine-readable form. This is an adapter check, not proof that an installed
+host version emits identical events or tool names.
 
 Doctor validates Agent Specs and reports host-specific Skill discovery, required
 Hook coverage, and whether `.miko/state/` is ignored. It defaults to Claude;

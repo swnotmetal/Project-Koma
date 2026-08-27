@@ -250,7 +250,9 @@
 
     /* Miko: CLI-shaped deterministic replay */
     .miko-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--sp-4); align-items: end; margin-bottom: var(--sp-4); }
-    .miko-hero h2 { margin: 0 0 var(--sp-2); font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.03em; }
+    .miko-title-row { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: var(--sp-3); align-items: center; margin-bottom: var(--sp-2); }
+    .miko-brand-mark { display: block; width: 68px; height: 68px; object-fit: contain; }
+    .miko-hero h2 { margin: 0; font-size: clamp(24px, 4vw, 38px); letter-spacing: -0.03em; }
     .miko-hero .lead { margin: 0; max-width: 68ch; font-size: var(--fs-md); }
     .miko-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.55fr); gap: var(--sp-4); align-items: stretch; }
     .miko-terminal-panel { display: flex; flex-direction: column; padding: 0; overflow: hidden; background: #17191c; border-color: #292d32; min-height: 610px; }
@@ -326,6 +328,8 @@
       .miko-terminal-panel .miko-terminal-body { min-height: 430px; }
     }
     @media (max-width: 520px) {
+      .miko-title-row { grid-template-columns: 52px minmax(0, 1fr); gap: var(--sp-2); }
+      .miko-brand-mark { width: 52px; height: 52px; }
       .tabs { flex-wrap: nowrap; gap: 0; }
       .tab { flex: 1 1 20%; min-width: 0; padding-left: 6px; padding-right: 6px; }
       .miko-terminal-body { padding: 14px 11px; font-size: 11.5px; height: 430px; }
@@ -629,7 +633,10 @@
     <div class="tabpanel active" id="tab-miko" role="tabpanel" aria-labelledby="tab-btn-miko">
       <div class="miko-hero">
         <div>
-          <h2>See Miko catch an AI agent cutting corners.</h2>
+          <div class="miko-title-row">
+            <img class="miko-brand-mark" src="/miko-mark.png" alt="Miko logo" />
+            <h2>See Miko catch an AI agent cutting corners.</h2>
+          </div>
           <p class="lead">You ask Claude to change a UI. It tries to write before loading your design Skill. Miko blocks the write, tells Claude exactly what is missing, and lets it retry—inside the CLI you already use.</p>
         </div>
         <aside class="demo-evidence" aria-labelledby="miko-evidence-title">

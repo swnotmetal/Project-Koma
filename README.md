@@ -45,6 +45,10 @@ Building an LLM endpoint instead? Start with `npm install koma-gate`.
 
 ### Featured Alpha: Miko
 
+<p align="center">
+  <img src="packages/koma-miko/assets/miko-lockup.png" alt="Koma Miko" width="420" />
+</p>
+
 Coding agents can say they loaded a required Skill or ran a test. Miko does not
 treat that claim as evidence. At supported local host Hooks, it compares
 observed Skill loads, reference reads, tool actions, and completion checks with
@@ -56,6 +60,7 @@ that a model understood a Skill, or verify events the host never exposes.
 
 ```bash
 npx --yes koma-miko@alpha demo       # deterministic; no API key
+npx --yes koma-miko@alpha probe --host claude  # isolated adapter check; no model
 npx koma-miko init --host claude     # after local installation
 ```
 

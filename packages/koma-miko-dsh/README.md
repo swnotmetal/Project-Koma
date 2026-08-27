@@ -1,9 +1,25 @@
 # koma-miko-dsh (alpha)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/swnotmetal/Project-Koma/main/packages/koma-miko/assets/miko-mark.png" alt="Koma Miko" width="112" />
+</p>
+
 Native DeepSeek Harness adapter for
 [Koma Miko Agent Specs](../koma-miko/README.md). The first alpha targets the
 exact DSH Developer Preview version verified below; later RC compatibility is
 not implied.
+
+Run a zero-credit package preflight before touching a Harness profile:
+
+```sh
+npx koma-miko-dsh@alpha probe
+```
+
+This verifies the packaged plugin entry, Cordis patch, core dependency, and
+bounded live runner without invoking a model or changing the current project.
+Use `npx koma-miko-dsh@alpha probe --live` only when you intentionally want the
+disposable model-backed Harness evaluation; it requires the provider key and
+the pinned DSH runtime described below.
 
 ## What it proves
 

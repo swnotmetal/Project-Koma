@@ -17,6 +17,7 @@ describe('Miko public demo', () => {
     expect(html).toContain('id="tab-btn-miko" aria-controls="tab-miko" aria-selected="true"');
     expect(html).toContain('class="tabpanel active" id="tab-miko"');
     expect(html).toContain('id="miko-terminal"');
+    expect(html).toContain('class="miko-brand-mark" src="/miko-mark.png" alt="Miko logo"');
     expect(html).toContain('Play 10-sec demo');
     expect(html).toContain('Show next step');
     expect(html).toContain('Restart demo');

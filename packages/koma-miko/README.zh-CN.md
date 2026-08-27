@@ -1,5 +1,9 @@
 # koma-miko（alpha）
 
+<p align="center">
+  <img src="./assets/miko-lockup.png" alt="Koma Miko" width="420" />
+</p>
+
 面向 AI agent 工作流的确定性 skill / action 契约验证器。
 
 可以把每份 Contract 理解成开发者维护的 **Agent Spec（智能体测试用例）**：
@@ -175,12 +179,22 @@ Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已
 花费模型额度前，先运行完全离线的预检：
 
 ```sh
+npx koma-miko probe --host claude
+npx koma-miko probe --host codex
+npx koma-miko probe --host gemini
+npx koma-miko probe --host vscode
 npx koma-miko doctor
 npx koma-miko doctor --strict --json
 npx koma-miko doctor --host codex
 npx koma-miko doctor --host gemini --strict
 npx koma-miko doctor --host vscode --strict
 ```
+
+`probe` 会在隔离 fixture 中让所选 adapter 完整走一遍
+`DENY -> evidence -> ALLOW`，检查 JSONL ledger 没有 prompt、源码或工具输出，
+随后自动清理。它不会调用模型，也不会修改当前项目；`--json` 输出同一份
+隐私安全报告。它验证的是 adapter conformance，不代表用户安装的宿主版本一定
+会发出完全相同的事件或工具名。
 
 Doctor 会验证 Agent Spec，并报告所选宿主的 Skill、Hook 覆盖范围以及
 `.miko/state/` 是否已忽略。默认检查 Claude；检查其他宿主时选择对应的
