@@ -24,20 +24,20 @@ The root development install resolves one deduplicated copy of
 
 ## Deterministic behavior result
 
-The adapter suite passes 9/9 cases:
+The adapter suite passes 10/10 cases covering:
 
-1. an applicable write is denied before required Skill/reference evidence;
-2. the exact missing `skill` and `read` preparation calls are allowed to repair
-   the denial;
-3. only successful final tool outcomes become evidence;
-4. exact foreground shell matches may become named passing checks;
-5. failed and background shell calls never become passing checks;
-6. `REVIEW` maps to DSH `ask` by default and may be configured as `deny`;
-7. completion steering stops at its configured bound;
-8. `run_code` is treated as a transport while native sub-calls remain guarded;
-9. compaction invalidates Skills marked `reloadAfterCompaction`.
+1. writes remain blocked until required Skill/reference evidence is observed;
+2. successful final outcomes become evidence, while failed/background calls do not;
+3. exact foreground shell matches may become named passing checks;
+4. `REVIEW` maps to DSH `ask` or a configured deny;
+5. completion steering is bounded;
+6. `run_code` is transport while native sub-calls remain guarded;
+7. a missing Agent Spec follows the configured fail-open warning path;
+8. compaction invalidates Skills marked `reloadAfterCompaction`;
+9. resume starts a fresh evidence epoch and requires Skill reload;
+10. unknown tools receive conservative risk with explicit override support.
 
-The full Koma suite passes 131/131 tests, and every workspace typecheck passes.
+The full Koma suite passes 132/132 tests, and every workspace typecheck passes.
 
 ## Real host smoke result
 
@@ -102,7 +102,7 @@ USD 0.072. This is an estimate, not a billing statement. The sample is
 intentionally tiny: **3/3 demonstrates the release path, not a 100% general
 recovery claim.**
 
-## What remains before npm publication
+## What remains before widening support
 
 1. Re-run the matrix before widening the exact DSH peer versions. Developer
    Preview compatibility must not be inferred from one RC.

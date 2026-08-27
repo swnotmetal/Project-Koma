@@ -10,15 +10,41 @@ All notable changes to Koma will be documented in this file.
 - `.0` shipped with a stale "not published" README; `.1` corrects it. Verifier and adapter runtime are unchanged.
 - Verified `koma-miko-dsh@alpha` registry install in a fresh DSH profile resolves both packages.
 
+## [0.2.0] - 2026-08-08
+
+### Added
+
+- Benchmark suite (`benchmarks/gate-eval.js`) with multi-provider support.
+- Public evaluation against the deepset prompt-injection corpus and a domain-aligned benign corpus.
+- Reproduction documentation and provider/model selection flags.
+
+### Changed
+
+- Default Gemini model updated to `gemini-2.5-flash` after the previous model was deprecated.
+- Google adapter output budget increased for thinking-model overhead.
+- Root package configured for ESM resolution.
+
+### Fixed
+
+- Non-2xx model responses now throw instead of silently becoming blocked decisions.
+- JSON response parsing is shared across providers and strips fenced JSON.
+- All `{domain_name}` placeholders are replaced.
+
+### Benchmarks
+
+| Provider | Model | Recall | Precision | FPR |
+|---|---|---:|---:|---:|
+| DeepSeek | deepseek-chat | 92.8% | 100.0% | 0.0% |
+| Google | gemini-2.5-flash | 96.2% | 100.0% | 0.0% |
+
 ## [0.1.0] - 2026-07-26
 
 ### Added
 
 - Initial Koma workspace structure with three packages: `koma-gate`, `koma-scout`, `koma-core`.
-- `koma-gate`: LLM-based intent classification with OpenAI / Anthropic / Google / Ollama adapters, 3 preset guards, LRU cache, Express & Fastify middleware.
+- `koma-gate`: LLM-based intent classification with OpenAI / Anthropic / Google / Ollama adapters, 4 preset guards, LRU cache, Express & Fastify middleware.
 - `koma-scout`: token-bucket rate limiting (in-memory + Firestore), audio upload validation (size/duration/MIME/cooldown), geo allowlisting via ipinfo.io.
 - `koma-core`: HKDF-based dual-store architecture (index + content), access-tier enforcement, audit logging, rate-limited retrieval, legacy migration tooling.
-- `koma-core` Lite/Strict mode toggle via `StorageConfig.mode`.
 - Shared `AccessTier` type (`'public' | 'premium' | 'enterprise'`).
 - Self-contained `demo/server.js` with keyword-based Gate simulation.
 - Vitest test suite: 72 tests across 3 packages.

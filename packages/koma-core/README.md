@@ -4,6 +4,30 @@ Protected split-store storage for AI apps.
 
 This package separates searchable index records from private content records and links them with opaque backend-derived tokens.
 
+## Security Boundary
+
+Koma Core provides the storage pattern, but the integrating application must derive a trustworthy `userTier` from authenticated identity. Core does not authenticate users; it enforces the tier the application passes in.
+
+### What Core Guarantees
+
+| Guarantee | Mechanism |
+|---|---|
+| Token opacity | HKDF-derived tokens cannot be reversed to `sourceId` |
+| Storage separation | Searchable index and private content use different stores |
+| Public-search redaction | Search omits `contentToken` unless a trusted backend explicitly requests it |
+| Retrieval throttling | Optional per-token or per-caller rate limiting |
+| Deterministic integrity | Stable token derivation and content hashing |
+
+### What Core Does Not Guarantee
+
+| Non-guarantee | Application responsibility |
+|---|---|
+| User authentication | Verify identity before calling Core |
+| Authorization identity | Derive `userTier` from the authenticated session, never the request body |
+| Database encryption | Use the database provider's encryption at rest |
+| Cross-store atomicity | Use a transactional backend when strict atomicity is required |
+| Tenant isolation | Use separate secrets and preferably separate Core instances per tenant |
+
 ## AI Agent Quick Read
 
 - Read order: this README, then `src/index.ts`, then [../../demo/server.js](../../demo/server.js).
@@ -11,99 +35,58 @@ This package separates searchable index records from private content records and
 - Token rule: retrieval stays backend-derived and opaque.
 - Primary use: protect sensitive content while preserving discovery and search.
 
-## Agent Handoff
-
-- Input: an item to ingest, a token to resolve, and two storage handles.
-- Output: searchable metadata plus token-addressed private content.
-- Control point: `createKomaStorage()` and the writer or reader it returns.
-- Common mistake: exposing private records to search or assuming tokens are client-generated.
-
-## Entry Point
-
-- Source entry: `src/index.ts`
-- Import from this monorepo: `./src`
-
 ## Install
 
-Source-first. Use the package from the workspace or bundle it into a build pipeline.
+```bash
+npm install koma-core
+```
 
 ## Usage
 
 ```ts
-import { createKomaStorage } from './src';
+import { createKomaStorage } from 'koma-core';
 
 const storage = createKomaStorage({
-  masterKey: process.env.AEGIS_MASTER_KEY || 'dev-key',
+  masterKey: process.env.KOMA_MASTER_KEY!, // at least 32 bytes
   indexDb,
   contentDb,
+  enableAudit: true,
+  auditLogger,
 });
 
-await storage.writer.ingest({
-  sourceId: 'item-123',
-  displayName: 'Example Item',
-  category: 'docs',
-  tags: ['searchable'],
-  payload: { title: 'Example Item', body: 'Protected content' },
-  provenance: { source: 'import', ingestedBy: 'system' },
+const written = await storage.writer.ingest({
+  sourceId: 'doc-42',
+  displayName: 'Meeting Notes',
+  category: 'internal',
+  tags: ['notes'],
+  payload: { title: 'Meeting Notes', body: 'Confidential content' },
+  accessTier: 'enterprise',
 });
+
+// Public-safe by default: no payload and no contentToken.
+const hits = await storage.reader.search({ category: 'internal' });
+
+// Resolve content only inside an authenticated backend route.
+const detail = await storage.reader.fetchBySourceId('doc-42', 'enterprise');
 ```
 
-## Exports
+## Main Exports
 
-- `TokenDeriver`
-- `ContentHasher`
-- `DualCollectionWriter`
-- `DualCollectionReader`
-- `RateLimiter`
-- `MemoryRateLimitStorage`
-- `DualCollectionMigrator`
-- `createKomaStorage()`
-- `StorageConfig`
-- `AccessTier`
+| Export | Purpose |
+|---|---|
+| `createKomaStorage()` | Creates the writer, reader, token deriver, and migrator |
+| `DualCollectionWriter` | Writes index metadata and private payloads separately |
+| `DualCollectionReader` | Searches safe metadata and performs authorized retrieval |
+| `TokenDeriver` | Derives opaque HKDF tokens, optionally scoped to a user |
+| `ContentHasher` | Produces deterministic payload hashes |
+| `RateLimiter` | Applies retrieval limits with a pluggable storage backend |
+| `DualCollectionMigrator` | Migrates legacy flat records into the split-store format |
 
-## Modes
+## Design Rules
 
-`createKomaStorage()` accepts a `mode` parameter:
-
-```ts
-// Lite: minimal split-store, no audit, no rate limiter
-const storage = createKomaStorage({
-  masterKey: process.env.AEGIS_MASTER_KEY!,
-  indexDb,
-  contentDb,
-  mode: 'lite',
-});
-
-// Strict (default): audit, access-tier enforcement, rate-limited retrieval
-const storage = createKomaStorage({
-  masterKey: process.env.AEGIS_MASTER_KEY!,
-  indexDb,
-  contentDb,
-  mode: 'strict',
-  auditLogger: myAuditLogger,
-});
-```
-
-| Feature | Lite | Strict |
-|---------|------|--------|
-| Split index/content | ✓ | ✓ |
-| HKDF token derivation | ✓ | ✓ |
-| Audit logging | — | ✓ |
-| Access-tier enforcement | — | ✓ |
-| Rate-limited retrieval | — | ✓ |
-| Legacy migration | — | ✓ |
-
-## Notes
-
-- Public records stay minimal.
-- Private records are token-addressed, not list-addressed.
-- Token mapping stays server-side.
-- Versioning and hashing make migration safer.
-
-## What It Solves
-
-- Accidental exposure of high-value payloads.
-- Brute-force or enumerated document access.
-- Search results leaking private data.
-- Weak coupling between discovery and retrieval.
-- Audit gaps around sensitive reads.
+- Use a master key of at least 32 bytes and load it from KMS or a secret manager.
+- Public search results never include content tokens by default.
+- `includeTokens: true` is for trusted backend code only.
+- Preview and full-content access enforce the stored access tier.
+- Unknown access tiers fail closed.
+- The returned ingestion token is a backend value; do not send it to untrusted clients.

@@ -2,7 +2,7 @@
  * Koma Core: anti-scraping dual-store routing architecture.
  *
  * Core design:
- * 1. DB_INDEX (public layer) stores only searchable index fields, display names, category tags, hashes, and opaque tokens
+ * 1. DB_INDEX stores searchable fields plus a backend-internal opaque token; public search results redact that token
  * 2. DB_CONTENT (private layer) stores the full payload, with document IDs derived from HKDF(secret, source_id)
  * 3. Token mapping stays on the backend and is never exposed to the client
  * 4. Enumeration resistance: DB_CONTENT cannot be traversed without the exact token
@@ -25,17 +25,13 @@ export interface StorageConfig {
   indexDb: DatabaseAdapter;
   /** Content-layer database adapter. */
   contentDb: DatabaseAdapter;
-  /**
-   * Operating mode.
-   * - `'lite'`: minimal split-store — no audit, no rate limiter, no migrator.
-   * - `'strict'` (default): full audit, access-tier enforcement, rate-limited retrieval, migration support.
-   */
-  mode?: 'lite' | 'strict';
   /** HKDF info context for domain separation. */
   hkdfInfo?: string;
   /** Token length in bytes. */
   tokenLength?: number;
-  /** Audit log adapter (strict mode only). */
+  /** Enable access auditing and the default retrieval rate limiter. */
+  enableAudit?: boolean;
+  /** Audit log adapter. */
   auditLogger?: AuditLogger;
 }
 
@@ -127,15 +123,16 @@ export interface ContentDocument extends Document {
 }
 
 // ============================================================================
-// Token Derivation (HKDF-based)
+// Token Derivation (HKDF-based, RFC 5869)
 // ============================================================================
 
 /**
- * Derive a content token from the master key using HKDF.
+ * Derive a content token from the master key using HKDF (RFC 5869).
  * Guarantees:
- * 1. The token cannot be reversed back to sourceId
- * 2. The same sourceId always maps to the same token
+ * 1. The token cannot be reversed back to sourceId (HKDF is one-way)
+ * 2. The same sourceId always maps to the same token (deterministic)
  * 3. Different applications or tenants can isolate token spaces with different info contexts
+ * 4. Optional user-binding scopes the token to one user when requested
  */
 export class TokenDeriver {
   private masterKey: Buffer;
@@ -144,26 +141,28 @@ export class TokenDeriver {
 
   constructor(masterKey: string | Buffer, info = 'koma-content-token', tokenLength = 32) {
     this.masterKey = Buffer.isBuffer(masterKey) ? masterKey : Buffer.from(masterKey, 'utf-8');
+    if (this.masterKey.length < 32) {
+      throw new Error('masterKey must be at least 32 bytes (256 bits) for HKDF');
+    }
     this.info = info;
     this.tokenLength = tokenLength;
   }
 
   /**
-   * Derive a content token using RFC 5869 HKDF.
+   * Derive a content token.
    * @param sourceId Business identifier such as SPL_ID, SKU, or DOI.
+   * @param userId Optional user identifier for user-scoped tokens.
    * @returns Token as a hexadecimal string.
    */
-  derive(sourceId: string): string {
-    // HKDF(salt=masterKey, IKM=sourceId, info=context, length=tokenLength)
-    // Node 18+ built-in crypto.hkdfSync follows RFC 5869.
+  derive(sourceId: string, userId?: string): string {
+    const info = userId ? `${this.info}:user=${userId}` : this.info;
     const derived = hkdfSync(
       'sha256',
-      Buffer.from(sourceId, 'utf-8'),    // IKM
-      this.masterKey,                     // salt
-      this.info,                          // info
-      this.tokenLength                    // output length in bytes
+      Buffer.from(sourceId, 'utf-8'),
+      this.masterKey,
+      Buffer.from(info, 'utf-8'),
+      this.tokenLength,
     );
-    // hkdfSync returns ArrayBuffer in Node 22+; wrap in Buffer for hex encoding.
     return Buffer.from(derived).toString('hex');
   }
 
@@ -547,7 +546,8 @@ export class DualCollectionWriter {
     const slug = displayName
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '')
       .substring(0, 80);
     const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     return `${slug}-${catSlug}-${randomBytes(4).toString('hex')}`;
@@ -586,7 +586,7 @@ export interface SearchResult {
   tags: string[];
   accessTier: string;
   metadata: Record<string, any>;
-  // Content preview (optional, public fields only).
+  /** Content preview (optional, public fields only). */
   preview?: Record<string, any>;
 }
 
@@ -750,18 +750,28 @@ export class DualCollectionReader {
 
   /**
    * Get a content preview without incrementing the access count.
+   * Preview access is authorized against the same tier as full content.
    */
-  async getPreview(contentToken: string): Promise<Record<string, any> | null> {
+  async getPreview(contentToken: string, options: { userTier: AccessTier }): Promise<Record<string, any> | null> {
     const contentDoc = await this.contentDb.get(this.contentCollection, contentToken);
     if (!contentDoc) return null;
-    
+
+    if (!this.canAccess(options.userTier, contentDoc.accessTier)) {
+      await this.auditLog('ACCESS_DENIED', { token: contentToken, success: false });
+      throw Object.assign(new Error('Access denied'), { code: 'ACCESS_DENIED' });
+    }
+
     // Return only safe preview fields.
     return this.extractPreview(contentDoc.payload);
   }
 
   private canAccess(userTier: string, requiredTier: string): boolean {
-    const tiers = { public: 0, premium: 1, enterprise: 2 };
-    return (tiers[userTier as keyof typeof tiers] || 0) >= (tiers[requiredTier as keyof typeof tiers] || 0);
+    const tiers: Record<string, number> = { public: 0, premium: 1, enterprise: 2 };
+    const userLevel = tiers[userTier];
+    const requiredLevel = tiers[requiredTier];
+    // Unknown tiers deny access instead of silently becoming public.
+    if (userLevel === undefined || requiredLevel === undefined) return false;
+    return userLevel >= requiredLevel;
   }
 
   private async updateAccessStats(contentToken: string): Promise<void> {
@@ -921,23 +931,21 @@ export class DualCollectionMigrator {
 // ============================================================================
 
 export function createKomaStorage(config: StorageConfig) {
-  const mode = config.mode ?? 'strict';
-  const isStrict = mode === 'strict';
   const tokenDeriver = new TokenDeriver(config.masterKey, config.hkdfInfo, config.tokenLength);
 
   const writer = new DualCollectionWriter({
     indexDb: config.indexDb,
     contentDb: config.contentDb,
     tokenDeriver,
-    auditLogger: isStrict ? config.auditLogger : undefined,
+    auditLogger: config.auditLogger,
   });
 
   const reader = new DualCollectionReader({
     indexDb: config.indexDb,
     contentDb: config.contentDb,
     tokenDeriver,
-    auditLogger: isStrict ? config.auditLogger : undefined,
-    rateLimiter: isStrict
+    auditLogger: config.auditLogger,
+    rateLimiter: config.enableAudit
       ? new RateLimiter({
           windowMs: 60_000,
           maxRequests: 100,
@@ -946,21 +954,16 @@ export function createKomaStorage(config: StorageConfig) {
       : undefined,
   });
 
-  const storage: Record<string, unknown> = { writer, reader, tokenDeriver };
-  if (isStrict) {
-    storage.migrator = new DualCollectionMigrator({
+  return {
+    writer,
+    reader,
+    tokenDeriver,
+    migrator: new DualCollectionMigrator({
       writer,
       legacyDb: config.indexDb,
       legacyCollection: 'legacy_collection',
       sourceIdField: 'sourceId',
-    });
-  }
-
-  return storage as {
-    writer: DualCollectionWriter;
-    reader: DualCollectionReader;
-    tokenDeriver: TokenDeriver;
-    migrator?: DualCollectionMigrator;
+    }),
   };
 }
 

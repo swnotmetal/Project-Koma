@@ -124,6 +124,15 @@ describe('TokenDeriver', () => {
     expect(token).toHaveLength(64);
   });
 
+  it('should reject master keys shorter than 256 bits', () => {
+    expect(() => new TokenDeriver('dev-key')).toThrow('at least 32 bytes');
+  });
+
+  it('should bind tokens to a user when userId is provided', () => {
+    expect(deriver.derive('same-doc', 'alice')).not.toBe(deriver.derive('same-doc', 'bob'));
+    expect(deriver.derive('same-doc', 'alice')).not.toBe(deriver.derive('same-doc'));
+  });
+
   it('should derive with custom token length', () => {
     const d = new TokenDeriver(masterKey, 'test', 16);
     expect(d.derive('x')).toHaveLength(32); // 16 bytes = 32 hex chars
@@ -369,6 +378,23 @@ describe('DualCollectionReader', () => {
     expect(enterpriseResult.success).toBe(true);
   });
 
+  it('should enforce access tiers for previews', async () => {
+    const contentToken = tokenDeriver.derive('premium-doc');
+
+    await expect(reader.getPreview(contentToken, { userTier: 'public' }))
+      .rejects.toMatchObject({ code: 'ACCESS_DENIED' });
+    await expect(reader.getPreview(contentToken, { userTier: 'enterprise' }))
+      .resolves.toEqual({ summary: 'A premium article' });
+  });
+
+  it('should fail closed for unknown access tiers', async () => {
+    const contentToken = tokenDeriver.derive('public-doc');
+    const result = await reader.fetchContent(contentToken, { userTier: 'unknown' as any });
+
+    expect(result.success).toBe(false);
+    expect(result.errorCode).toBe('ACCESS_DENIED');
+  });
+
   it('should return NOT_FOUND for unknown tokens', async () => {
     const result = await reader.fetchContent('nonexistent-token', { userTier: 'public' });
     expect(result.success).toBe(false);
@@ -431,6 +457,8 @@ describe('createKomaStorage', () => {
       indexDb,
       contentDb,
     });
+
+    expect(storage.migrator).toBeDefined();
 
     expect(storage.writer).toBeInstanceOf(DualCollectionWriter);
     expect(storage.reader).toBeInstanceOf(DualCollectionReader);

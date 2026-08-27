@@ -31,5 +31,8 @@ jobs:
       - name: Typecheck all packages
         run: npm run typecheck
 
+      - name: Run unit tests
+        run: npm test
+
       - name: Smoke test (pack + clean install + import)
         run: npm run smoke:npm

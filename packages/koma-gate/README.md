@@ -1,71 +1,73 @@
 # Koma Gate
 
-Semantic request filtering for AI apps.
+LLM-based scope classification and semantic request filtering for AI apps.
 
-This package exposes a compact intent-classification guard that returns a strict JSON decision and is designed to sit in front of LLM calls, tool calls, or support workflows.
+Koma Gate sits before model or tool calls and returns a compact, structured allow/block decision.
+
+## Security Boundary
+
+Koma Gate is a scope classifier, not a cryptographic prompt-injection defense. A sufficiently adversarial input may influence the classifier itself.
+
+- Prefer providers with system/user message separation.
+- Set `failOpen: false` when security is more important than availability.
+- Evaluate against representative benign and attack corpora before production use.
+- See [SECURITY-HARDENING.md](../../SECURITY-HARDENING.md) for known limitations and mitigations.
+
+Gate is best used as a first-pass filter before expensive model calls, not as the only security boundary.
 
 ## AI Agent Quick Read
 
 - Read order: this README, then `src/index.ts`, then [../../demo/server.js](../../demo/server.js).
-- Boundary: decide whether an input is in scope before any model or tool work begins.
-- Output shape: strict JSON decision plus middleware helpers.
-- Primary use: guard the request path, not the downstream business logic.
-
-## Agent Handoff
-
-- Input: a short user request or route text.
-- Output: allow or reject, plus a JSON decision object.
-- Control point: `createGeneralKnowledgeGuard()`, `createCodeAssistantGuard()`, or `createSupportGuard()`.
-- Common mistake: treating this layer as an intent router instead of a guard.
-
-## Entry Point
-
-- Source entry: `src/index.ts`
-- Import from this monorepo: `./src`
+- Boundary: classify input before model, tool, or business work begins.
+- Output: a strict decision object plus Express and Fastify helpers.
+- Common mistake: treating Gate as a complete sandbox or authorization layer.
 
 ## Install
 
-Source-first. Use the package from the workspace or bundle it into a build pipeline.
+```bash
+npm install koma-gate
+```
 
 ## Usage
 
 ```ts
-import {
-  createGeneralKnowledgeGuard,
-  createCodeAssistantGuard,
-  createSupportGuard,
-} from './src';
+import { createSupportGuard } from 'koma-gate';
 
-const guard = createGeneralKnowledgeGuard();
-
-app.post('/api/query', guard.middleware(), async (req, res) => {
-  res.json({ ok: true });
+const guard = createSupportGuard({
+  llm: { apiKey: process.env.OPENAI_API_KEY },
+  behavior: { failOpen: false },
 });
+
+app.post('/support', guard.middleware(), handler);
 ```
 
-## Exports
+## Benchmarks
 
-- `KomaGuard`
-- `GuardConfig`
-- `GuardResult`
-- `GuardDecision`
-- `createGeneralKnowledgeGuard()`
-- `createCodeAssistantGuard()`
-- `createSupportGuard()`
-- `buildClassificationPrompt()`
-- `SYSTEM_PROMPT_TEMPLATE`
+Evaluated in fail-closed mode. See [BENCHMARKS.md](../../BENCHMARKS.md) for methodology and reproduction commands.
 
-## What It Solves
+| Corpus | Provider | Recall | Precision | FPR |
+|---|---|---:|---:|---:|
+| EN (deepset) | Google | 96.2% | 100.0% | 0.0% |
+| EN (deepset) | DeepSeek | 93.2% | 100.0% | 0.0% |
+| ZH (zh-50) | DeepSeek | 100.0% | 100.0% | 0.0% |
+| ZH (zh-50) | Google | 98.0% | 100.0% | 0.0% |
 
-- off-topic requests
-- prompt injection attempts
-- instruction override attempts
-- noisy or meaningless input
-- basic abuse filtering before expensive model calls
+These results describe the recorded corpora and configurations, not universal prompt-injection immunity.
 
-## Notes
+## Main Exports
 
-- English-first source and prompts
-- low token budget
-- fail-open by default for availability
-- easy to swap between local and hosted LLMs
+| Export | Purpose |
+|---|---|
+| `createGeneralKnowledgeGuard()` | General factual and knowledge assistants |
+| `createCodeAssistantGuard()` | Coding assistants and developer tools |
+| `createSupportGuard()` | Customer-support workflows |
+| `createReferenceToolGuard()` | Narrow factual lookup and reference tools |
+| `KomaGuard` | Programmatic classification and middleware integration |
+| `buildClassificationPrompt()` | Custom-domain prompt construction |
+
+## Design Rules
+
+- Run Gate before the protected model call.
+- Keep the domain policy narrow and explicit.
+- Treat fail-open/fail-closed as a deployment decision.
+- Do not present an LLM classifier as a deterministic security proof.

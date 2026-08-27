@@ -33,9 +33,6 @@ dsh --profile miko-lab --dump-config
 For local development, build from the Koma root and install or link the package
 into a disposable DSH profile:
 
-Build from the Koma root, then install or link the package into a disposable DSH
-profile:
-
 ```sh
 npm run build -w koma-miko -w koma-miko-dsh
 dsh plugin --profile miko-lab add ./packages/koma-miko-dsh
