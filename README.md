@@ -115,7 +115,13 @@ Each package works standalone. Stack them: Gate filters → Scout throttles → 
 
 **Alpha: `koma-miko`** — verifies that an agent loaded the required skill,
 stayed within its action contract, and produced completion evidence such as
-tests or rendered UI review. Install the core with `npm install koma-miko@alpha`.
+tests or rendered UI review. Install and initialize a Claude Code project with:
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
+```
+
 Try its no-API replay with `npx koma-miko@alpha demo`.
 DeepSeek Harness users can add the native adapter with
 `dsh plugin --profile miko add koma-miko-dsh@alpha`. [Core README →](./packages/koma-miko/README.md) ·

@@ -153,11 +153,23 @@ CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结
 变为缺失。adapter 保留 append-only JSONL 作为审计记录，同时使用紧凑 snapshot，
 每次 Hook 只需回放 snapshot 之后的尾部事件。该账本便于审计，但并非防篡改账本。
 
-试用 alpha 时，安装该包，把示例 `miko.json` 复制到项目根目录，
-再把示例 Hook 合并进 `.claude/settings.json`。
-示例不会自动启用，因为目标项目中必须真实存在被强制要求的
-`frontend-design` Skill。会话元数据写入 `.miko/state/`，该目录应保持忽略。
-旧 `.miko/contracts.json` 数组仍可读取，但不再是推荐的开发者入口。
+在 Claude Code 项目中试用 alpha 时，安装后让初始化命令自动完成配置：
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
+```
+
+`init` 会创建一个默认 `review-only` 的 starter `miko.json`，把所需 Claude
+Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已有设置前先
+备份，并把 `.miko/state/` 加入 `.gitignore`。命令可以安全重复运行。使用
+`--skill <name>` 和 `--path <prefix>` 定制 starter spec；准备好阻止缺失证据
+后再加 `--enforce`。修改 Hook 后请重新启动 Claude 会话；使用 `--dry-run`
+可只预览改动。Codex 和 Gemini 可分别使用 `--host codex` 或 `--host gemini`。
+
+初始化器不会覆盖已有的 `miko.json`；请按项目实际情况编辑它。会话元数据写入
+`.miko/state/`，该目录应保持忽略。旧 `.miko/contracts.json` 数组仍可读取，
+但不再是推荐的开发者入口。
 
 花费模型额度前，先运行完全离线的预检：
 

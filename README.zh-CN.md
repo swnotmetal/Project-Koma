@@ -104,9 +104,15 @@ curl http://localhost:8080/self-test
 每层独立使用。叠加：Gate 过滤 → Scout 控流 → Core 存数据。
 
 **Alpha：`koma-miko`** — 验证 agent 是否加载了必需 skill、动作是否符合契约，
-以及测试或 UI 渲染检查等完成证据是否真实存在。核心包使用
-`npm install koma-miko@alpha`；无需 API key 即可运行
-`npx koma-miko@alpha demo`。DeepSeek Harness 用户可运行
+以及测试或 UI 渲染检查等完成证据是否真实存在。在 Claude Code 项目中安装并
+自动配置：
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
+```
+
+无需 API key 即可运行 `npx koma-miko@alpha demo`。DeepSeek Harness 用户可运行
 `dsh plugin --profile miko add koma-miko-dsh@alpha`。
 [核心 README →](./packages/koma-miko/README.zh-CN.md) ·
 [DSH adapter →](./packages/koma-miko-dsh/README.md) ·

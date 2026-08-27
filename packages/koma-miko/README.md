@@ -178,13 +178,27 @@ Claude `PostCompact` event. The adapter keeps JSONL as the append-only audit
 record and uses a compact materialized snapshot so each Hook only replays events
 written after the latest snapshot. The ledger is auditable, not tamper-proof.
 
-To try the alpha, install the package, copy the example `miko.json` to the
-project root, and merge the example hooks into
-`.claude/settings.json`. The example is intentionally not enabled automatically:
-its enforced `frontend-design` skill must actually exist in the target project.
-Miko writes session metadata under `.miko/state/`, which should stay ignored.
-Legacy `.miko/contracts.json` arrays remain readable but are no longer the
-preferred developer interface.
+To try the alpha in a Claude Code project, install it and let the initializer
+wire the local files for you:
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
+```
+
+`init` creates a review-only starter `miko.json`, merges the required Claude
+Hooks into `.claude/settings.json` without replacing unrelated settings, backs
+up an existing settings file before changing it, and adds `.miko/state/` to
+`.gitignore`. Run it again safely; it is idempotent. Use `--skill <name>` and
+`--path <prefix>` to tailor the starter spec, or `--enforce` when you are ready
+to block missing evidence. Start a new Claude session after changing Hooks.
+Use `--dry-run` to preview changes. Codex and Gemini layouts can be initialized
+with `--host codex` or `--host gemini`.
+
+The initializer does not overwrite an existing `miko.json`; edit that file to
+match your project. Miko writes session metadata under `.miko/state/`, which
+should stay ignored. Legacy `.miko/contracts.json` arrays remain readable but
+are no longer the preferred developer interface.
 
 Run an entirely offline preflight before spending model credits:
 

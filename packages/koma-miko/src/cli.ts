@@ -5,13 +5,16 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { doctorProject, formatDoctorReport } from './doctor.js';
 import type { DoctorHost } from './doctor.js';
+import { initProject } from './init.js';
 
 function help(): string {
   return [
     'koma-miko demo',
+    'koma-miko init [--project <path>] [--host claude|codex|gemini] [--skill <name>] [--path <prefix>] [--mode review|enforce] [--enforce] [--dry-run]',
     'koma-miko doctor [--project <path>] [--host claude|codex|gemini] [--json] [--strict]',
     '',
     'Runs a deterministic, no-API Agent Spec replay.',
+    'Initializes a starter Agent Spec and host Hooks without overwriting existing settings.',
     'Runs offline checks for miko.json, host Skills, Hooks, and Git ignore.',
   ].join('\n');
 }
@@ -19,6 +22,14 @@ function help(): string {
 function option(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function hasFlag(args: string[], name: string): boolean {
+  return args.includes(name);
+}
+
+function validHost(value: string | undefined): value is DoctorHost {
+  return value === 'claude' || value === 'codex' || value === 'gemini';
 }
 
 const args = process.argv.slice(2);
@@ -32,13 +43,55 @@ if (args[0] === 'demo') {
   } else if (result.status !== 0) {
     process.exitCode = result.status ?? 1;
   }
+} else if (args[0] === 'init') {
+  const projectRoot = path.resolve(option(args, '--project') ?? process.cwd());
+  const requestedHost = option(args, '--host') ?? 'claude';
+  if (!validHost(requestedHost)) {
+    process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, or gemini.\n`);
+    process.exitCode = 1;
+  } else {
+    const requestedMode = option(args, '--mode');
+    const mode = hasFlag(args, '--enforce') ? 'enforce' : requestedMode ?? 'review';
+    if (mode !== 'review' && mode !== 'enforce') {
+      process.stdout.write(`Unknown mode "${mode}". Choose review or enforce.\n`);
+      process.exitCode = 1;
+    } else {
+      try {
+        const result = initProject(projectRoot, {
+          host: requestedHost,
+          skill: option(args, '--skill'),
+          pathPrefix: option(args, '--path'),
+          mode,
+          dryRun: hasFlag(args, '--dry-run'),
+        });
+        const prefix = hasFlag(args, '--dry-run') ? 'Miko init (dry run)' : 'Miko init';
+        process.stdout.write(`${prefix} (${result.host}) — ${result.projectRoot}\n`);
+        process.stdout.write(result.changes.length > 0
+          ? result.changes.map((change) => `[OK] ${change}`).join('\n') + '\n'
+          : '[OK] Project is already initialized; no files changed.\n');
+        if (result.backupPath) process.stdout.write(`[OK] backed up existing settings to ${result.backupPath}\n`);
+        if (hasFlag(args, '--dry-run')) {
+          process.stdout.write('Review the generated starter spec, then start a new host session.\n');
+        } else {
+          const report = doctorProject(result.projectRoot, { host: result.host });
+          process.stdout.write(`${formatDoctorReport(report)}\n`);
+          process.stdout.write('Edit miko.json to match your project, then start a new host session.\n');
+          if (!report.ok) process.exitCode = 1;
+        }
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        process.stdout.write(`Miko init failed: ${reason}\n`);
+        process.exitCode = 1;
+      }
+    }
+  }
 } else if (args[0] !== 'doctor') {
   process.stdout.write(`${help()}\n`);
   process.exitCode = args.length === 0 || args.includes('--help') ? 0 : 1;
 } else {
   const projectRoot = path.resolve(option(args, '--project') ?? process.cwd());
   const requestedHost = option(args, '--host') ?? 'claude';
-  if (requestedHost !== 'claude' && requestedHost !== 'codex' && requestedHost !== 'gemini') {
+  if (!validHost(requestedHost)) {
     process.stdout.write(`Unknown host "${requestedHost}". Choose claude, codex, or gemini.\n`);
     process.exitCode = 1;
   } else {
