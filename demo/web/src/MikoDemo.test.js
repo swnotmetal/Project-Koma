@@ -17,7 +17,11 @@ describe('Miko public demo', () => {
     expect(html).toContain('id="tab-btn-miko" aria-controls="tab-miko" aria-selected="true"');
     expect(html).toContain('class="tabpanel active" id="tab-miko"');
     expect(html).toContain('id="miko-terminal"');
-    expect(html).toContain('Run 10-sec demo');
+    expect(html).toContain('Play 10-sec demo');
+    expect(html).toContain('Show next step');
+    expect(html).toContain('Restart demo');
+    expect(html).toContain('class="miko-proof-list"');
+    expect(html).not.toContain('class="verified"');
     expect(html).toContain("mikoProgress.textContent = '0 / ' + mikoSteps.length");
     expect(html).toContain("number.textContent = 'Scenario ' + (index + 1) + ' / ' + mikoSteps.length");
     expect(html).toContain("scenario: 'Unsafe edit attempt'");
