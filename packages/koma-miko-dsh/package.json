@@ -1,6 +1,6 @@
 {
   "name": "koma-miko-dsh",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "description": "DeepSeek Harness adapter for Koma Miko Agent Specs.",
   "author": "Shuang Wu",
   "type": "module",
@@ -32,7 +32,7 @@
     }
   },
   "dependencies": {
-    "koma-miko": "0.1.0-alpha.1"
+    "koma-miko": "0.1.0-alpha.4"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "4.0.1",
