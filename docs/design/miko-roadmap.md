@@ -11,7 +11,7 @@ traffic-light result while an agent works.
 
 Preferred product sentence:
 
-> Miko is a local contract verifier for Claude Code, Codex, Gemini, and later MCP agent tools.
+> Miko is a local contract verifier for Claude Code, Codex, Gemini, VS Code Copilot, and later MCP agent tools.
 > It checks observable preparation, action, and completion evidence.
 
 Do not claim "first", "tamper-proof", "100% compliant", or that Miko eliminates
@@ -19,6 +19,13 @@ hallucination. `observed` evidence is only as trustworthy as the local host and
 append-only JSONL is auditable, not cryptographically immutable.
 
 ## Developer experience
+
+**Product principle: minimize tester and user labor.** If Miko can detect,
+generate, configure, validate, sanitize, or clean up a test step, Miko should do
+it. External testers should not have to download example files, understand Hook
+locations, invent a safe fixture, inspect raw transcripts, or manually redact
+logs. The target onboarding shape is one command to create an isolated,
+reproducible probe and one small result bundle to return.
 
 - [x] Machine-readable `PREPARE`, `PRE_ACTION`, and `COMPLETE` checkpoints.
 - [x] Bounded `🔴 DENY` / `🟡 REVIEW` / `🟢 ALLOW` terminal rendering.
@@ -33,6 +40,13 @@ append-only JSONL is auditable, not cryptographically immutable.
   raw events and the Agent Spec expandable, with no model backend required.
 - [x] Publish a developer recovery playbook for common PREPARE, PRE_ACTION, and
   COMPLETE denials.
+- [ ] Add a one-command VS Code Copilot probe that creates an isolated Skill,
+  Agent Spec, Hook configuration, and disposable `src/miko-probe` fixture.
+- [ ] Emit a privacy-safe probe report containing only host/version metadata,
+  Hook event order, tool names, argument-key names, and Miko decisions; never
+  ask testers to send raw Agent Debug Logs by default.
+- [ ] Make the probe clean up its fixture automatically or print one explicit,
+  recoverable cleanup command.
 
 ## Evidence ledger
 
