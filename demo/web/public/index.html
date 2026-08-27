@@ -200,6 +200,32 @@
     .demo-evidence-row dt, .demo-evidence-row dd { margin: 0; }
     .demo-evidence-row dt { color: var(--muted); font: 600 10px/1.35 var(--mono); text-transform: uppercase; letter-spacing: 0.04em; }
     .demo-evidence-row dd { color: var(--text); font: 650 var(--fs-xs)/1.4 var(--mono); }
+    .install-card {
+      display: grid; grid-template-columns: minmax(190px, 0.62fr) minmax(0, 1.38fr); gap: var(--sp-4); align-items: center;
+      margin: 0 0 var(--sp-4); padding: 17px 18px; border: 1px solid var(--border); border-radius: var(--r-md);
+      background: var(--panel); box-shadow: 0 10px 30px rgba(34, 27, 22, 0.035);
+    }
+    .install-kicker { display: block; color: var(--accent-strong); font: 800 10px/1.2 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; }
+    .install-title { margin: 5px 0 4px; font-size: var(--fs-md); line-height: 1.3; }
+    .install-docs { color: var(--muted); font-size: var(--fs-xs); text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; transition: color var(--t), text-decoration-color var(--t); }
+    .install-docs:hover { color: var(--accent-strong); text-decoration-color: currentColor; }
+    .install-shell { min-width: 0; }
+    .install-command-row {
+      display: grid; grid-template-columns: minmax(0, 1fr) auto; overflow: hidden;
+      border: 1px solid #292d32; border-radius: var(--r-sm); background: #17191c;
+    }
+    .install-command { margin: 0; padding: 11px 14px; overflow-x: auto; color: #e5e9ee; font: 12px/1.65 var(--mono); white-space: pre; scrollbar-width: thin; }
+    .install-copy {
+      min-height: 44px; min-width: 164px; border: 0; border-left: 1px solid #383d43; padding: 9px 14px;
+      background: #292d32; color: #f0f2f4; cursor: pointer; font: 700 var(--fs-xs)/1.3 var(--sans);
+      transition: color var(--t), background var(--t), box-shadow var(--t);
+    }
+    .install-copy:hover { background: #34383e; color: #f0ad90; }
+    .install-copy:focus-visible { position: relative; z-index: 1; outline: 3px solid rgba(229,138,99,0.42); outline-offset: -3px; }
+    .install-copy:disabled { cursor: default; opacity: 1; }
+    .install-copy.copied { background: #21372f; color: #9de0b7; }
+    .install-copy.copy-failed { background: #3c2c22; color: #f0c36c; }
+    .install-note { margin: 7px 2px 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
     .scenario-bar { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2); margin: var(--sp-3) 0 var(--sp-4); }
     .scenario-label { color: var(--muted); font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-right: var(--sp-1); }
     .scenario-chip { min-height: 34px; border: 1px solid var(--border); border-radius: 999px; padding: 6px 11px; background: var(--panel); color: var(--muted); cursor: pointer; font: 600 var(--fs-xs) var(--mono); transition: color var(--t), border-color var(--t), background var(--t); }
@@ -239,10 +265,14 @@
     @media (max-width: 900px) {
       .defense-hero { grid-template-columns: 1fr; align-items: start; }
       .demo-evidence { justify-self: start; width: 100%; }
+      .install-card { grid-template-columns: 1fr; gap: var(--sp-3); }
       .defense-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 520px) {
       .field-grid { grid-template-columns: 1fr; }
+      .install-card { padding: var(--sp-3); }
+      .install-command-row { grid-template-columns: 1fr; }
+      .install-copy { width: 100%; min-width: 0; border-left: 0; border-top: 1px solid #383d43; }
       .defense-terminal .miko-terminal-body { height: 390px; }
       .defense-terminal-footer { align-items: flex-start; flex-direction: column; }
       .defense-terminal-footer button { width: 100%; }
@@ -412,6 +442,20 @@
           </dl>
         </aside>
       </div>
+      <section class="install-card" aria-labelledby="gate-install-title">
+        <div>
+          <span class="install-kicker">Install Gate</span>
+          <h3 class="install-title" id="gate-install-title">Guard an LLM endpoint</h3>
+          <a class="install-docs" href="https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-gate/README.md" target="_blank" rel="noopener">Open the setup guide ↗</a>
+        </div>
+        <div class="install-shell">
+          <div class="install-command-row">
+            <pre class="install-command"><code id="install-gate-command">npm install koma-gate</code></pre>
+            <button class="install-copy" type="button" data-copy-target="install-gate-command" data-default-label="Copy Gate install" data-success-label="Gate install copied">Copy Gate install</button>
+          </div>
+          <p class="install-note">Use it before your application model call. Express and Fastify examples are in the guide.</p>
+        </div>
+      </section>
       <div class="grid">
         <section class="panel">
           <h2>Try a prompt</h2>
@@ -514,6 +558,21 @@
         </aside>
       </div>
 
+      <section class="install-card" aria-labelledby="scout-install-title">
+        <div>
+          <span class="install-kicker">Install Scout</span>
+          <h3 class="install-title" id="scout-install-title">Protect a voice or upload boundary</h3>
+          <a class="install-docs" href="https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-scout/README.md" target="_blank" rel="noopener">Open the setup guide ↗</a>
+        </div>
+        <div class="install-shell">
+          <div class="install-command-row">
+            <pre class="install-command"><code id="install-scout-command">npm install koma-scout</code></pre>
+            <button class="install-copy" type="button" data-copy-target="install-scout-command" data-default-label="Copy Scout install" data-success-label="Scout install copied">Copy Scout install</button>
+          </div>
+          <p class="install-note">Add it before transcription, file parsing, or any other expensive downstream work.</p>
+        </div>
+      </section>
+
       <div class="scenario-bar" aria-label="Scout scenarios">
         <span class="scenario-label">Select a request</span>
         <button class="scenario-chip risky" type="button" data-scout-scenario="oversized" aria-pressed="true">6 MB upload bomb</button>
@@ -585,6 +644,21 @@
         </aside>
       </div>
 
+      <section class="install-card" aria-labelledby="core-install-title">
+        <div>
+          <span class="install-kicker">Install Core</span>
+          <h3 class="install-title" id="core-install-title">Separate search from protected content</h3>
+          <a class="install-docs" href="https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-core/README.md" target="_blank" rel="noopener">Open the setup guide ↗</a>
+        </div>
+        <div class="install-shell">
+          <div class="install-command-row">
+            <pre class="install-command"><code id="install-core-command">npm install koma-core</code></pre>
+            <button class="install-copy" type="button" data-copy-target="install-core-command" data-default-label="Copy Core install" data-success-label="Core install copied">Copy Core install</button>
+          </div>
+          <p class="install-note">Keep token derivation and protected payload retrieval on your backend.</p>
+        </div>
+      </section>
+
       <div class="scenario-bar" aria-label="Core scenarios">
         <span class="scenario-label">Select a path</span>
         <button class="scenario-chip risky" type="button" data-core-scenario="attack" aria-pressed="true">Scraper attack</button>
@@ -648,6 +722,22 @@
           </dl>
         </aside>
       </div>
+
+      <section class="install-card" aria-labelledby="miko-install-title">
+        <div>
+          <span class="install-kicker">Install Miko · Alpha</span>
+          <h3 class="install-title" id="miko-install-title">Keep Claude Code on-spec</h3>
+          <a class="install-docs" href="https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-miko/README.md" target="_blank" rel="noopener">See Codex, Gemini, and Copilot setup ↗</a>
+        </div>
+        <div class="install-shell">
+          <div class="install-command-row">
+            <pre class="install-command"><code id="install-miko-command">npm install -D koma-miko@alpha
+npx koma-miko init --host claude</code></pre>
+            <button class="install-copy" type="button" data-copy-target="install-miko-command" data-default-label="Copy Miko setup" data-success-label="Miko setup copied">Copy Miko setup</button>
+          </div>
+          <p class="install-note">Paste both lines in the project root. The initializer creates the Agent Spec and Claude hook configuration.</p>
+        </div>
+      </section>
 
       <div class="miko-grid">
         <section class="panel miko-terminal-panel" aria-label="Simulated Claude Code terminal">
@@ -822,6 +912,49 @@
         else if (e.key === 'Home') next = 0;
         else if (e.key === 'End') next = tabs.length - 1;
         if (next !== null) { e.preventDefault(); activateTab(next, true); }
+      });
+    });
+
+    // ---- Install commands ----
+    async function writeInstallCommand(command) {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(command);
+        return;
+      }
+
+      const copyArea = document.createElement('textarea');
+      copyArea.value = command;
+      copyArea.setAttribute('readonly', '');
+      copyArea.style.position = 'fixed';
+      copyArea.style.opacity = '0';
+      document.body.appendChild(copyArea);
+      copyArea.select();
+      const copied = document.execCommand('copy');
+      copyArea.remove();
+      if (!copied) throw new Error('Clipboard unavailable');
+    }
+
+    document.querySelectorAll('.install-copy').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const command = document.getElementById(button.dataset.copyTarget)?.textContent.trim();
+        if (!command) return;
+
+        button.disabled = true;
+        button.classList.remove('copied', 'copy-failed');
+        try {
+          await writeInstallCommand(command);
+          button.textContent = button.dataset.successLabel;
+          button.classList.add('copied');
+        } catch {
+          button.textContent = 'Copy failed — select command';
+          button.classList.add('copy-failed');
+        }
+
+        window.setTimeout(() => {
+          button.textContent = button.dataset.defaultLabel;
+          button.classList.remove('copied', 'copy-failed');
+          button.disabled = false;
+        }, 3000);
       });
     });
 
