@@ -233,6 +233,16 @@ signals. See [`examples/codex`](./examples/codex) and
 
 ## Automated replay
 
+Try the published alpha without cloning the repository:
+
+```sh
+npx koma-miko@alpha demo
+```
+
+This runs the ten deterministic Agent Spec profiles with no API key or project
+configuration. For source-level development, the same replay can be run from
+the repository with `npm run eval:replay -w koma-miko`.
+
 `npm run eval:replay -w koma-miko` runs ten simplified skill contracts without
 an API key. For every skill it verifies three cases: missing evidence, an agent
 claim (`asserted`), and a host-observed load (`observed`). Only observed or

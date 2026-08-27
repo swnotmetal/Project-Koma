@@ -201,6 +201,15 @@ alpha 也提供两个面向文字终端的窄范围 Hook 适配器：
 
 ## 自动化回放
 
+无需克隆仓库即可试用已发布的 alpha：
+
+```sh
+npx koma-miko@alpha demo
+```
+
+该命令会在无需 API key 或项目配置的情况下运行十个确定性的 Agent Spec。
+源码级开发时，可在仓库内使用 `npm run eval:replay -w koma-miko` 运行同一回放。
+
 `npm run eval:replay -w koma-miko` 无需 API key，即可运行十个极简 Skill
 合约。每个 Skill 都验证三种情况：没有证据、agent 自述（`asserted`）以及
 宿主观察到的加载（`observed`）。只有 observed 或 external 证据能满足合约。

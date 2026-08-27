@@ -105,7 +105,8 @@ curl http://localhost:8080/self-test
 
 **Alpha：`koma-miko`** — 验证 agent 是否加载了必需 skill、动作是否符合契约，
 以及测试或 UI 渲染检查等完成证据是否真实存在。核心包使用
-`npm install koma-miko@alpha`；DeepSeek Harness 用户可运行
+`npm install koma-miko@alpha`；无需 API key 即可运行
+`npx koma-miko@alpha demo`。DeepSeek Harness 用户可运行
 `dsh plugin --profile miko add koma-miko-dsh@alpha`。
 [核心 README →](./packages/koma-miko/README.zh-CN.md) ·
 [DSH adapter →](./packages/koma-miko-dsh/README.md) ·

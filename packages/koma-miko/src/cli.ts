@@ -1,12 +1,17 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import { dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { doctorProject, formatDoctorReport } from './doctor.js';
 import type { DoctorHost } from './doctor.js';
 
 function help(): string {
   return [
+    'koma-miko demo',
     'koma-miko doctor [--project <path>] [--host claude|codex|gemini] [--json] [--strict]',
     '',
+    'Runs a deterministic, no-API Agent Spec replay.',
     'Runs offline checks for miko.json, host Skills, Hooks, and Git ignore.',
   ].join('\n');
 }
@@ -17,7 +22,17 @@ function option(args: string[], name: string): string | undefined {
 }
 
 const args = process.argv.slice(2);
-if (args[0] !== 'doctor') {
+if (args[0] === 'demo') {
+  const packageRoot = path.resolve(dirname(fileURLToPath(import.meta.url)), '..');
+  const replay = path.join(packageRoot, 'evals', 'replay.mjs');
+  const result = spawnSync(process.execPath, [replay], { stdio: 'inherit' });
+  if (result.error) {
+    process.stderr.write(`Unable to run Miko demo: ${result.error.message}\n`);
+    process.exitCode = 1;
+  } else if (result.status !== 0) {
+    process.exitCode = result.status ?? 1;
+  }
+} else if (args[0] !== 'doctor') {
   process.stdout.write(`${help()}\n`);
   process.exitCode = args.length === 0 || args.includes('--help') ? 0 : 1;
 } else {
