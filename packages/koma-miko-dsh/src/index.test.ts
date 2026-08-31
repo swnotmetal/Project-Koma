@@ -104,6 +104,7 @@ function configuredAdapter(
   cwd: string,
   overrides: Partial<Config> = {},
   warn = vi.fn(),
+  info = vi.fn(),
 ) {
   const adapter = createDshMikoAdapter({
     checks: [{
@@ -113,16 +114,16 @@ function configuredAdapter(
       equals: 'npm test -- Hero',
     }],
     ...overrides,
-  }, { warn });
+  }, { warn, info });
   const { agent, steer } = fakeAgent(cwd);
   adapter.sessionStart(agent, 'startup');
-  return { adapter, agent, steer, warn };
+  return { adapter, agent, steer, warn, info };
 }
 
 describe('koma-miko-dsh experimental adapter', () => {
   it('blocks an applicable write until DSH observes the required skill and reference', async () => {
     const cwd = workspace(uiSpec());
-    const { adapter, agent } = configuredAdapter(cwd);
+    const { adapter, agent, info } = configuredAdapter(cwd);
     const write = execution(agent, 'write', {
       file_path: path.join(cwd, 'src/ui/Hero.tsx'),
       content: 'private source code',
@@ -143,13 +144,14 @@ describe('koma-miko-dsh experimental adapter', () => {
     });
     expect(await adapter.beforeTool(read, allowNext())).toEqual({ kind: 'allow' });
     adapter.toolResult(read, success);
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('Miko recovered'));
 
     expect(await adapter.beforeTool(write, allowNext())).toEqual({ kind: 'allow' });
   });
 
   it('records only authoritative successful outcomes and satisfies completion', async () => {
     const cwd = workspace(uiSpec());
-    const { adapter, agent, steer } = configuredAdapter(cwd);
+    const { adapter, agent, steer, info } = configuredAdapter(cwd);
     const write = execution(agent, 'write', {
       file_path: 'src/ui/Hero.tsx',
       content: 'must not enter evidence',
@@ -161,6 +163,7 @@ describe('koma-miko-dsh experimental adapter', () => {
       description: 'Run targeted Hero tests',
     });
 
+    expect((await adapter.beforeTool(write, allowNext())).kind).toBe('deny');
     adapter.toolResult(skill, success);
     adapter.toolResult(read, success);
     adapter.toolResult(write, success);
@@ -168,6 +171,7 @@ describe('koma-miko-dsh experimental adapter', () => {
     adapter.turnStopping(agent);
 
     expect(steer).not.toHaveBeenCalled();
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('Miko verified'));
     const evidence = adapter.snapshot(agent)?.evidence.map((item) => item.event) ?? [];
     expect(evidence).toContainEqual({
       type: 'check_passed', name: 'targeted-tests', source: 'observed',

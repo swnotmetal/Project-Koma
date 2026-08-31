@@ -45,14 +45,36 @@ describe('Gemini CLI adapter', () => {
       tool_input: { name: 'product-design' },
     }).output).toBeUndefined();
 
-    handleGeminiHookEvent(miko, 'gemini-session', {
+    const recovered = handleGeminiHookEvent(miko, 'gemini-session', {
       ...edit,
       hook_event_name: 'AfterTool',
       tool_name: 'activate_skill',
       tool_input: { name: 'product-design' },
       tool_response: { llmContent: 'loaded' },
     });
+    expect(recovered.output).toMatchObject({ systemMessage: expect.stringContaining('Miko recovered') });
     expect(handleGeminiHookEvent(miko, 'gemini-session', edit).output).toBeUndefined();
+
+    const completed = handleGeminiHookEvent(miko, 'gemini-session', {
+      session_id: 'gemini-session', cwd: 'D:\\portfolio', hook_event_name: 'AfterAgent',
+      stop_hook_active: false,
+    });
+    expect(completed.output).toMatchObject({ systemMessage: expect.stringContaining('Miko verified') });
+  });
+
+  it('uses the host confirmation path for REVIEW instead of hard-denying it', () => {
+    const miko = createMiko({ contracts: [{ ...contract, mode: 'review' }] });
+    miko.startTask({ sessionId: 'gemini-session', taskId: 'gemini-session', tags: [] });
+    const reviewed = handleGeminiHookEvent(miko, 'gemini-session', {
+      session_id: 'gemini-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'BeforeTool',
+      tool_name: 'replace',
+      tool_input: { file_path: 'src/ui/Hero.tsx' },
+    });
+
+    expect(reviewed.verification?.decision).toBe('REVIEW');
+    expect(reviewed.output).toMatchObject({ decision: 'ask' });
   });
 
   it('accepts only successful structured Gemini tool responses', () => {

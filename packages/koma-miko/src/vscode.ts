@@ -1,7 +1,13 @@
 import type { EvidenceEvent, Miko, VerificationResult } from './index.js';
-import { formatMikoDecision } from './index.js';
+import {
+  formatMikoAgentContext,
+  formatMikoCompletionReceipt,
+  formatMikoUserNotice,
+  toHostInteractionDecision,
+} from './index.js';
 import {
   evidenceFromSuccessfulHostTool,
+  recordHostEvidence,
   toProjectRelativePath,
   verifyBeforeHostTool,
   type HostHookHandlingResult,
@@ -127,15 +133,18 @@ export function canonicalVSCodeCalls(
   return [{ tool, arguments: {}, cwd }];
 }
 
-function blockVSCodeTool(result: VerificationResult): object {
-  const message = formatMikoDecision(result);
+function decideVSCodeTool(result: VerificationResult): object | undefined {
+  const interaction = toHostInteractionDecision(result);
+  if (interaction === 'defer') return undefined;
+  const userNotice = formatMikoUserNotice(result);
+  const agentContext = formatMikoAgentContext(result);
   return {
-    systemMessage: message,
+    systemMessage: userNotice,
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
-      permissionDecision: 'deny',
-      permissionDecisionReason: message,
-      additionalContext: message,
+      permissionDecision: interaction,
+      permissionDecisionReason: agentContext,
+      additionalContext: agentContext,
     },
   };
 }
@@ -155,7 +164,9 @@ export function handleVSCodeHookEvent(
   input: VSCodeHookInput,
 ): HostHookHandlingResult {
   const evidence = evidenceFromVSCodeEvent(input);
-  for (const event of evidence) miko.record({ taskId, ...event });
+  const recoveryNotice = recordHostEvidence(miko, taskId, evidence);
+
+  if (recoveryNotice) return { output: { systemMessage: recoveryNotice }, evidence };
 
   if (input.hook_event_name === 'PreCompact') {
     return {
@@ -170,9 +181,10 @@ export function handleVSCodeHookEvent(
     for (const call of canonicalVSCodeCalls(event.tool_name, event.tool_input, event.cwd)) {
       const checked = verifyBeforeHostTool(miko, taskId, call, VSCODE_PROFILE);
       if (checked.remediation) continue;
-      if (checked.verification.decision !== 'ALLOW') {
+      const output = decideVSCodeTool(checked.verification);
+      if (output) {
         return {
-          output: blockVSCodeTool(checked.verification),
+          output,
           evidence,
           verification: checked.verification,
         };
@@ -186,21 +198,23 @@ export function handleVSCodeHookEvent(
     const event = input as VSCodeStopInput;
     const verification = miko.verifyCompletion(taskId);
     if (verification.decision !== 'ALLOW' && !event.stop_hook_active) {
-      const message = formatMikoDecision(verification);
+      const userNotice = formatMikoUserNotice(verification);
+      const agentContext = formatMikoAgentContext(verification);
       return {
         output: {
-          systemMessage: message,
+          systemMessage: userNotice,
           hookSpecificOutput: {
             hookEventName: 'Stop',
             decision: 'block',
-            reason: message,
+            reason: agentContext,
           },
         },
         evidence,
         verification,
       };
     }
-    return { evidence, verification };
+    const receipt = formatMikoCompletionReceipt(verification, miko.getEvidence(taskId).length);
+    return { ...(receipt ? { output: { systemMessage: receipt } } : {}), evidence, verification };
   }
 
   return { evidence };

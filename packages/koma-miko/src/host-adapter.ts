@@ -5,6 +5,7 @@ import type {
   RiskLevel,
   VerificationResult,
 } from './index.js';
+import { formatMikoRecoveryNotice } from './index.js';
 
 export const DEFAULT_PATH_ARGUMENT_NAMES = ['file_path', 'path', 'filePath'] as const;
 
@@ -37,6 +38,19 @@ export interface HostHookHandlingResult {
   verification?: VerificationResult;
   contextAdvance?: ReturnType<Miko['advanceContext']>;
   contextAdvanceReason?: 'compaction' | 'resume' | 'manual';
+}
+
+/** Record a successful host event and report only a real PREPARE transition. */
+export function recordHostEvidence(
+  miko: Miko,
+  taskId: string,
+  evidence: readonly EvidenceEvent[],
+): string | undefined {
+  if (evidence.length === 0) return undefined;
+  const before = miko.verifyPreparation(taskId);
+  for (const event of evidence) miko.record({ taskId, ...event });
+  const after = miko.verifyPreparation(taskId);
+  return formatMikoRecoveryNotice(before, after);
 }
 
 function nonEmptyString(value: unknown): value is string {

@@ -160,7 +160,8 @@ Next: load the required skill/reference, then retry the blocked action.
 ## Claude Code hook mapping
 
 `toClaudePreToolUseDecision(result)` maps Miko decisions to Claude Code's
-structured `PreToolUse` output:
+structured `PreToolUse` output when an integration explicitly wants a complete
+three-way mapping:
 
 - `ALLOW` → `allow`
 - `DENY` → `deny`
@@ -169,6 +170,20 @@ structured `PreToolUse` output:
 Non-ALLOW results also include a concise `systemMessage` for the user and
 `additionalContext` for the agent. Miko Verifier has no graphical UI: each host
 renders the same structured decision using its native text/approval surface.
+Those native surfaces now use one visible status language across adapters:
+`🔴 Miko paused/blocked` for DENY, `🟡 Miko needs your decision` for REVIEW,
+`🟢 Miko recovered` when newly observed evidence clears PREPARE, and a compact
+`🟢 Miko verified` receipt when the active Agent Specs reach COMPLETE. The
+user-facing status stays short; exact missing evidence remains in agent context
+and the local ledger.
+Packaged adapters apply one interaction rule consistently: an `ALLOW` defers to
+the host's existing permission policy, a `REVIEW` opens the host's native
+approval path, and a `DENY` blocks only the proposed action while giving the
+agent recovery context. Recoverable denials should therefore be retried by the
+agent without asking the user to repair Miko state manually. The shared
+`toHostInteractionDecision(result)` helper exposes this as
+`defer | ask | deny`; the packaged Claude adapter intentionally emits no
+explicit `allow` even though the lower-level Claude mapper can produce one.
 
 The included `koma-miko-claude-hook` executable provides a minimal durable
 Claude Code adapter. It observes automatic `Skill` calls, direct `/skill-name`
@@ -244,21 +259,26 @@ See the official [platform overview](https://code.claude.com/docs/en/platforms),
 The alpha also ships narrow adapters for these host Hook surfaces:
 
 - `koma-miko-codex-hook` consumes Codex `SessionStart`, `PreToolUse`,
-  `PostToolUse`, `PostCompact`, and `Stop` events. It maps `DENY` to Codex's
-  native `permissionDecision: deny`; it deliberately does not emit `allow`, so
-  Codex's own permission policy remains authoritative. `apply_patch` targets
+  `PostToolUse`, `PostCompact`, and `Stop` events. It maps `REVIEW` to
+  `permissionDecision: ask` and `DENY` to `permissionDecision: deny`; it
+  deliberately does not emit `allow`, so Codex's own permission policy remains
+  authoritative. `apply_patch` targets
   are recorded as path metadata only, and the adapter recognizes a tiny,
   read-only `Get-Content`/`cat` subset for Skill reloads.
 - `koma-miko-gemini-hook` consumes Gemini `BeforeTool`, `AfterTool`,
   `SessionStart`, `PreCompress`, and `AfterAgent` events. It maps `DENY` to
-  Gemini's native `decision: deny` and records only successful tool metadata.
+  `decision: deny`, maps `REVIEW` to the current CLI's interactive
+  `decision: ask` path, and records only successful tool metadata. A
+  non-interactive Gemini run has no user to ask and can therefore treat review
+  as denial. Older Gemini CLI releases that predate Hook `ask` need updating.
   Project-level Gemini hooks may require the user to trust the hook fingerprint;
   headless automation should install the command in a trusted user settings
   layer, as the live runner does.
 - `koma-miko-vscode-hook` consumes VS Code `SessionStart`, `PreToolUse`,
-  `PostToolUse`, `PreCompact`, and `Stop`. It uses the documented nested deny
-  and stop outputs, splits multi-file edits into separately scoped paths, and
-  never returns an explicit allow over VS Code's own approval policy. The
+  `PostToolUse`, `PreCompact`, and `Stop`. It uses the documented nested
+  `permissionDecision: ask | deny` and stop outputs, splits multi-file edits
+  into separately scoped paths, and never returns an explicit allow over VS
+  Code's own approval policy. The
   initializer writes `.github/hooks/miko.json`; no extension or Miko API key is
   required.
 

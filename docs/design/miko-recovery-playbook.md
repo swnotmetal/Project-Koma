@@ -16,12 +16,21 @@ call, or grants a permission that the host did not grant.
 
 ## Host-specific notes
 
-- Claude Code maps `REVIEW` to its native `ask` surface and `DENY` to `deny`.
-- Codex maps `DENY` to `permissionDecision: deny`; the adapter does not emit an
-  explicit allow, so Codex's permission policy remains authoritative.
-- Gemini maps `DENY` to `decision: deny`; project Hook fingerprints may require
-  a one-time user trust action before a headless run can observe anything.
-- DeepSeek Harness may steer one corrective completion step, bounded by
+Every interactive adapter follows the same rule: defer when Miko returns
+`ALLOW`, use the host's native approval path for `REVIEW`, and block the
+proposed action for `DENY`. Deferring is not an approval; the host's own policy
+remains authoritative. A denial with an exact recovery step should be handled
+by the agent without asking the user to repair evidence manually.
+
+- Claude Code and VS Code map `REVIEW` to `permissionDecision: ask` and `DENY`
+  to `permissionDecision: deny`.
+- Codex uses the same narrow `ask` / `deny` mapping and never emits an explicit
+  allow from its packaged adapter.
+- Gemini maps `REVIEW` to `decision: ask` on current interactive CLI releases
+  and `DENY` to `decision: deny`; non-interactive mode may deny because no user
+  is available. Project Hook fingerprints may require a one-time trust action.
+- DeepSeek Harness maps `REVIEW` to native `ask` by default. It may steer one
+  corrective completion step, bounded by
   `maxCompletionSteers`; it is not an infinite retry loop.
 
 ## Operator checklist

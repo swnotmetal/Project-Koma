@@ -110,6 +110,12 @@ adapter returns both a user-visible `systemMessage` and agent-visible recovery
 context. This keeps Miko useful on text-only surfaces without coupling the verifier
 package to one UI toolkit.
 
+All packaged host adapters use the same interaction policy: `ALLOW` defers to
+the host's existing permission engine, `REVIEW` requests native human approval,
+and `DENY` blocks the proposed action while preserving an explicit recovery
+path for the agent. Miko does not auto-approve a tool call merely because its
+own contract is satisfied.
+
 ### Claude surface matrix
 
 | Surface | Alpha expectation | Important limit |

@@ -63,8 +63,11 @@ async function codexCase(root, stateDir) {
   runHook(bin, { ...read, hook_event_name: 'PostToolUse', tool_response: 'private-skill-body' }, env, root);
   assertThat(runHook(bin, edit, env, root) === undefined, 'Expected Codex edit after Skill evidence');
   runHook(bin, { ...edit, hook_event_name: 'PostToolUse', tool_response: 'Done!' }, env, root);
-  assertThat(runHook(bin, { ...base, hook_event_name: 'Stop', stop_hook_active: false }, env, root) === undefined,
-    'Expected Codex completion');
+  const completion = runHook(bin, {
+    ...base, hook_event_name: 'Stop', stop_hook_active: false,
+  }, env, root);
+  assertThat(completion?.systemMessage?.includes('Miko verified'),
+    'Expected Codex completion receipt');
 
   const ledger = await ledgerText(stateDir);
   assertThat(ledger.includes('PREPARATION_EVIDENCE_MISSING'), 'Expected audited Codex denial');
@@ -106,8 +109,11 @@ async function geminiCase(root, stateDir) {
   runHook(bin, { ...skill, hook_event_name: 'AfterTool', tool_response: { llmContent: 'private-skill-body' } }, env, root);
   assertThat(runHook(bin, edit, env, root) === undefined, 'Expected Gemini edit after Skill evidence');
   runHook(bin, { ...edit, hook_event_name: 'AfterTool', tool_response: { llmContent: 'private-tool-output' } }, env, root);
-  assertThat(runHook(bin, { ...base, hook_event_name: 'AfterAgent', stop_hook_active: false }, env, root) === undefined,
-    'Expected Gemini completion');
+  const completion = runHook(bin, {
+    ...base, hook_event_name: 'AfterAgent', stop_hook_active: false,
+  }, env, root);
+  assertThat(completion?.systemMessage?.includes('Miko verified'),
+    'Expected Gemini completion receipt');
 
   const ledger = await ledgerText(stateDir);
   assertThat(ledger.includes('PREPARATION_EVIDENCE_MISSING'), 'Expected audited Gemini denial');
@@ -182,11 +188,13 @@ async function vscodeCase(root, stateDir) {
     hook_event_name: 'PostToolUse',
     tool_response: 'private-tool-response',
   }, env, root);
-  assertThat(runHook(bin, {
+  const completion = runHook(bin, {
     ...base,
     hook_event_name: 'Stop',
     stop_hook_active: false,
-  }, env, root) === undefined, 'Expected VS Code completion');
+  }, env, root);
+  assertThat(completion?.systemMessage?.includes('Miko verified'),
+    'Expected VS Code completion receipt');
 
   const ledger = await ledgerText(stateDir);
   assertThat(ledger.includes('PREPARATION_EVIDENCE_MISSING'), 'Expected audited VS Code denial');

@@ -120,6 +120,19 @@ export interface VerificationResult {
   missing?: string[];
 }
 
+/**
+ * The interaction Miko asks a host to perform for a proposed tool call.
+ * `defer` never grants permission; it leaves the host's own policy authoritative.
+ */
+export type HostInteractionDecision = 'defer' | 'deny' | 'ask';
+
+export function toHostInteractionDecision(
+  result: VerificationResult,
+): HostInteractionDecision {
+  if (result.decision === 'ALLOW') return 'defer';
+  return result.decision === 'REVIEW' ? 'ask' : 'deny';
+}
+
 export interface RecordEvidenceResult {
   accepted: boolean;
   reasonCode: 'EVIDENCE_RECORDED' | 'TASK_NOT_FOUND' | 'INVALID_EVIDENCE';
@@ -880,26 +893,112 @@ export function formatMikoDecision(
   return lines.join('\n');
 }
 
+function isRecoverablePreparation(result: VerificationResult): boolean {
+  return result.reasonCode === 'PREPARATION_EVIDENCE_MISSING' ||
+    result.reasonCode === 'SKILL_DECLARED_BUT_NOT_OBSERVED';
+}
+
+/** A short, host-facing status that keeps Miko visible without exposing ledger detail. */
+export function formatMikoUserNotice(result: VerificationResult): string {
+  if (result.decision === 'REVIEW') {
+    return [
+      `🟡 Miko needs your decision · ${result.checkpoint}`,
+      result.reason,
+      'Choose whether this one action should proceed.',
+    ].join('\n');
+  }
+
+  if (isRecoverablePreparation(result)) {
+    return [
+      '🔴 Miko paused this action · PREPARE',
+      'Required Skill or reference evidence is missing.',
+      'The agent can load it and retry automatically; no manual setup is needed.',
+    ].join('\n');
+  }
+
+  return [
+    `🔴 Miko blocked this action · ${result.checkpoint}`,
+    result.reason,
+    'The action was not sent to the tool.',
+  ].join('\n');
+}
+
+/** Exact recovery instructions for the agent, kept separate from the user-facing notice. */
+export function formatMikoAgentContext(result: VerificationResult): string {
+  const instruction = result.decision === 'REVIEW'
+    ? 'Miko requires the user to choose. Do not bypass this checkpoint or retry unchanged.'
+    : isRecoverablePreparation(result)
+      ? 'Miko paused this call. Briefly attribute the pause to Miko, load the exact missing Skill/reference, then retry the original action.'
+      : 'Miko blocked this call. Briefly attribute the block to Miko and do not retry the same action unchanged.';
+  return `${instruction}\n\n${formatMikoDecision(result)}`;
+}
+
+/** Emit once when newly observed evidence moves PREPARE from red/yellow to green. */
+export function formatMikoRecoveryNotice(
+  before: VerificationResult | undefined,
+  after: VerificationResult | undefined,
+): string | undefined {
+  if (!before || !after || before.decision === 'ALLOW' || after.decision !== 'ALLOW') {
+    return undefined;
+  }
+  if (after.checkpoint !== 'PREPARE' || after.contractIds.length === 0) return undefined;
+  return [
+    '🟢 Miko recovered · PREPARE',
+    'Required preparation is now observed.',
+    'The agent can retry the paused action; normal host permissions still apply.',
+  ].join('\n');
+}
+
+/** A privacy-safe receipt for a guarded turn that satisfies its active Agent Specs. */
+export function formatMikoCompletionReceipt(
+  result: VerificationResult,
+  observedEvidenceCount?: number,
+): string | undefined {
+  if (
+    result.decision !== 'ALLOW' ||
+    result.checkpoint !== 'COMPLETE' ||
+    result.reasonCode !== 'CONTRACT_SATISFIED' ||
+    result.contractIds.length === 0
+  ) {
+    return undefined;
+  }
+  const evidence = observedEvidenceCount === undefined
+    ? undefined
+    : `${observedEvidenceCount} observed evidence event${observedEvidenceCount === 1 ? '' : 's'}`;
+  return [
+    '🟢 Miko verified · COMPLETE',
+    `${result.contractIds.length} Agent Spec${result.contractIds.length === 1 ? '' : 's'} satisfied${evidence ? ` · ${evidence}` : ''}.`,
+    'Prompts, source code, and tool output were not stored.',
+  ].join('\n');
+}
+
 /**
  * Maps a Miko result to Claude Code's structured PreToolUse hook output.
  * The host remains responsible for task/evidence persistence across hook processes.
  */
 export function toClaudePreToolUseDecision(result: VerificationResult): ClaudePreToolUseDecision {
-  const permissionDecision = result.decision === 'ALLOW'
-    ? 'allow'
-    : result.decision === 'DENY'
-      ? 'deny'
-      : 'ask';
-  const message = formatMikoDecision(result);
+  const interaction = toHostInteractionDecision(result);
+  const permissionDecision = interaction === 'defer' ? 'allow' : interaction;
+  const technicalMessage = formatMikoDecision(result);
   return {
-    ...(result.decision === 'ALLOW' ? {} : { systemMessage: message }),
+    ...(result.decision === 'ALLOW' ? {} : { systemMessage: formatMikoUserNotice(result) }),
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecision,
-      permissionDecisionReason: message,
-      ...(result.decision === 'ALLOW' ? {} : { additionalContext: message }),
+      permissionDecisionReason: result.decision === 'ALLOW'
+        ? technicalMessage
+        : formatMikoAgentContext(result),
+      ...(result.decision === 'ALLOW' ? {} : { additionalContext: formatMikoAgentContext(result) }),
     },
   };
 }
 
-export default { createMiko, formatMikoDecision, toClaudePreToolUseDecision };
+export default {
+  createMiko,
+  formatMikoDecision,
+  formatMikoUserNotice,
+  formatMikoAgentContext,
+  formatMikoRecoveryNotice,
+  formatMikoCompletionReceipt,
+  toClaudePreToolUseDecision,
+};

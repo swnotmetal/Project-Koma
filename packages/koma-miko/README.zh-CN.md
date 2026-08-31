@@ -142,10 +142,22 @@ Missing evidence:
 Next: load the required skill/reference, then retry the blocked action.
 ```
 
-`toClaudePreToolUseDecision(result)` 可将 `ALLOW / DENY / REVIEW` 映射到
-Claude Code `PreToolUse` 的 `allow / deny / ask`。非 ALLOW 结果还会同时
+当集成方明确需要完整三态映射时，`toClaudePreToolUseDecision(result)` 可将
+`ALLOW / DENY / REVIEW` 映射到 Claude Code `PreToolUse` 的
+`allow / deny / ask`。非 ALLOW 结果还会同时
 向用户显示精简文字，并把恢复提示交给 agent。Miko Verifier 本身不带图形 UI；
 CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结构化结果。
+所有 adapter 现在统一使用一套可感知状态语言：DENY 显示
+`🔴 Miko 已暂停/拦截`，REVIEW 显示 `🟡 Miko 需要你的决定`，新观察到的证据
+补齐 PREPARE 时显示 `🟢 Miko 已恢复`，活动 Agent Spec 到达 COMPLETE 时显示
+精简的 `🟢 Miko 已验证` 收据。面向用户的状态保持简短；精确缺失项只进入
+agent 上下文与本地账本。
+包内所有 adapter 统一遵守一条交互规则：`ALLOW` 只表示 Miko 不反对，仍由宿主
+自身的权限策略决定；`REVIEW` 调用宿主原生审批；`DENY` 只拦截当前动作，并把
+恢复信息交给 agent。可恢复的拒绝应由 agent 自行补齐证据并重试，不要求用户
+手工修理 Miko 状态。共享的 `toHostInteractionDecision(result)` 将这条规则表达为
+`defer | ask | deny`；包内 Claude adapter 即使底层 mapper 能生成 `allow`，也会
+刻意对 `ALLOW` 不输出显式放行。
 
 包内的 `koma-miko-claude-hook` 提供最小可用的持久化 Claude Code 适配器：
 它观察自动 `Skill` 调用、用户直接输入的 `/skill-name`、`Read`、`Edit` 与
@@ -212,20 +224,24 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 alpha 也提供以下窄范围 Hook 适配器：
 
 - `koma-miko-codex-hook` 消费 Codex 的 `SessionStart`、`PreToolUse`、
-  `PostToolUse`、`PostCompact` 与 `Stop` 事件。`DENY` 映射到 Codex 原生的
-  `permissionDecision: deny`；它刻意不发出 `allow`，让 Codex 自己的权限策略
-  保持最终权威。`apply_patch` 只记录路径元数据，并且只识别极窄的只读
+  `PostToolUse`、`PostCompact` 与 `Stop` 事件。`REVIEW` 映射到
+  `permissionDecision: ask`，`DENY` 映射到 `permissionDecision: deny`；它刻意
+  不发出 `allow`，让 Codex 自己的权限策略保持最终权威。`apply_patch` 只记录
+  路径元数据，并且只识别极窄的只读
   `Get-Content`/`cat` Skill 重载命令。
 - `koma-miko-gemini-hook` 消费 Gemini 的 `BeforeTool`、`AfterTool`、
   `SessionStart`、`PreCompress` 与 `AfterAgent` 事件。`DENY` 映射到 Gemini
-  原生的 `decision: deny`，只记录成功工具的元数据。Gemini 项目级 Hook 首次
+  原生的 `decision: deny`，`REVIEW` 映射到当前 CLI 的交互式
+  `decision: ask`，并且只记录成功工具的元数据。无交互模式没有用户可询问，
+  因而可能把 review 当作 deny；早于 Hook `ask` 的 Gemini CLI 版本需要升级。
+  Gemini 项目级 Hook 首次
   可能需要用户信任 Hook 指纹；无交互自动化应把命令安装到受信任的用户设置层，
   活体验证 runner 就采用此方式。
 - `koma-miko-vscode-hook` 消费 VS Code 的 `SessionStart`、`PreToolUse`、
-  `PostToolUse`、`PreCompact` 与 `Stop`。它使用官方文档中的嵌套 deny/stop
-  输出，把多文件编辑拆成逐路径校验，并且不会用显式 allow 覆盖 VS Code 自己的
-  审批策略。初始化器会写入 `.github/hooks/miko.json`；不需要安装扩展，也不需要
-  Miko API key。
+  `PostToolUse`、`PreCompact` 与 `Stop`。它使用官方文档中的嵌套
+  `permissionDecision: ask | deny` 与 stop 输出，把多文件编辑拆成逐路径校验，
+  并且不会用显式 allow 覆盖 VS Code 自己的审批策略。初始化器会写入
+  `.github/hooks/miko.json`；不需要安装扩展，也不需要 Miko API key。
 
 可以让 Copilot Agent mode 针对一个已有项目 Skill 做小范围测试：
 

@@ -154,7 +154,8 @@ describe('persistent Hook runtime recovery', () => {
     run(artifactInput(), root, stateDir);
 
     writeFileSync(snapshotPathFor(stateDir), '{"version":1,"ledgerBytes":"bad"}\n');
-    expect(run({ ...base, hook_event_name: 'Stop', stop_hook_active: false }, root, stateDir)).toBeUndefined();
+    expect(run({ ...base, hook_event_name: 'Stop', stop_hook_active: false }, root, stateDir))
+      .toMatchObject({ systemMessage: expect.stringContaining('Miko verified') });
   });
 });
 

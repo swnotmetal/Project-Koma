@@ -1,7 +1,13 @@
 import type { EvidenceEvent, Miko, VerificationResult } from './index.js';
-import { formatMikoDecision } from './index.js';
+import {
+  formatMikoAgentContext,
+  formatMikoCompletionReceipt,
+  formatMikoUserNotice,
+  toHostInteractionDecision,
+} from './index.js';
 import {
   evidenceFromSuccessfulHostTool,
+  recordHostEvidence,
   toProjectRelativePath,
   verifyBeforeHostTool,
   type HostHookHandlingResult,
@@ -155,14 +161,17 @@ export function codexToolSucceeded(response: unknown): boolean {
   return typeof response === 'string' || Array.isArray(response) || isRecord(response);
 }
 
-function blockCodexTool(result: VerificationResult): object {
-  const message = formatMikoDecision(result);
+function decideCodexTool(result: VerificationResult): object | undefined {
+  const interaction = toHostInteractionDecision(result);
+  if (interaction === 'defer') return undefined;
+  const userNotice = formatMikoUserNotice(result);
+  const agentContext = formatMikoAgentContext(result);
   return {
-    systemMessage: message,
+    systemMessage: userNotice,
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
-      permissionDecision: 'deny',
-      permissionDecisionReason: message,
+      permissionDecision: interaction,
+      permissionDecisionReason: agentContext,
     },
   };
 }
@@ -182,7 +191,9 @@ export function handleCodexHookEvent(
   input: CodexHookInput,
 ): HostHookHandlingResult {
   const evidence = evidenceFromCodexEvent(input);
-  for (const event of evidence) miko.record({ taskId, ...event });
+  const recoveryNotice = recordHostEvidence(miko, taskId, evidence);
+
+  if (recoveryNotice) return { output: { systemMessage: recoveryNotice }, evidence };
 
   if (input.hook_event_name === 'SessionStart') {
     const event = input as CodexSessionStartInput;
@@ -209,9 +220,10 @@ export function handleCodexHookEvent(
     for (const call of canonicalCodexCalls(event.tool_name, event.tool_input, event.cwd)) {
       const checked = verifyBeforeHostTool(miko, taskId, call, CODEX_PROFILE);
       if (checked.remediation) continue;
-      if (checked.verification.decision !== 'ALLOW') {
+      const output = decideCodexTool(checked.verification);
+      if (output) {
         return {
-          output: blockCodexTool(checked.verification),
+          output,
           evidence,
           verification: checked.verification,
         };
@@ -225,14 +237,16 @@ export function handleCodexHookEvent(
     const event = input as CodexStopInput;
     const verification = miko.verifyCompletion(taskId);
     if (verification.decision !== 'ALLOW' && !event.stop_hook_active) {
-      const message = formatMikoDecision(verification);
+      const userNotice = formatMikoUserNotice(verification);
+      const agentContext = formatMikoAgentContext(verification);
       return {
-        output: { decision: 'block', reason: message, systemMessage: message },
+        output: { decision: 'block', reason: agentContext, systemMessage: userNotice },
         evidence,
         verification,
       };
     }
-    return { evidence, verification };
+    const receipt = formatMikoCompletionReceipt(verification, miko.getEvidence(taskId).length);
+    return { ...(receipt ? { output: { systemMessage: receipt } } : {}), evidence, verification };
   }
 
   return { evidence };

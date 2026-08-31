@@ -5,10 +5,16 @@ import type {
   RiskLevel,
   VerificationResult,
 } from './index.js';
-import { formatMikoDecision, toClaudePreToolUseDecision } from './index.js';
+import {
+  formatMikoCompletionReceipt,
+  formatMikoUserNotice,
+  toClaudePreToolUseDecision,
+  toHostInteractionDecision,
+} from './index.js';
 import {
   evidenceFromSuccessfulHostTool,
   normalizedHostArguments,
+  recordHostEvidence,
   riskForHostTool,
   type HostToolProfile,
 } from './host-adapter.js';
@@ -103,7 +109,9 @@ export function handleClaudeHookEvent(
   input: ClaudeHookInput,
 ): ClaudeHookHandlingResult {
   const evidence = evidenceFromClaudeEvent(input);
-  for (const event of evidence) miko.record({ taskId, ...event });
+  const recoveryNotice = recordHostEvidence(miko, taskId, evidence);
+
+  if (recoveryNotice) return { output: { systemMessage: recoveryNotice }, evidence };
 
   if (input.hook_event_name === 'PostCompact') {
     return {
@@ -121,6 +129,10 @@ export function handleClaudeHookEvent(
       risk: riskForClaudeTool(event.tool_name),
       arguments: normalizedHostArguments(event.tool_input, event.cwd, PATH_KEYS),
     });
+    // ALLOW means Miko has no objection; it must not override Claude's own permission policy.
+    if (toHostInteractionDecision(verification) === 'defer') {
+      return { evidence, verification };
+    }
     return { output: toClaudePreToolUseDecision(verification), evidence, verification };
   }
 
@@ -128,12 +140,15 @@ export function handleClaudeHookEvent(
     const verification = miko.verifyCompletion(taskId);
     if (verification.decision !== 'ALLOW') {
       return {
-        output: { systemMessage: formatMikoDecision(verification) },
+        output: {
+          systemMessage: formatMikoUserNotice(verification),
+        },
         evidence,
         verification,
       };
     }
-    return { evidence, verification };
+    const receipt = formatMikoCompletionReceipt(verification, miko.getEvidence(taskId).length);
+    return { ...(receipt ? { output: { systemMessage: receipt } } : {}), evidence, verification };
   }
 
   return { evidence };

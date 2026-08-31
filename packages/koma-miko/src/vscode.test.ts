@@ -86,12 +86,29 @@ describe('VS Code Copilot adapter', () => {
       tool_input: { filePath: '.github/skills/product-design/SKILL.md' },
     };
     expect(handleVSCodeHookEvent(miko, 'vscode-session', read).output).toBeUndefined();
-    handleVSCodeHookEvent(miko, 'vscode-session', {
+    const recovered = handleVSCodeHookEvent(miko, 'vscode-session', {
       ...read,
       hook_event_name: 'PostToolUse',
       tool_response: 'private-skill-body',
     });
+    expect(recovered.output).toMatchObject({ systemMessage: expect.stringContaining('Miko recovered') });
     expect(handleVSCodeHookEvent(miko, 'vscode-session', edit).output).toBeUndefined();
+  });
+
+  it('uses the native approval surface for REVIEW instead of hard-denying it', () => {
+    const miko = createMiko({ contracts: [{ ...contract, mode: 'review' }] });
+    miko.startTask({ sessionId: 'vscode-session', taskId: 'vscode-session', tags: [] });
+    const reviewed = handleVSCodeHookEvent(miko, 'vscode-session', {
+      ...base,
+      hook_event_name: 'PreToolUse',
+      tool_name: 'replace_string_in_file',
+      tool_input: { filePath: 'src/ui/Hero.tsx' },
+    });
+
+    expect(reviewed.verification?.decision).toBe('REVIEW');
+    expect(reviewed.output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'ask' },
+    });
   });
 
   it('records every successful multi-file edit without retaining edit content', () => {
@@ -165,5 +182,31 @@ describe('VS Code Copilot adapter', () => {
       stop_hook_active: true,
     });
     expect(second.output).toBeUndefined();
+  });
+
+  it('shows a green completion receipt after the guarded artifact is observed', () => {
+    const miko = start();
+    handleVSCodeHookEvent(miko, 'vscode-session', {
+      ...base,
+      hook_event_name: 'PreToolUse',
+      tool_name: 'replace_string_in_file',
+      tool_input: { filePath: 'src/ui/Hero.tsx' },
+    });
+    miko.record({
+      taskId: 'vscode-session', type: 'skill_loaded', name: 'product-design', source: 'observed',
+    });
+    handleVSCodeHookEvent(miko, 'vscode-session', {
+      ...base,
+      hook_event_name: 'PostToolUse',
+      tool_name: 'replace_string_in_file',
+      tool_input: { filePath: 'src/ui/Hero.tsx' },
+      tool_response: 'done',
+    });
+    const completed = handleVSCodeHookEvent(miko, 'vscode-session', {
+      ...base,
+      hook_event_name: 'Stop',
+      stop_hook_active: false,
+    });
+    expect(completed.output).toMatchObject({ systemMessage: expect.stringContaining('Miko verified') });
   });
 });

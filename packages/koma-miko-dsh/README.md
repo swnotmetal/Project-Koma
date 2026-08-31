@@ -32,7 +32,10 @@ The adapter uses three native DSH extension points:
 | `agent/turn-stopping` | `COMPLETE` | Missing obligations steer one more model step, with a bounded loop guard |
 
 The normal CLI, Web UI, and any other DSH surface render the host's own approval,
-tool-error, and steering interaction. Miko does not add a separate GUI.
+tool-error, steering, and logger interaction. Miko does not add a separate GUI:
+denials and reviews carry an attributed Miko status, while successful PREPARE
+recovery and COMPLETE verification emit concise green logger receipts when the
+host exposes that surface.
 
 DSH Code Mode is covered at the native sub-call boundary. The outer `run_code`
 transport is delegated because each `tools.*` sub-call re-enters

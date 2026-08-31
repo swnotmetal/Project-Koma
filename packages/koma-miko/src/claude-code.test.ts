@@ -64,16 +64,42 @@ describe('Claude Code adapter', () => {
       hookSpecificOutput: { permissionDecision: 'deny' },
     });
 
-    handleClaudeHookEvent(miko, 'claude-session', {
+    const recovered = handleClaudeHookEvent(miko, 'claude-session', {
       session_id: 'claude-session',
       cwd: 'D:\\portfolio',
       hook_event_name: 'PostToolUse',
       tool_name: 'Skill',
       tool_input: { skill: 'frontend-design' },
     });
+    expect(recovered.output).toMatchObject({ systemMessage: expect.stringContaining('Miko recovered') });
 
     const allowed = handleClaudeHookEvent(miko, 'claude-session', edit);
     expect(allowed.verification?.decision).toBe('ALLOW');
+    expect(allowed.output).toBeUndefined();
+
+    const completed = handleClaudeHookEvent(miko, 'claude-session', {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'Stop',
+    });
+    expect(completed.output).toMatchObject({ systemMessage: expect.stringContaining('Miko verified') });
+  });
+
+  it('asks for native approval when a review-mode spec needs judgment', () => {
+    const miko = createMiko({ contracts: [{ ...contract, mode: 'review' }] });
+    miko.startTask({ sessionId: 'claude-session', taskId: 'claude-session', tags: [] });
+    const reviewed = handleClaudeHookEvent(miko, 'claude-session', {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Edit',
+      tool_input: { file_path: 'src/components/Hero.tsx' },
+    });
+
+    expect(reviewed.verification?.decision).toBe('REVIEW');
+    expect(reviewed.output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'ask' },
+    });
   });
 
   it('invalidates context-fresh skill evidence after Claude compaction', () => {

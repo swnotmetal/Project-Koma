@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { createMiko, formatMikoDecision, toClaudePreToolUseDecision } from './index';
+import {
+  createMiko,
+  formatMikoAgentContext,
+  formatMikoCompletionReceipt,
+  formatMikoDecision,
+  formatMikoRecoveryNotice,
+  formatMikoUserNotice,
+  toClaudePreToolUseDecision,
+  toHostInteractionDecision,
+} from './index';
 import type { MikoContract } from './index';
 
 const uiContract: MikoContract = {
@@ -376,11 +385,40 @@ describe('Koma Miko alpha', () => {
     });
 
     expect(toClaudePreToolUseDecision(review).hookSpecificOutput.permissionDecision).toBe('ask');
-    expect(toClaudePreToolUseDecision(review).systemMessage).toContain('Miko REVIEW');
+    expect(toClaudePreToolUseDecision(review).systemMessage).toContain('Miko needs your decision');
     expect(toClaudePreToolUseDecision(allow).hookSpecificOutput.permissionDecision).toBe('allow');
     expect(toClaudePreToolUseDecision(allow).systemMessage).toBeUndefined();
     expect(toClaudePreToolUseDecision(deny).hookSpecificOutput.permissionDecision).toBe('deny');
+    expect(toHostInteractionDecision(allow)).toBe('defer');
+    expect(toHostInteractionDecision(review)).toBe('ask');
+    expect(toHostInteractionDecision(deny)).toBe('deny');
     expect(formatMikoDecision(deny)).toContain('TOOL_DENIED');
+  });
+
+  it('separates concise user status from agent recovery detail and emits green receipts', () => {
+    const miko = startUiTask();
+    const before = miko.verifyPreparation('settings-page');
+    expect(formatMikoUserNotice(before)).toContain('Miko needs your decision');
+    expect(formatMikoUserNotice(before)).not.toContain('skill_loaded:product-design');
+    expect(formatMikoAgentContext(before)).toContain('skill_loaded:product-design');
+
+    recordPreparation(miko);
+    const after = miko.verifyPreparation('settings-page');
+    expect(formatMikoRecoveryNotice(before, after)).toContain('Miko recovered');
+
+    miko.record({
+      taskId: 'settings-page', type: 'check_passed', name: 'rendered-ui-review', source: 'observed',
+    });
+    miko.record({
+      taskId: 'settings-page', type: 'check_passed', name: 'targeted-tests', source: 'observed',
+    });
+    miko.record({
+      taskId: 'settings-page', type: 'tool_succeeded', tool: 'run_check',
+      arguments: { suite: 'ui' }, source: 'observed',
+    });
+    const completed = miko.verifyCompletion('settings-page');
+    expect(formatMikoCompletionReceipt(completed, miko.getEvidence('settings-page').length))
+      .toContain('Miko verified');
   });
 
   it('renders a bounded developer traffic-light summary without truncating machine evidence', () => {

@@ -70,11 +70,12 @@ describe('Codex adapter', () => {
       },
     };
     expect(handleCodexHookEvent(miko, 'codex-session', shellInput).output).toBeUndefined();
-    handleCodexHookEvent(miko, 'codex-session', {
+    const recovered = handleCodexHookEvent(miko, 'codex-session', {
       ...shellInput,
       hook_event_name: 'PostToolUse',
       tool_response: { status: 'completed', exitCode: 0 },
     });
+    expect(recovered.output).toMatchObject({ systemMessage: expect.stringContaining('Miko recovered') });
     expect(handleCodexHookEvent(miko, 'codex-session', patchInput).output).toBeUndefined();
   });
 
@@ -97,12 +98,24 @@ describe('Codex adapter', () => {
     };
     expect(handleCodexHookEvent(miko, 'codex-session', readInput).output).toBeUndefined();
 
-    handleCodexHookEvent(miko, 'codex-session', {
+    const recovered = handleCodexHookEvent(miko, 'codex-session', {
       ...readInput,
       hook_event_name: 'PostToolUse',
       tool_response: 'Skill instructions loaded.',
     });
+    expect(recovered.output).toMatchObject({ systemMessage: expect.stringContaining('Miko recovered') });
     expect(handleCodexHookEvent(miko, 'codex-session', patchInput).output).toBeUndefined();
+  });
+
+  it('uses the host approval surface for REVIEW instead of hard-denying it', () => {
+    const miko = createMiko({ contracts: [{ ...contract, mode: 'review' }] });
+    miko.startTask({ sessionId: 'codex-session', taskId: 'codex-session', tags: [] });
+    const reviewed = handleCodexHookEvent(miko, 'codex-session', patchInput);
+
+    expect(reviewed.verification?.decision).toBe('REVIEW');
+    expect(reviewed.output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'ask' },
+    });
   });
 
   it('does not treat an explicit failed tool response as evidence', () => {
@@ -128,5 +141,22 @@ describe('Codex adapter', () => {
       stop_hook_active: true,
     });
     expect(second.output).toBeUndefined();
+  });
+
+  it('emits a green receipt when completion evidence is observed', () => {
+    const miko = start();
+    handleCodexHookEvent(miko, 'codex-session', patchInput);
+    miko.record({
+      taskId: 'codex-session', type: 'skill_loaded', name: 'product-design', source: 'observed',
+    });
+    handleCodexHookEvent(miko, 'codex-session', {
+      ...patchInput,
+      hook_event_name: 'PostToolUse',
+      tool_response: { status: 'completed', exitCode: 0 },
+    });
+    const completed = handleCodexHookEvent(miko, 'codex-session', {
+      session_id: 'codex-session', cwd: 'D:\\portfolio', hook_event_name: 'Stop', stop_hook_active: false,
+    });
+    expect(completed.output).toMatchObject({ systemMessage: expect.stringContaining('Miko verified') });
   });
 });

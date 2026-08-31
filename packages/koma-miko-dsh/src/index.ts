@@ -30,6 +30,76 @@ const PREPARATION_REASON_CODES = new Set([
   'SKILL_DECLARED_BUT_NOT_OBSERVED',
 ]);
 
+function formatDshUserNotice(result: VerificationResult): string {
+  if (result.decision === 'REVIEW') {
+    return [
+      `🟡 Miko needs your decision · ${result.checkpoint}`,
+      result.reason,
+      'Choose whether this one action should proceed.',
+    ].join('\n');
+  }
+  if (PREPARATION_REASON_CODES.has(result.reasonCode)) {
+    return [
+      '🔴 Miko paused this action · PREPARE',
+      'Required Skill or reference evidence is missing.',
+      'The agent can load it and retry automatically; no manual setup is needed.',
+    ].join('\n');
+  }
+  return [
+    `🔴 Miko blocked this action · ${result.checkpoint}`,
+    result.reason,
+    'The action was not sent to the tool.',
+  ].join('\n');
+}
+
+function formatDshAgentContext(result: VerificationResult): string {
+  const instruction = result.decision === 'REVIEW'
+    ? 'Miko requires the user to choose. Do not bypass this checkpoint or retry unchanged.'
+    : PREPARATION_REASON_CODES.has(result.reasonCode)
+      ? 'Miko paused this call. Briefly attribute the pause to Miko, load the exact missing Skill/reference, then retry the original action.'
+      : 'Miko blocked this call. Briefly attribute the block to Miko and do not retry the same action unchanged.';
+  return `${instruction}\n\n${formatMikoDecision(result)}`;
+}
+
+function formatDshRecoveryNotice(
+  before: VerificationResult,
+  after: VerificationResult,
+): string | undefined {
+  if (
+    before.decision === 'ALLOW' ||
+    after.decision !== 'ALLOW' ||
+    after.checkpoint !== 'PREPARE' ||
+    after.contractIds.length === 0
+  ) {
+    return undefined;
+  }
+  return [
+    '🟢 Miko recovered · PREPARE',
+    'Required preparation is now observed.',
+    'The agent can retry the paused action; normal host permissions still apply.',
+  ].join('\n');
+}
+
+function formatDshCompletionReceipt(
+  result: VerificationResult,
+  observedEvidenceCount: number,
+): string | undefined {
+  if (
+    result.decision !== 'ALLOW' ||
+    result.checkpoint !== 'COMPLETE' ||
+    result.reasonCode !== 'CONTRACT_SATISFIED' ||
+    result.contractIds.length === 0
+  ) {
+    return undefined;
+  }
+  return [
+    '🟢 Miko verified · COMPLETE',
+    `${result.contractIds.length} Agent Spec${result.contractIds.length === 1 ? '' : 's'} satisfied · ` +
+      `${observedEvidenceCount} observed evidence event${observedEvidenceCount === 1 ? '' : 's'}.`,
+    'Prompts, source code, and tool output were not stored.',
+  ].join('\n');
+}
+
 export interface CheckEvidenceRule {
   /** Miko check name recorded after the configured DSH tool succeeds. */
   name: string;
@@ -92,6 +162,7 @@ export const Config: z<Config> = z.object({
 
 interface AdapterLogger {
   warn(message: string): void;
+  info?(message: string): void;
 }
 
 interface SessionState {
@@ -99,6 +170,7 @@ interface SessionState {
   taskId: string;
   cwd: string;
   completionSteers: number;
+  receiptPending: boolean;
 }
 
 export interface DshMikoAdapter {
@@ -286,7 +358,10 @@ function evidenceFromSuccessfulTool(
 
 function mikoMessage(result: VerificationResult) {
   return createUserMessage({
-    content: [{ type: 'text' as const, text: formatMikoDecision(result) }],
+    content: [{
+      type: 'text' as const,
+      text: `${formatDshUserNotice(result)}\n\n${formatDshAgentContext(result)}`,
+    }],
     source: PLUGIN_SOURCE,
   });
 }
@@ -319,7 +394,7 @@ export function createDshMikoAdapter(
       const miko = createMiko({ contracts: loaded.contracts });
       const taskId = sessionId(agent);
       miko.startTask({ sessionId: taskId, taskId, tags: config.taskTags });
-      const state = { miko, taskId, cwd, completionSteers: 0 };
+      const state = { miko, taskId, cwd, completionSteers: 0, receiptPending: false };
       states.set(agent, state);
       return state;
     } catch (error: unknown) {
@@ -352,6 +427,7 @@ export function createDshMikoAdapter(
       if (!exec.agent) return next();
       const state = ensure(exec.agent);
       if (!state) return next();
+      state.receiptPending = true;
 
       // run_code is a transport. Its native sub-calls re-enter this same pipeline
       // and are the actions Miko can evaluate without inspecting program text.
@@ -367,7 +443,7 @@ export function createDshMikoAdapter(
         if (verification.decision === 'ALLOW') return next();
         if (preparationToolMatches(exec, verification, state.cwd)) return next();
 
-        const reason = formatMikoDecision(verification);
+        const reason = `${formatDshUserNotice(verification)}\n\n${formatMikoDecision(verification)}`;
         if (verification.decision === 'REVIEW' && config.reviewPolicy === 'ask') {
           return { kind: 'ask', reason };
         }
@@ -384,9 +460,14 @@ export function createDshMikoAdapter(
       const state = ensure(exec.agent);
       if (!state) return;
       try {
+        const before = state.miko.verifyPreparation(state.taskId);
         for (const event of evidenceFromSuccessfulTool(exec, state.cwd, config)) {
           state.miko.record({ taskId: state.taskId, ...event });
         }
+        state.receiptPending = true;
+        const after = state.miko.verifyPreparation(state.taskId);
+        const recoveryNotice = formatDshRecoveryNotice(before, after);
+        if (recoveryNotice) logger.info?.(recoveryNotice);
       } catch (error: unknown) {
         fail('koma-miko-dsh: result evidence mapping failed', undefined, error);
       }
@@ -399,6 +480,12 @@ export function createDshMikoAdapter(
         const verification = state.miko.verifyCompletion(state.taskId);
         if (verification.decision === 'ALLOW') {
           state.completionSteers = 0;
+          const receipt = formatDshCompletionReceipt(
+            verification,
+            state.miko.getEvidence(state.taskId).length,
+          );
+          if (receipt && state.receiptPending) logger.info?.(receipt);
+          state.receiptPending = false;
           return;
         }
         if (state.completionSteers >= config.maxCompletionSteers) {

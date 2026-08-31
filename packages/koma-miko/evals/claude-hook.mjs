@@ -68,9 +68,9 @@ try {
     'utf8',
   );
   const passed = first?.hookSpecificOutput?.permissionDecision === 'deny' &&
-    second?.hookSpecificOutput?.permissionDecision === 'allow' &&
+    second === undefined &&
     afterCompact?.hookSpecificOutput?.permissionDecision === 'deny' &&
-    afterReload?.hookSpecificOutput?.permissionDecision === 'allow' &&
+    afterReload === undefined &&
     ledger.includes('"type":"decision_recorded"') &&
     ledger.includes('"decision":"DENY"') &&
     ledger.includes('"type":"context_advanced"') &&
@@ -78,7 +78,7 @@ try {
     !snapshot.includes('must-not-persist');
   if (!passed) throw new Error('Claude hook persistence fixture failed');
   console.log(
-    'Miko Claude hook: PASS (snapshot restore; DENY -> Skill -> ALLOW -> compact -> DENY -> reload -> ALLOW; no code content persisted)',
+    'Miko Claude hook: PASS (snapshot restore; DENY -> Skill -> host-deferred ALLOW -> compact -> DENY -> reload -> host-deferred ALLOW; no code content persisted)',
   );
 } finally {
   rmSync(stateDir, { recursive: true, force: true });

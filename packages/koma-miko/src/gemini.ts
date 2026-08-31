@@ -1,7 +1,13 @@
 import type { EvidenceEvent, Miko } from './index.js';
-import { formatMikoDecision } from './index.js';
+import {
+  formatMikoAgentContext,
+  formatMikoCompletionReceipt,
+  formatMikoUserNotice,
+  toHostInteractionDecision,
+} from './index.js';
 import {
   evidenceFromSuccessfulHostTool,
+  recordHostEvidence,
   verifyBeforeHostTool,
   type HostHookHandlingResult,
   type HostToolProfile,
@@ -90,7 +96,9 @@ export function handleGeminiHookEvent(
   input: GeminiHookInput,
 ): HostHookHandlingResult {
   const evidence = evidenceFromGeminiEvent(input);
-  for (const event of evidence) miko.record({ taskId, ...event });
+  const recoveryNotice = recordHostEvidence(miko, taskId, evidence);
+
+  if (recoveryNotice) return { output: { systemMessage: recoveryNotice }, evidence };
 
   if (input.hook_event_name === 'SessionStart') {
     const event = input as GeminiSessionStartInput;
@@ -119,13 +127,15 @@ export function handleGeminiHookEvent(
       arguments: event.tool_input,
       cwd: event.cwd,
     }, GEMINI_PROFILE);
-    if (checked.remediation || checked.verification.decision === 'ALLOW') {
+    const interaction = toHostInteractionDecision(checked.verification);
+    if (checked.remediation || interaction === 'defer') {
       // Keep Gemini's normal confirmation and policy engine in control.
       return { evidence };
     }
-    const message = formatMikoDecision(checked.verification);
+    const userNotice = formatMikoUserNotice(checked.verification);
+    const agentContext = formatMikoAgentContext(checked.verification);
     return {
-      output: { decision: 'deny', reason: message, systemMessage: message },
+      output: { decision: interaction, reason: agentContext, systemMessage: userNotice },
       evidence,
       verification: checked.verification,
     };
@@ -135,14 +145,16 @@ export function handleGeminiHookEvent(
     const event = input as GeminiAfterAgentInput;
     const verification = miko.verifyCompletion(taskId);
     if (verification.decision !== 'ALLOW' && !event.stop_hook_active) {
-      const message = formatMikoDecision(verification);
+      const userNotice = formatMikoUserNotice(verification);
+      const agentContext = formatMikoAgentContext(verification);
       return {
-        output: { decision: 'deny', reason: message, systemMessage: message },
+        output: { decision: 'deny', reason: agentContext, systemMessage: userNotice },
         evidence,
         verification,
       };
     }
-    return { evidence, verification };
+    const receipt = formatMikoCompletionReceipt(verification, miko.getEvidence(taskId).length);
+    return { ...(receipt ? { output: { systemMessage: receipt } } : {}), evidence, verification };
   }
 
   return { evidence };
