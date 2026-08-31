@@ -27,6 +27,7 @@ miko-apis.env
 packages/koma-miko/.miko-live-*/
 /miko-vscode-ux-lab/
 /miko-codex-ux-lab/
+/miko-codex-desktop-lab/
 
 # TypeScript artifacts
 *.tsbuildinfo
