@@ -28,6 +28,7 @@ packages/koma-miko/.miko-live-*/
 /miko-vscode-ux-lab/
 /miko-codex-ux-lab/
 /miko-codex-desktop-lab/
+/miko-claude-cli-lab/
 
 # TypeScript artifacts
 *.tsbuildinfo

@@ -1,6 +1,6 @@
 # Miko Claude Haiku alpha evaluation
 
-Date: 2026-08-26
+Date: 2026-08-26; updated 2026-09-01
 
 This record covers two narrow Claude Code behaviors. It does **not** establish
 reliability for arbitrary tasks, hosts, models, or near-million-token contexts.
@@ -12,6 +12,8 @@ reliability for arbitrary tasks, hosts, models, or near-million-token contexts.
 | Long-context baseline | 100 | 1k | pass | selected before checkpoint | 5 | $0.02168445 |
 | Long-context smoke | 100 | 20k | pass | selected before checkpoint | 5 | $0.07064975 |
 | Miko recovery | 1 | small | pass | `DENY → observed Skill → changed artifact` | 6 | $0.01929665 |
+| Strict recovery v1 | 1 | small | scenario miss | proactively selected Skill; exact artifact and COMPLETE passed, but no DENY occurred | 6 | $0.02440525 |
+| Strict recovery v2 | 1 | small | pass | `DENY → observed Skill → exact artifact → COMPLETE` | 7 | $0.02347050 |
 
 Both 100-Skill passes applied the target Skill's marker rule and requested edit.
 The 20k run reported 28,273 cache-creation input tokens, 99,005 cache-read input
@@ -20,6 +22,16 @@ that a real Claude Code session could react to a Miko denial, load the named
 Skill, and retry the edit successfully.
 
 All passing runs reported `promptOrCodePersistedByMiko: false`.
+
+The 2026-09-01 rerun strengthened the harness before spending credits: the
+fixture now has a Stop/COMPLETE obligation and fails unless the Skill marker,
+entire artifact, completion decision, denial order, and ledger privacy all
+match. In v1 the prompt named `frontend-design`, so Haiku sensibly loaded it
+before editing and the recovery-specific assertion failed. This is retained as
+a valid proactive-compliance observation and a failed recovery scenario, not a
+Miko or model failure. V2 removed the leaked Skill name; the first Edit was
+denied, Claude loaded the Skill from Miko's guidance, and every strengthened
+assertion passed.
 
 ## Harness correction retained as evidence
 
@@ -34,8 +46,9 @@ exposing only `Read`, `Edit`, and `Skill`; it provides no Bash or network tool.
 This change is confined to eval fixtures and does not alter Miko's default
 permissions or user projects.
 
-Total Anthropic spend while creating and diagnosing this evaluation was
-$0.21233235. Passing runs account for $0.11163085 of that total.
+Total Anthropic spend while creating and diagnosing this evaluation is now
+$0.26020810. The two strengthened 2026-09-01 runs added $0.04787575; the clean
+v2 recovery run cost $0.02347050.
 
 ## What remains unknown
 
@@ -47,3 +60,6 @@ $0.21233235. Passing runs account for $0.11163085 of that total.
   one visible rule, but neither proves general comprehension or long-term
   retention.
 - No Sonnet or near-million-token result exists.
+- The strengthened result is a non-interactive Claude CLI/API-key fixture.
+  Human CLI UX remains a separate hand-test; a Claude subscription-only Desktop
+  surface is not inferred from Console API credits.

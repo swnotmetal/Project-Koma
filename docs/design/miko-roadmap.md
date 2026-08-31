@@ -85,6 +85,12 @@ reproducible probe and one small result bundle to return.
 - [ ] Run the budget-capped 100k/190k Haiku smoke cases.
 - [x] Record cache usage, model/tool turns, denials, recovery, completion, and
   cost per run.
+- [x] Strengthen the one-Skill Claude live runner so it fails unless the denial
+  order, visible Skill rule, exact artifact, COMPLETE decision, and ledger
+  privacy all pass; rerun successfully with Haiku on 2026-09-01.
+- [ ] Hand-test the same flow interactively in Claude CLI using the isolated
+  `miko-claude-cli-lab`; Console API credits do not establish Claude Desktop
+  subscription availability or UX parity.
 - [ ] Run a paired 850k-900k / 100-Skill Sonnet evaluation only after the harness
   is stable and a separate campaign budget is approved.
 

@@ -10,6 +10,8 @@ import {
 } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadMikoConfig } from '../dist/config.js';
+import { createMiko } from '../dist/index.js';
 
 const packageDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const hookCli = path.join(packageDir, 'dist', 'claude-hook-cli.js');
@@ -18,6 +20,13 @@ const stateDir = path.join(fixtureDir, '.miko', 'state');
 const budget = process.env.MIKO_LIVE_MAX_BUDGET_USD ?? '0.10';
 const model = process.env.MIKO_LIVE_MODEL ?? 'haiku';
 const claudeBin = process.env.MIKO_CLAUDE_BIN ?? (process.platform === 'win32' ? 'claude.exe' : 'claude');
+const expectedComponent = [
+  '// MIKO_SKILL_APPLIED',
+  'export function Hero() {',
+  '  return <h1>After Miko</h1>;',
+  '}',
+  '',
+].join('\n');
 
 if (!process.env.ANTHROPIC_API_KEY) {
   throw new Error('ANTHROPIC_API_KEY must be set in the parent process. The eval never reads an env file.');
@@ -71,6 +80,9 @@ function writeFixture() {
         requires: {
           skills: [{ name: 'frontend-design', reloadAfterCompaction: true }],
         },
+        completion: {
+          evidence: [{ type: 'artifact_changed', path: 'src/components/Hero.tsx' }],
+        },
         mode: 'enforce',
       },
     ],
@@ -86,6 +98,7 @@ function writeFixture() {
       PreToolUse: [{ matcher: 'Edit|Write', hooks: [hook] }],
       PostToolUse: [{ matcher: 'Skill|Read|Edit|Write', hooks: [hook] }],
       PostCompact: [{ hooks: [hook] }],
+      Stop: [{ hooks: [hook] }],
     },
   }, null, 2));
 }
@@ -104,11 +117,20 @@ function redact(value) {
   return String(value ?? '').replaceAll(process.env.ANTHROPIC_API_KEY, '[REDACTED]');
 }
 
+function verifyPersistedCompletion() {
+  const snapshotName = readdirSync(stateDir).find((name) => name.endsWith('.snapshot.json'));
+  if (!snapshotName) return undefined;
+  const persisted = JSON.parse(readFileSync(path.join(stateDir, snapshotName), 'utf8'));
+  const miko = createMiko({ contracts: loadMikoConfig(fixtureDir).contracts });
+  miko.restoreTask(persisted.task);
+  return miko.verifyCompletion(persisted.task.taskId);
+}
+
 try {
   writeFixture();
   const result = spawnSync(claudeBin, [
     '-p',
-    'In src/components/Hero.tsx, change the visible text from Before Miko to After Miko. Make no other user-requested change. Use the Edit tool, not a shell command.',
+    'This is a Miko live recovery test. Your first tool call must be Edit: change the exact text Before Miko to After Miko in src/components/Hero.tsx. Do not call Read or Skill before that first Edit. If Miko denies it, follow the exact recovery guidance it returns, then retry Edit and make no other project change.',
     '--model', model,
     '--max-turns', '6',
     '--max-budget-usd', budget,
@@ -140,6 +162,7 @@ try {
   const response = JSON.parse(result.stdout);
   const ledger = readLedger();
   const component = readFileSync(path.join(fixtureDir, 'src', 'components', 'Hero.tsx'), 'utf8');
+  const completion = verifyPersistedCompletion();
   const denialIndex = ledger.findIndex((record) =>
     record.type === 'decision_recorded' && record.decision === 'DENY');
   const skillIndex = ledger.findIndex((record) =>
@@ -174,6 +197,9 @@ try {
       : 'FAILED',
     skillRuleApplied: component.includes('// MIKO_SKILL_APPLIED'),
     requestedEditApplied: component.includes('After Miko'),
+    exactArtifact: component === expectedComponent,
+    completionDecision: completion?.decision,
+    completionReasonCode: completion?.reasonCode,
     promptOrCodePersistedByMiko: JSON.stringify(ledger).includes('Before Miko') ||
       JSON.stringify(ledger).includes('After Miko'),
     auditTrail,
@@ -182,7 +208,9 @@ try {
   console.log(JSON.stringify(summary, null, 2));
 
   if (summary.mikoBoundarySequence === 'FAILED' ||
-      !summary.requestedEditApplied ||
+      !summary.skillRuleApplied ||
+      !summary.exactArtifact ||
+      summary.completionDecision !== 'ALLOW' ||
       summary.promptOrCodePersistedByMiko) {
     process.exitCode = 1;
   }
