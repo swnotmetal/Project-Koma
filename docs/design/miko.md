@@ -126,6 +126,11 @@ own contract is satisfied.
 | Claude Code cloud/web | Not an alpha target yet | Does not read local user settings; package/install availability differs |
 | Other agents/editors | Verifier protocol only | Requires a dedicated adapter; Claude compatibility does not imply support |
 
+The local CLI path was hand-tested on 2026-09-01 with a Console API key. It
+visibly completed `DENY → Skill → edit → COMPLETE`, including Miko's red pause,
+green recovery, and green completion messages. That evidence does not establish
+Desktop or subscription-only parity.
+
 Official references: [platform comparison](https://code.claude.com/docs/en/platforms),
 [Desktop shared configuration](https://code.claude.com/docs/en/desktop),
 [VS Code/Cursor integration](https://code.claude.com/docs/en/ide-integrations), and

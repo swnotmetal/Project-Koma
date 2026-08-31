@@ -33,6 +33,26 @@ Miko or model failure. V2 removed the leaked Skill name; the first Edit was
 denied, Claude loaded the Skill from Miko's guidance, and every strengthened
 assertion passed.
 
+## Human CLI UX hand-test
+
+On 2026-09-01, the isolated `miko-claude-cli-lab` was exercised interactively
+with Claude Code 2.1.202 and a Console API key against the published
+`koma-miko@0.1.0-alpha.7` package. The visible sequence was:
+
+1. Claude proposed `Edit`; Miko rendered a red PREPARE pause naming the missing
+   `frontend-design` Skill and the automatic recovery action.
+2. Claude loaded the named Skill without asking the user to move or inspect any
+   files; Miko rendered a green PREPARE recovery receipt.
+3. Claude read the target and retried the original edit.
+4. The Stop Hook rendered a green COMPLETE receipt for one satisfied Agent Spec
+   and six observed evidence events.
+
+The resulting artifact exactly contained the required Skill marker and
+`After Miko` heading. The local JSONL ledger contained the denial and observed
+Skill, Read, and Edit metadata, but no prompt, source-code content, or tool
+output. This validates the API-key CLI path and its user-visible recovery flow;
+it does not validate Claude Desktop or subscription-only behavior.
+
 ## Harness correction retained as evidence
 
 The first 20k attempt and a 1k diagnostic selected the correct Skill but did not
@@ -60,6 +80,6 @@ v2 recovery run cost $0.02347050.
   one visible rule, but neither proves general comprehension or long-term
   retention.
 - No Sonnet or near-million-token result exists.
-- The strengthened result is a non-interactive Claude CLI/API-key fixture.
-  Human CLI UX remains a separate hand-test; a Claude subscription-only Desktop
-  surface is not inferred from Console API credits.
+- The strengthened automated result and interactive hand-test both use the
+  Claude CLI/API-key path. A Claude subscription-only Desktop surface is not
+  inferred from Console API credits.

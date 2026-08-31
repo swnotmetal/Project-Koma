@@ -88,9 +88,11 @@ reproducible probe and one small result bundle to return.
 - [x] Strengthen the one-Skill Claude live runner so it fails unless the denial
   order, visible Skill rule, exact artifact, COMPLETE decision, and ledger
   privacy all pass; rerun successfully with Haiku on 2026-09-01.
-- [ ] Hand-test the same flow interactively in Claude CLI using the isolated
-  `miko-claude-cli-lab`; Console API credits do not establish Claude Desktop
-  subscription availability or UX parity.
+- [x] Hand-test the same flow interactively in Claude CLI using the isolated
+  `miko-claude-cli-lab`. On 2026-09-01 the API-key CLI visibly rendered Miko's
+  red denial, green recovery, and green COMPLETE receipt; the exact artifact
+  and privacy-minimized ledger also matched. This does not establish Claude
+  Desktop subscription availability or UX parity.
 - [ ] Run a paired 850k-900k / 100-Skill Sonnet evaluation only after the harness
   is stable and a separate campaign budget is approved.
 
