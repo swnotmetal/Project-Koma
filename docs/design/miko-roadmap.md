@@ -111,11 +111,12 @@ shared, but let each host own its permission and text surface.
 - [x] Verify live Codex Hook activation with the existing ChatGPT login: after
   exact-hash CLI trust, `SessionStart` and `Stop` reached Miko and the local
   heartbeat ledger was written without an API key.
-- [ ] Complete a live Codex `DENY → Skill/reference recovery → edit → COMPLETE`
-  fixture; the activation smoke alone does not establish tool interception.
-  A 2026-09-01 live edit did reach `DENY → two Skills/reference → edit`, but an
-  initially grouped read triggered an unrelated shell Spec and no completion
-  obligation was configured, so this remains an intermediate result.
+- [x] Complete a live Codex `DENY → two Skills/reference recovery → two-file
+  edit → COMPLETE` fixture after fixing safe grouped reads. The final run used
+  10,252 tokens and did not activate the unrelated shell Spec.
+- [ ] Find a host-native way to keep the green recovery/completion result visible;
+  current Codex CLI renders the red denial but collapses successful Miko output
+  to generic `PostToolUse Completed` / `Stop Completed` lines.
 - [ ] Repeat the Gemini live fixture with a short, low-latency model after the
   CLI/service latency issue is understood; the flash-lite attempt authenticated
   successfully but still hit the 180-second runner timeout.

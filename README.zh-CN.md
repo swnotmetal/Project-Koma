@@ -97,7 +97,7 @@ Miko 本身是确定性验证器，因此这里衡量的是验证开销和端到
 | 离线宿主一致性 | Claude、Codex、Gemini 与 VS Code Copilot 均复现 `DENY → 观察到 Skill → ALLOW`；账本夹具确认不保存 prompt、代码或工具响应 |
 | 本地 verifier 规模测试 | 1,000 份 Agent Spec：每次动作 **p95 1.34 ms**；10,001 条索引证据：**p95 0.0041 ms**；恢复 1,000 条证据：**p95 1.52 ms** |
 | Claude Code smoke | 一次 100-Skill / 约 20k context 测试通过；另一次单 Skill 恢复完成 `DENY → Skill → edit` |
-| Codex 激活 smoke | 使用现有 ChatGPT 登录态，在 CLI 一次性信任后观察到真实 `SessionStart` / `Stop` Hook 并写入本地 Miko heartbeat；该测试只证明激活，尚未完成编辑恢复链路 |
+| Codex live smoke | CLI 一次性信任后，一次 10,252-token 测试完成 `DENY → 两个 Skills + reference → 两文件 edit → COMPLETE`；账本验证通过，但 Codex 把 Miko 绿色完成文案折叠成了通用 `Stop Completed` |
 | DeepSeek Harness smoke | 窄范围 packed-artifact 恢复 **3/3** 通过；模型阶段平均 19.425 秒 |
 
 规模数据来自 2026-08-27 的 Node 24.19 / Windows 参考运行；可用

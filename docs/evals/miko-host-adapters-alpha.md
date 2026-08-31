@@ -59,10 +59,9 @@ SessionStart Hook → model replies OK → Stop Hook
 4,579 tokens reported by Codex · local Miko task_started ledger written
 ```
 
-This is a **live activation smoke only**. It proves that the trusted project
+That first phase was a **live activation smoke only**. It proved that the trusted project
 Hook command can reach Miko and persist a privacy-minimized heartbeat. The turn
-did not call `apply_patch`, so it does not yet prove a live
-`DENY → Skill/reference recovery → edit → COMPLETE` sequence.
+did not call `apply_patch`.
 
 A subsequent live lab attempted a two-file patch before reading project files.
 Miko denied the first `apply_patch`, named two missing Skills and one reference,
@@ -74,12 +73,28 @@ The model recovered by loading that extra Skill, but the added work was Miko
 friction, not a user requirement. The adapter now recognizes unquoted
 `Get-Content -Raw path` and semicolon-separated batches only when **every**
 segment is a safe read; regression tests cover both the accepted all-read batch
-and a rejected read-plus-command batch. That parser fix has not yet received a
-third paid live rerun.
+and a rejected read-plus-command batch.
 
-The live transcript also displayed only `hook: SessionStart Completed`, not the
-adapter's branded `systemMessage`, so persistent green startup presence remains
-a host-UX TODO even though the heartbeat proves activation.
+The post-fix third live run used the same trusted project and existing ChatGPT
+login. A completion obligation required both target artifacts:
+
+```text
+apply_patch DENY
+→ one safe grouped PowerShell read loads product-design + accessibility + reference
+→ identical two-file apply_patch succeeds
+→ snapshot recheck returns ALLOW / COMPLETE / CONTRACT_SATISFIED
+10,252 tokens reported by Codex
+```
+
+No unrelated shell contract activated. The JSONL contains path/name/decision
+metadata for the two Skills, reference, and artifacts, without the prompt,
+source contents, or tool output. This is now a successful narrow CLI recovery
+fixture, not a claim about arbitrary Codex tools or Desktop behavior.
+
+The live transcript displayed the branded red denial, but only generic
+`hook: SessionStart Completed`, `PostToolUse Completed`, and `Stop Completed`
+lines for successful states. Persistent green Miko presence remains a host-UX
+TODO even though the heartbeat and completion snapshot prove activation.
 
 The test also exposed an onboarding failure: before CLI `/hooks` trust, the same
 local project had five correctly installed Hooks but Codex Desktop completed an
