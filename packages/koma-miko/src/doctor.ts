@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { closeSync, existsSync, openSync, readFileSync, readdirSync, readSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { loadMikoConfig } from './config.js';
 import type { LoadedMikoConfig } from './config.js';
@@ -8,7 +8,7 @@ export type DoctorStatus = 'pass' | 'warn' | 'fail';
 export type DoctorHost = 'claude' | 'codex' | 'gemini' | 'vscode';
 
 export interface DoctorCheck {
-  id: 'config' | 'skills' | 'hooks' | 'state-ignore';
+  id: 'config' | 'skills' | 'hooks' | 'activation' | 'state-ignore';
   status: DoctorStatus;
   message: string;
 }
@@ -129,6 +129,67 @@ function stateIsIgnored(projectRoot: string): boolean {
   });
 }
 
+function hasCodexTaskStarted(pathname: string): boolean {
+  const size = statSync(pathname).size;
+  if (size === 0) return false;
+  const buffer = Buffer.alloc(Math.min(size, 4096));
+  const file = openSync(pathname, 'r');
+  try {
+    readSync(file, buffer, 0, buffer.length, 0);
+  } finally {
+    closeSync(file);
+  }
+  return /"type"\s*:\s*"task_started"/.test(buffer.toString('utf8'));
+}
+
+function codexActivationCheck(projectRoot: string, hookPaths: string[]): DoctorCheck {
+  const stateRoot = path.join(projectRoot, '.miko', 'state');
+  const recovery = 'Start Codex CLI in this project, run /hooks, trust the five Miko Hooks, run one turn, then rerun doctor. Codex Desktop-only activation remains Preview.';
+  if (!existsSync(stateRoot)) {
+    return {
+      id: 'activation',
+      status: 'warn',
+      message: `Codex Hooks are configured, but no live Miko runtime has been observed. ${recovery}`,
+    };
+  }
+
+  const heartbeats = readdirSync(stateRoot, { withFileTypes: true })
+    .filter((entry) => entry.isFile() && /^codex-.*\.jsonl$/i.test(entry.name))
+    .map((entry) => path.join(stateRoot, entry.name))
+    .filter((pathname) => {
+      try {
+        return hasCodexTaskStarted(pathname);
+      } catch {
+        return false;
+      }
+    })
+    .map((pathname) => ({ pathname, modified: statSync(pathname).mtimeMs }))
+    .sort((left, right) => right.modified - left.modified);
+
+  if (heartbeats.length === 0) {
+    return {
+      id: 'activation',
+      status: 'warn',
+      message: `Codex Hooks are configured, but no live SessionStart heartbeat was found. ${recovery}`,
+    };
+  }
+
+  const newestHookWrite = Math.max(0, ...hookPaths.map((pathname) => statSync(pathname).mtimeMs));
+  if (heartbeats[0].modified < newestHookWrite) {
+    return {
+      id: 'activation',
+      status: 'warn',
+      message: `A Codex runtime heartbeat exists, but the Hook config changed afterward. Trust may need renewed review. ${recovery}`,
+    };
+  }
+
+  return {
+    id: 'activation',
+    status: 'pass',
+    message: 'A live Codex SessionStart reached Miko after the current Hook config was written. This proves activation for at least one session, not permanent trust.',
+  };
+}
+
 export function doctorProject(projectRootInput: string, options: DoctorOptions = {}): DoctorReport {
   const projectRoot = path.resolve(projectRootInput);
   const host = options.host ?? 'claude';
@@ -163,8 +224,10 @@ export function doctorProject(projectRootInput: string, options: DoctorOptions =
       : `Required Skills not found under ${skillsRoots.join(', ')}: ${missingSkills.join(', ')}.`,
   });
 
+  let inspectedHookPaths: string[] = [];
   try {
     const settings = settingsWithMiko(projectRoot, host);
+    inspectedHookPaths = settings.map(({ pathname }) => pathname);
     const foundEvents = hookEvents(settings, host);
     const requiredEvents = host === 'claude' || host === 'codex' || host === 'vscode'
       ? ['PreToolUse', 'PostToolUse']
@@ -187,6 +250,19 @@ export function doctorProject(projectRootInput: string, options: DoctorOptions =
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Unknown settings error';
     checks.push({ id: 'hooks', status: 'fail', message: `Cannot inspect ${host} settings: ${reason}` });
+  }
+
+  if (host === 'codex') {
+    try {
+      checks.push(codexActivationCheck(projectRoot, inspectedHookPaths));
+    } catch (error) {
+      const reason = error instanceof Error ? error.message : 'Unknown activation error';
+      checks.push({
+        id: 'activation',
+        status: 'warn',
+        message: `Cannot verify live Codex Hook activation: ${reason}`,
+      });
+    }
   }
 
   checks.push({

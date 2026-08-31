@@ -92,13 +92,13 @@ export function pathsFromCodexPatch(command: unknown, cwd: string): string[] {
 
 /** Recognize a deliberately tiny single-file read subset without retaining contents. */
 export function readPathFromCodexShell(command: unknown, cwd: string): string | undefined {
-  if (!nonEmptyString(command) || /[;&|><`\r\n]/.test(command)) return undefined;
+  if (!nonEmptyString(command) || /[;&|><`$()\r\n]/.test(command)) return undefined;
   const candidate = command.trim();
   const powerShell = candidate.match(
-    /^Get-Content(?:\s+-Raw)?\s+-LiteralPath\s+(['"])([^'"]+)\1$/i,
+    /^Get-Content(?:\s+-Raw)?(?:\s+-LiteralPath)?\s+(?:(['"])([^'"]+)\1|([^\s'"]+))$/i,
   );
   const posix = candidate.match(/^cat\s+(['"]?)([^'"]+)\1$/i);
-  const pathname = powerShell?.[2] ?? posix?.[2];
+  const pathname = powerShell?.[2] ?? powerShell?.[3] ?? posix?.[2];
   return pathname ? toProjectRelativePath(pathname, cwd) : undefined;
 }
 
@@ -107,6 +107,17 @@ export function skillReadPathFromCodexShell(command: unknown, cwd: string): stri
   const pathname = readPathFromCodexShell(command, cwd);
   return pathname && /(?:^|\/)SKILL\.md$/i.test(pathname.replace(/\\/g, '/'))
     ? pathname
+    : undefined;
+}
+
+/** Recognize a semicolon-separated batch only when every segment is a safe read. */
+export function readPathsFromCodexShell(command: unknown, cwd: string): string[] | undefined {
+  if (!nonEmptyString(command)) return undefined;
+  const segments = command.split(';').map((segment) => segment.trim()).filter(Boolean);
+  if (segments.length === 0) return undefined;
+  const paths = segments.map((segment) => readPathFromCodexShell(segment, cwd));
+  return paths.every((pathname): pathname is string => pathname !== undefined)
+    ? paths
     : undefined;
 }
 
@@ -123,8 +134,10 @@ function canonicalCodexCalls(
   }
 
   if (tool === 'Bash' || tool === 'exec_command') {
-    const readPath = readPathFromCodexShell(input.command ?? input.cmd, cwd);
-    if (readPath) return [{ tool: 'Read', arguments: { path: readPath }, cwd }];
+    const readPaths = readPathsFromCodexShell(input.command ?? input.cmd, cwd);
+    if (readPaths) {
+      return readPaths.map((pathname) => ({ tool: 'Read', arguments: { path: pathname }, cwd }));
+    }
   }
 
   if (tool === 'read_file' || tool === 'Read') {
@@ -194,6 +207,19 @@ function decideCodexTool(result: VerificationResult): object | undefined {
   };
 }
 
+function codexActiveNotice(reset = false): object {
+  const userNotice = reset
+    ? '🟢 Miko active · evidence epoch reset; required Skills must be observed again.'
+    : '🟢 Miko active · Agent Specs loaded; observable tool calls will be checked.';
+  return {
+    systemMessage: userNotice,
+    hookSpecificOutput: {
+      hookEventName: 'SessionStart',
+      additionalContext: `${userNotice} Host-native permissions remain authoritative.`,
+    },
+  };
+}
+
 function evidenceFromCodexEvent(input: CodexHookInput): EvidenceEvent[] {
   if (input.hook_event_name !== 'PostToolUse') return [];
   const event = input as CodexPostToolUseInput;
@@ -217,12 +243,13 @@ export function handleCodexHookEvent(
     const event = input as CodexSessionStartInput;
     if (event.source === 'resume' || event.source === 'clear') {
       return {
+        output: codexActiveNotice(true),
         evidence,
         contextAdvance: miko.advanceContext(taskId, 'resume'),
         contextAdvanceReason: 'resume',
       };
     }
-    return { evidence };
+    return { output: codexActiveNotice(), evidence };
   }
 
   if (input.hook_event_name === 'PostCompact') {

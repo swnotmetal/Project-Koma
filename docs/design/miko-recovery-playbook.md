@@ -29,13 +29,21 @@ agent without asking the user to repair evidence manually.
   `PreToolUse`. Miko therefore maps both `REVIEW` and `DENY` to a visible,
   recoverable deny and never emits an explicit allow. This avoids Codex's
   documented failure mode where an unsupported `ask` is ignored and the tool
-  call continues.
+call continues.
 - Gemini maps `REVIEW` to `decision: ask` on current interactive CLI releases
   and `DENY` to `decision: deny`; non-interactive mode may deny because no user
   is available. Project Hook fingerprints may require a one-time trust action.
 - DeepSeek Harness maps `REVIEW` to native `ask` by default. It may steer one
   corrective completion step, bounded by
   `maxCompletionSteers`; it is not an infinite retry loop.
+
+**No Miko message is not an `ALLOW`.** The current Codex CLI may collapse the
+startup message to `hook: SessionStart Completed`, so the privacy-safe heartbeat
+is the stronger check. If `.miko/state/` receives no new Codex heartbeat, stop
+the test and run `npx koma-miko doctor --host codex --strict`. Installed project
+Hooks may still be untrusted and silently skipped. The current recovery is to
+open Codex CLI in the project, run `/hooks`, trust the five exact Miko commands,
+send one small turn, and rerun doctor. Desktop-only activation remains Preview.
 
 ## Operator checklist
 

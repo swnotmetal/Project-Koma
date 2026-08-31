@@ -64,6 +64,13 @@ npx --yes koma-miko@alpha probe --host claude  # isolated adapter check; no mode
 npx koma-miko init --host claude     # after local installation
 ```
 
+> **Codex is a narrower Preview path, not equivalent to Claude Code.** Codex
+> CLI requires a one-time `/hooks` review before project Hooks run. In our
+> current Codex Desktop test, five correctly installed Hooks remained inactive
+> until that review was completed in the CLI; Desktop-only onboarding is not
+> yet smooth enough for the primary vibe-coder path. An offline `probe` proves
+> adapter logic, not live Hook activation.
+
 [Miko README →](./packages/koma-miko/README.md) ·
 [10-second web replay →](https://koma-demo.swbuilds.workers.dev) ·
 [DeepSeek Harness adapter →](./packages/koma-miko-dsh/README.md)
@@ -106,6 +113,7 @@ Hook behavior—not a generic score for model intelligence.
 | Offline host conformance | Claude, Codex, Gemini, and VS Code Copilot each reproduce `DENY → observed Skill → ALLOW`; ledger fixtures reject prompt/code/tool-response persistence |
 | Local verifier scale | 1,000 Agent Specs: **1.34 ms p95** per action; 10,001 indexed evidence events: **0.0041 ms p95**; restore 1,000 evidence events: **1.52 ms p95** |
 | Claude Code smoke | One 100-Skill / ~20k-context run passed; a separate one-Skill recovery run completed `DENY → Skill → edit` |
+| Codex activation smoke | Existing ChatGPT login emitted live `SessionStart` / `Stop` Hooks and wrote a local Miko heartbeat after one-time CLI trust; this was activation-only, not a completed edit-recovery run |
 | DeepSeek Harness smoke | **3/3** narrow packed-artifact recovery runs passed; 19.425 s mean model phase |
 
 The scale row is a 2026-08-27 reference run on Node 24.19 / Windows; rerun it

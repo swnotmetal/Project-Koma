@@ -49,11 +49,43 @@ this is an upstream packaging issue, not a Miko dependency change.
 
 ## Codex
 
-The existing Codex CLI login was able to start the live fixture and enter a
-model turn without an API key. The account then returned its usage-limit error
-before the Miko completion sequence could finish. This run is recorded as
-`host/quota failure`, not adapter success or model failure. The offline test
-remains the reproducible gate until the account quota is available again.
+The first live attempt reached Codex CLI without an API key but stopped at the
+account usage limit. On 2026-09-01, the five project Hooks were reviewed and
+trusted in Codex CLI, then a minimal turn ran through the existing ChatGPT login
+with `gpt-5.6-luna`:
+
+```text
+SessionStart Hook → model replies OK → Stop Hook
+4,579 tokens reported by Codex · local Miko task_started ledger written
+```
+
+This is a **live activation smoke only**. It proves that the trusted project
+Hook command can reach Miko and persist a privacy-minimized heartbeat. The turn
+did not call `apply_patch`, so it does not yet prove a live
+`DENY → Skill/reference recovery → edit → COMPLETE` sequence.
+
+A subsequent live lab attempted a two-file patch before reading project files.
+Miko denied the first `apply_patch`, named two missing Skills and one reference,
+observed the three reads, and ultimately allowed the exact HTML/CSS changes.
+Codex reported 17,266 tokens. This was not yet the clean target flow: Codex first
+grouped the three PowerShell reads with semicolons, which the adapter treated as
+a generic shell call and used to activate an unrelated `local-testing` Spec.
+The model recovered by loading that extra Skill, but the added work was Miko
+friction, not a user requirement. The adapter now recognizes unquoted
+`Get-Content -Raw path` and semicolon-separated batches only when **every**
+segment is a safe read; regression tests cover both the accepted all-read batch
+and a rejected read-plus-command batch. That parser fix has not yet received a
+third paid live rerun.
+
+The live transcript also displayed only `hook: SessionStart Completed`, not the
+adapter's branded `systemMessage`, so persistent green startup presence remains
+a host-UX TODO even though the heartbeat proves activation.
+
+The test also exposed an onboarding failure: before CLI `/hooks` trust, the same
+local project had five correctly installed Hooks but Codex Desktop completed an
+edit without a visible Miko intervention. Config presence and offline
+conformance must therefore never be reported as live protection. Plugin-bundled
+Hooks would still be subject to Codex review.
 
 ## Gemini
 

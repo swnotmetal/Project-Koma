@@ -6,6 +6,7 @@ import {
   handleCodexHookEvent,
   pathsFromCodexPatch,
   readPathFromCodexShell,
+  readPathsFromCodexShell,
   skillReadPathFromCodexShell,
 } from './codex';
 
@@ -40,6 +41,39 @@ const patchInput = {
 };
 
 describe('Codex adapter', () => {
+  it('announces live activation when a Codex session starts', () => {
+    const miko = start();
+    const started = handleCodexHookEvent(miko, 'codex-session', {
+      session_id: 'codex-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'SessionStart',
+      source: 'startup',
+    });
+
+    expect(started.output).toMatchObject({
+      systemMessage: expect.stringContaining('Miko active'),
+      hookSpecificOutput: {
+        hookEventName: 'SessionStart',
+        additionalContext: expect.stringContaining('Host-native permissions remain authoritative'),
+      },
+    });
+  });
+
+  it('announces the evidence reset when a Codex session resumes', () => {
+    const miko = start();
+    const resumed = handleCodexHookEvent(miko, 'codex-session', {
+      session_id: 'codex-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'SessionStart',
+      source: 'resume',
+    });
+
+    expect(resumed.output).toMatchObject({
+      systemMessage: expect.stringContaining('evidence epoch reset'),
+    });
+    expect(resumed.contextAdvance?.advanced).toBe(true);
+  });
+
   it('extracts every target path without retaining patch content', () => {
     expect(pathsFromCodexPatch(
       '*** Update File: src/ui/A.tsx\n*** Add File: src/ui/B.tsx',
@@ -60,6 +94,30 @@ describe('Codex adapter', () => {
       "Get-Content -Raw -LiteralPath 'docs/design-system.md'",
       'D:\\portfolio',
     )).toBe('docs/design-system.md');
+    expect(readPathFromCodexShell(
+      'Get-Content -Raw docs/design-system.md',
+      'D:\\portfolio',
+    )).toBe('docs/design-system.md');
+    expect(skillReadPathFromCodexShell(
+      'Get-Content -Raw .agents/skills/product-design/SKILL.md',
+      'D:\\portfolio',
+    )).toBe('.agents/skills/product-design/SKILL.md');
+    expect(readPathFromCodexShell(
+      'Get-Content -Raw docs/design-system.md; npm test',
+      'D:\\portfolio',
+    )).toBeUndefined();
+    expect(readPathsFromCodexShell(
+      'Get-Content -Raw .agents/skills/product-design/SKILL.md; Get-Content -Raw docs/design-system.md',
+      'D:\\portfolio',
+    )).toEqual(['.agents/skills/product-design/SKILL.md', 'docs/design-system.md']);
+    expect(readPathsFromCodexShell(
+      'Get-Content -Raw docs/design-system.md; npm test',
+      'D:\\portfolio',
+    )).toBeUndefined();
+    expect(readPathsFromCodexShell(
+      'Get-Content -Raw docs/design-system.md; Get-Content -Raw $(Get-Location)',
+      'D:\\portfolio',
+    )).toBeUndefined();
     expect(skillReadPathFromCodexShell(
       "Get-Content -Raw -LiteralPath 'docs/design-system.md'",
       'D:\\portfolio',
@@ -86,6 +144,37 @@ describe('Codex adapter', () => {
     });
     expect(recovered.output).toMatchObject({ systemMessage: expect.stringContaining('Miko recovered') });
     expect(handleCodexHookEvent(miko, 'codex-session', patchInput).output).toBeUndefined();
+  });
+
+  it('treats an all-read PowerShell batch as recovery instead of a shell action', () => {
+    const miko = createMiko({ contracts: [contract, {
+      id: 'shell-safety',
+      appliesWhen: { action: { tools: ['Bash', 'exec_command'] } },
+      requires: { skills: ['local-testing'] },
+      mode: 'enforce',
+    }] });
+    miko.startTask({ sessionId: 'codex-session', taskId: 'codex-session', tags: [] });
+    const batch = {
+      session_id: 'codex-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PreToolUse' as const,
+      tool_name: 'Bash',
+      tool_input: {
+        command: 'Get-Content -Raw .agents/skills/product-design/SKILL.md; Get-Content -Raw docs/design-system.md',
+      },
+    };
+
+    expect(handleCodexHookEvent(miko, 'codex-session', batch).output).toBeUndefined();
+    expect(miko.getActiveContractIds('codex-session')).not.toContain('shell-safety');
+    handleCodexHookEvent(miko, 'codex-session', {
+      ...batch,
+      hook_event_name: 'PostToolUse',
+      tool_response: { status: 'completed', exitCode: 0 },
+    });
+    expect(miko.getEvidence('codex-session')).toEqual(expect.arrayContaining([
+      expect.objectContaining({ type: 'skill_loaded', name: 'product-design' }),
+      expect.objectContaining({ type: 'reference_read', path: 'docs/design-system.md' }),
+    ]));
   });
 
   it('blocks a patch, permits exact Skill recovery, then allows the retried patch', () => {

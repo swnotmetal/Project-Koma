@@ -17,7 +17,7 @@ function help(): string {
     'Runs a deterministic, no-API Agent Spec replay.',
     'Runs an isolated, no-model host-adapter conformance probe and removes its fixture.',
     'Initializes a starter Agent Spec and host Hooks without overwriting existing settings.',
-    'Runs offline checks for miko.json, host Skills, Hooks, and Git ignore.',
+    'Runs offline checks for miko.json, host Skills, Hooks, Git ignore, and a Codex runtime heartbeat.',
   ].join('\n');
 }
 
@@ -101,7 +101,17 @@ if (args[0] === 'demo') {
         } else {
           const report = doctorProject(result.projectRoot, { host: result.host });
           process.stdout.write(`${formatDoctorReport(report)}\n`);
-          process.stdout.write('Edit miko.json to match your project, then start a new host session.\n');
+          if (result.host === 'codex') {
+            process.stdout.write([
+              'ACTION REQUIRED: Codex skips project Hooks until you review and trust them.',
+              'In Codex CLI, open this project, run /hooks, trust the five Miko Hooks, run one turn, then run:',
+              '  npx koma-miko doctor --host codex --strict',
+              'If the codex command is unavailable, Desktop-only activation is currently Preview and may not surface this review clearly.',
+              'Miko cannot safely automate the host trust decision.',
+            ].join('\n') + '\n');
+          } else {
+            process.stdout.write('Edit miko.json to match your project, then start a new host session.\n');
+          }
           if (!report.ok) process.exitCode = 1;
         }
       } catch (error) {

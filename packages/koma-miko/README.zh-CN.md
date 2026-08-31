@@ -188,6 +188,33 @@ Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已
 `.miko/state/`，该目录应保持忽略。旧 `.miko/contracts.json` 数组仍可读取，
 但不再是推荐的开发者入口。
 
+### Codex Preview：安装不等于激活
+
+`npx koma-miko init --host codex` 可以安装 Agent Spec 和 5 个项目 Hook，
+但不能代替用户让 Codex 信任可执行的项目代码。非托管 Codex Hook 会按命令的
+精确 hash 接受审阅；用户信任前，Codex 会跳过它们。目前可靠的首次流程是：
+
+```text
+1. 运行：npm install -D koma-miko@alpha
+2. 运行：npx koma-miko init --host codex --enforce
+3. 在该项目启动 Codex CLI，运行：/hooks
+4. 信任 5 个 Miko Hook，然后发送一个很小的任务
+5. 运行：npx koma-miko doctor --host codex --strict
+```
+
+最后一步只有在 Miko 观察到晚于当前 Hook 配置的真实 `SessionStart` heartbeat
+后，才会通过新的 activation 检查。heartbeat 只能证明至少一个真实会话到达过
+Miko；它不能保证 Hook 命令变更后仍受信任，也不能证明每个 Codex 工具都发出 Hook。
+adapter 也会返回带 Miko 品牌的 `SessionStart` context，但当前 `codex exec`
+transcript 只显示 `hook: SessionStart Completed`；请以 heartbeat 支撑的 doctor
+结果为准，不要假设一定存在持续显示的绿色 banner。
+
+**仅用 Codex Desktop 的 onboarding 目前还不是主推 alpha 路径。** 在当前本地
+测试里，5 个项目 Hook 已安装但尚未信任时，Desktop 仍直接完成了编辑；直到打开
+Codex CLI，审阅要求才清晰出现。如果终端中没有 `codex` 命令，不应把成功的
+`init`、Hook 配置检查或离线 `probe` 当作保护已生效。Miko 不会绕过信任决定；
+把它封装成 Codex plugin 也不会取消 Codex 的 Hook 审阅。
+
 花费模型额度前，先运行完全离线的预检：
 
 ```sh
@@ -205,11 +232,13 @@ npx koma-miko doctor --host vscode --strict
 `probe` 会在隔离 fixture 中让所选 adapter 完整走一遍
 `DENY -> evidence -> ALLOW`，检查 JSONL ledger 没有 prompt、源码或工具输出，
 随后自动清理。它不会调用模型，也不会修改当前项目；`--json` 输出同一份
-隐私安全报告。它验证的是 adapter conformance，不代表用户安装的宿主版本一定
-会发出完全相同的事件或工具名。
+隐私安全报告，并明确标记 runtime activation 为 `NOT CHECKED`。它验证的是
+adapter conformance，不代表用户安装的宿主信任了 Hook，也不代表一定会发出
+完全相同的事件或工具名。
 
 Doctor 会验证 Agent Spec，并报告所选宿主的 Skill、Hook 覆盖范围以及
-`.miko/state/` 是否已忽略。默认检查 Claude；检查其他宿主时选择对应的
+`.miko/state/` 是否已忽略；检查 Codex 时还会分别报告 Hook 已配置和真实 runtime
+heartbeat 已观察。默认检查 Claude；检查其他宿主时选择对应的
 `--host`。它不会调用模型，也不会读取 API key。
 
 Claude Code 本地 CLI、Desktop Code tab 与 VS Code/Cursor 扩展共享 settings、
@@ -349,6 +378,9 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
 - **100-Skills fixture 仅在约 20k tokens 的一次 Haiku 测试中通过；这不能代表 100k、190k 或近百万 token 的行为；**
 - **暂无托管遥测和云端策略服务；** Claude 适配器仅使用本地 JSONL 账本；
 - **无法观察没有发出已配置宿主 Hook 事件的云端工具、编辑器包装层或远程会话；**
+- **仅用 Codex Desktop 的 onboarding 还不够适合 vibe coder：项目 Hook 即使
+  已安装，也可能在用户完成 CLI 信任审阅前被静默跳过；配置存在和离线 probe
+  通过都不等于已经激活；**
 - **VS Code Agent Hooks 仍是 Preview；适配器已通过离线 schema 一致性测试，
   但仍需在测试者的真实 Copilot 工具集上完成编辑器活测；**
 - **不自动改写工具调用；**

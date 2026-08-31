@@ -220,6 +220,37 @@ match your project. Miko writes session metadata under `.miko/state/`, which
 should stay ignored. Legacy `.miko/contracts.json` arrays remain readable but
 are no longer the preferred developer interface.
 
+### Codex Preview: installation is not activation
+
+`npx koma-miko init --host codex` can install the Agent Spec and five project
+Hooks, but it cannot make Codex trust executable project code. Non-managed
+Codex Hooks are reviewed by exact command hash and are skipped until the user
+trusts them. The current reliable first-run path is:
+
+```text
+1. Run: npm install -D koma-miko@alpha
+2. Run: npx koma-miko init --host codex --enforce
+3. Start Codex CLI in that project and run: /hooks
+4. Trust the five Miko Hooks, then send one small turn
+5. Run: npx koma-miko doctor --host codex --strict
+```
+
+The last command passes the new activation check only after Miko has observed a
+real `SessionStart` heartbeat written after the current Hook config. A heartbeat
+proves at least one live session reached Miko; it does not guarantee that trust
+will survive a later Hook command change or that every Codex tool emits Hooks.
+The adapter also returns branded `SessionStart` context, but the current
+`codex exec` transcript reduced it to `hook: SessionStart Completed`; use the
+heartbeat-backed doctor result rather than assuming a persistent banner exists.
+
+**Codex Desktop-only onboarding is not yet a primary alpha path.** In the
+current local test, Desktop allowed an edit while all five installed project
+Hooks were still untrusted; the review became obvious only after opening Codex
+CLI. If the `codex` command is not available, do not interpret a successful
+`init`, Hook config check, or offline `probe` as protection. Miko deliberately
+does not automate trust, and packaging it as a Codex plugin would not remove
+Codex's review requirement.
+
 Run an entirely offline preflight before spending model credits:
 
 ```sh
@@ -238,11 +269,13 @@ npx koma-miko doctor --host vscode --strict
 ALLOW` conformance fixture, checks that prompt, source, and tool output content
 stay out of the JSONL ledger, and removes the fixture. It never invokes a model
 or modifies the current project. Use `--json` for the same privacy-safe report
-in machine-readable form. This is an adapter check, not proof that an installed
-host version emits identical events or tool names.
+in machine-readable form. Its report explicitly marks runtime activation as
+`NOT CHECKED`. This is an adapter check, not proof that an installed host trusts
+the Hook or emits identical events and tool names.
 
 Doctor validates Agent Specs and reports host-specific Skill discovery, required
-Hook coverage, and whether `.miko/state/` is ignored. It defaults to Claude;
+Hook coverage, and whether `.miko/state/` is ignored. For Codex it separately
+reports configured Hooks and an observed live runtime heartbeat. It defaults to Claude;
 select the matching host when checking another layout. It never calls a model
 or reads an API key.
 
@@ -407,6 +440,9 @@ metrics, and never reads an env file. See the
 - **No hosted telemetry service** (the Claude adapter uses a local JSONL ledger)
 - **Cannot observe hosted tools, editor wrappers, or remote sessions that do not
   emit the configured host Hook events**
+- **Codex Desktop-only onboarding is not yet vibe-coder-ready: installed project
+  Hooks may be silently skipped until the user completes an explicit CLI trust
+  review; config presence and offline probe success do not prove activation**
 - **VS Code Agent Hooks are Preview; the adapter has offline schema conformance
   but still needs a live Copilot editor pass on the tester's tool set**
 - **No automatic rewriting of tool calls**

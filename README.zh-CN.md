@@ -62,6 +62,12 @@ npx --yes koma-miko@alpha probe --host claude  # 隔离式 adapter 检查；不�
 npx koma-miko init --host claude     # 本地安装后自动配置
 ```
 
+> **Codex 是更窄的 Preview 路径，并不等同于 Claude Code。** Codex CLI
+> 必须先通过一次 `/hooks` 审阅，项目 Hook 才会运行。在我们当前的 Codex
+> Desktop 测试中，5 个已正确安装的 Hook 在 CLI 完成信任前仍未生效；仅使用
+> Desktop 的首次启用流程还不够适合作为 vibe coder 主路径。离线 `probe` 只验证
+> adapter 逻辑，不代表真实 Hook 已激活。
+
 [Miko README →](./packages/koma-miko/README.zh-CN.md) ·
 [10 秒网页回放 →](https://koma-demo.swbuilds.workers.dev) ·
 [DeepSeek Harness adapter →](./packages/koma-miko-dsh/README.md)
@@ -91,6 +97,7 @@ Miko 本身是确定性验证器，因此这里衡量的是验证开销和端到
 | 离线宿主一致性 | Claude、Codex、Gemini 与 VS Code Copilot 均复现 `DENY → 观察到 Skill → ALLOW`；账本夹具确认不保存 prompt、代码或工具响应 |
 | 本地 verifier 规模测试 | 1,000 份 Agent Spec：每次动作 **p95 1.34 ms**；10,001 条索引证据：**p95 0.0041 ms**；恢复 1,000 条证据：**p95 1.52 ms** |
 | Claude Code smoke | 一次 100-Skill / 约 20k context 测试通过；另一次单 Skill 恢复完成 `DENY → Skill → edit` |
+| Codex 激活 smoke | 使用现有 ChatGPT 登录态，在 CLI 一次性信任后观察到真实 `SessionStart` / `Stop` Hook 并写入本地 Miko heartbeat；该测试只证明激活，尚未完成编辑恢复链路 |
 | DeepSeek Harness smoke | 窄范围 packed-artifact 恢复 **3/3** 通过；模型阶段平均 19.425 秒 |
 
 规模数据来自 2026-08-27 的 Node 24.19 / Windows 参考运行；可用

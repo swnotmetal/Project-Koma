@@ -22,6 +22,7 @@ const HOSTS = {
     tools: ['apply_patch', 'Bash'],
     argumentKeys: ['command'],
     recovery: 'DENY -> exact Skill read -> ALLOW -> COMPLETE',
+    limitation: 'Offline adapter conformance only; it does not verify project Hook trust, Codex Desktop activation, or live host events.',
   },
   gemini: {
     label: 'Gemini CLI',
@@ -74,6 +75,7 @@ function formatReport(report) {
     `[OK] ${report.recovery}`,
     '[OK] report contains host metadata only; prompt, source, and tool output omitted',
     '[OK] no model or API invoked; temporary fixture removed',
+    '[NOT CHECKED] installed Hook trust or live host event delivery',
     `[NOTE] ${report.limitation}`,
   ].join('\n');
 }
@@ -99,13 +101,14 @@ export async function runProbe(hostInput) {
     recovery: profile.recovery,
     modelInvoked: false,
     projectModified: false,
+    runtimeActivationChecked: false,
     privacy: {
       containsPrompt: false,
       containsSource: false,
       containsToolOutput: false,
     },
     cleanup: 'complete',
-    limitation: 'Offline adapter conformance only; this does not prove that an installed host emits the same events or tool names.',
+    limitation: profile.limitation ?? 'Offline adapter conformance only; this does not prove that an installed host emits the same events or tool names.',
   };
 }
 

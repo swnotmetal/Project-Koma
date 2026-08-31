@@ -1,8 +1,8 @@
 # Koma Miko — Alpha Design
 
-Status: **Public alpha implemented with narrow Claude Code, Codex, Gemini, and
-DeepSeek Harness enforcement paths; stable API and broad host claims remain
-pending**.
+Status: **Public alpha implemented with a primary Claude Code path and narrow
+Codex, Gemini, VS Code, and DeepSeek Harness mappings; stable API, smooth Codex
+Desktop onboarding, and broad host claims remain pending**.
 
 Miko addresses a narrower, observable problem than general "agent reliability":
 an agent starts work without loading a required skill, forgets a loaded contract as
@@ -135,7 +135,8 @@ Official references: [platform comparison](https://code.claude.com/docs/en/platf
 
 | Host | Hook path implemented | Alpha caveat |
 |---|---|---|
-| Codex CLI/Desktop local project | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostCompact`, `Stop` | Project Hook requires one-time trust; `PreToolUse` cannot surface `ask`, so Miko pauses `REVIEW`; hosted/specialized tools may not emit local events |
+| Codex CLI local project | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostCompact`, `Stop` | Live activation smoke verified with existing ChatGPT login; exact-hash Hook review is required once and again after command changes; `PreToolUse` cannot surface `ask`, so Miko pauses `REVIEW` |
+| Codex Desktop local project | Uses the same project Hook target | Not a primary alpha onboarding path: in the 2026-09-01 local test, five installed Hooks were inactive until CLI `/hooks` trust; Desktop did not make the missing activation obvious before an edit |
 | Gemini CLI | `SessionStart`, `BeforeTool`, `AfterTool`, `PreCompress`, `AfterAgent` | Project Hook fingerprint needs trust; full headless live fixture timed out and needs a shorter-model rerun |
 | DeepSeek Harness | Native DSH tool/turn lifecycle | Pinned Developer Preview and peer-install workaround; not a broad future-version guarantee |
 
@@ -143,6 +144,26 @@ The adapters share the Miko verifier and privacy rules, but their host-native
 outputs are intentionally different. A successful offline conformance test
 means the mapping is deterministic; it does not mean every surface has equal
 Hook coverage.
+
+Codex therefore needs three separate product states: **installed** (Hook files
+exist), **trusted** (Codex accepted the exact commands), and **observed active**
+(a real session reached Miko). `probe --host codex` establishes none of the last
+two. `doctor --host codex --strict` reports active only after a live
+`SessionStart` heartbeat newer than the current Hook config. A later command
+change can invalidate trust, so even that heartbeat is evidence of a past live
+session rather than a permanent guarantee.
+
+This trust step cannot be safely automated away. Codex documents that
+non-managed Hooks are skipped until their exact command hash is reviewed through
+`/hooks`; project-local configuration also depends on project trust, and
+plugin-provided Hooks remain subject to review. See the official
+[Codex Hooks reference](https://learn.chatgpt.com/docs/hooks) and
+[Codex CLI guide](https://learn.chatgpt.com/docs/codex/cli).
+
+The adapter returns branded `SessionStart` context, but the current live
+`codex exec` transcript rendered only `hook: SessionStart Completed`. Until the
+host exposes a persistent native status surface, the activation heartbeat and
+`doctor` result are more reliable than expecting a visible green banner.
 
 ### Evidence trust
 

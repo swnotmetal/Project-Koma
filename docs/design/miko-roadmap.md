@@ -43,6 +43,15 @@ reproducible probe and one small result bundle to return.
 - [x] Add one privacy-safe, no-model `probe --host` interface for Claude,
   Codex, Gemini, and VS Code adapter conformance; use a separate zero-credit
   `koma-miko-dsh probe` package preflight and reserve `--live` for paid DSH.
+- [x] Separate Codex Hook configuration from runtime activation in `doctor`;
+  require a real `SessionStart` heartbeat before strict readiness passes.
+- [x] Emit Codex `SessionStart` context plus a local activation heartbeat.
+- [ ] Make `Miko active` persistently user-visible in Codex Desktop and CLI;
+  the current live `codex exec` transcript rendered only `hook: SessionStart
+  Completed`, not the adapter's branded `systemMessage`.
+- [ ] Replace the current CLI `/hooks` detour with a genuinely clear Codex
+  Desktop trust/review path if the host exposes one. Until then, do not market
+  Desktop-only onboarding as vibe-coder-ready.
 - [ ] Add a one-command VS Code Copilot probe that creates an isolated Skill,
   Agent Spec, Hook configuration, and disposable `src/miko-probe` fixture.
 - [ ] Emit a privacy-safe probe report containing only host/version metadata,
@@ -99,9 +108,14 @@ shared, but let each host own its permission and text surface.
 - [x] Add persistent Gemini Hook handling for `BeforeTool`, `AfterTool`,
   `PreCompress`, `SessionStart`, and `AfterAgent`.
 - [x] Run zero-API independent-process conformance tests for both adapters.
-- [ ] Re-run the Codex live fixture after the account usage limit resets; the
-  first attempt reached the CLI but stopped before completion because the
-  existing Codex login had no remaining usage quota.
+- [x] Verify live Codex Hook activation with the existing ChatGPT login: after
+  exact-hash CLI trust, `SessionStart` and `Stop` reached Miko and the local
+  heartbeat ledger was written without an API key.
+- [ ] Complete a live Codex `DENY → Skill/reference recovery → edit → COMPLETE`
+  fixture; the activation smoke alone does not establish tool interception.
+  A 2026-09-01 live edit did reach `DENY → two Skills/reference → edit`, but an
+  initially grouped read triggered an unrelated shell Spec and no completion
+  obligation was configured, so this remains an intermediate result.
 - [ ] Repeat the Gemini live fixture with a short, low-latency model after the
   CLI/service latency issue is understood; the flash-lite attempt authenticated
   successfully but still hit the 180-second runner timeout.

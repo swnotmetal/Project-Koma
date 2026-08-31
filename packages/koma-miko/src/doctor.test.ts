@@ -106,7 +106,44 @@ describe('miko doctor', () => {
       const report = doctorProject(project, { host: 'codex' });
       expect(report.host).toBe('codex');
       expect(report.ok).toBe(true);
-      expect(report.checks.every((check) => check.status === 'pass')).toBe(true);
+      expect(report.checks.find((check) => check.id === 'hooks')).toMatchObject({ status: 'pass' });
+      expect(report.checks.find((check) => check.id === 'activation')).toMatchObject({
+        status: 'warn',
+        message: expect.stringContaining('no live Miko runtime'),
+      });
+
+      mkdirSync(path.join(project, '.miko', 'state'), { recursive: true });
+      writeFileSync(
+        path.join(project, '.miko', 'state', 'codex-test.jsonl'),
+        `${JSON.stringify({ type: 'task_started', sessionId: 'live', taskId: 'live' })}\n`,
+      );
+      const active = doctorProject(project, { host: 'codex' });
+      expect(active.checks.find((check) => check.id === 'activation')).toMatchObject({
+        status: 'pass',
+        message: expect.stringContaining('live Codex SessionStart'),
+      });
+      expect(active.checks.every((check) => check.status === 'pass')).toBe(true);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+
+  it('does not mistake an unrelated Codex state file for a live Hook heartbeat', () => {
+    const project = mkdtempSync(path.join(tmpdir(), 'miko-doctor-codex-state-'));
+    try {
+      mkdirSync(path.join(project, '.miko', 'state'), { recursive: true });
+      writeFileSync(path.join(project, '.miko', 'state', 'codex-test.jsonl'),
+        `${JSON.stringify({ type: 'evidence_recorded', taskId: 'not-live' })}\n`);
+      writeFileSync(path.join(project, 'miko.json'), JSON.stringify({
+        version: 1,
+        specs: [{ id: 'state-check', appliesWhen: { taskTags: ['state'] }, requires: {} }],
+      }));
+
+      const report = doctorProject(project, { host: 'codex' });
+      expect(report.checks.find((check) => check.id === 'activation')).toMatchObject({
+        status: 'warn',
+        message: expect.stringContaining('no live SessionStart heartbeat'),
+      });
     } finally {
       rmSync(project, { recursive: true, force: true });
     }
