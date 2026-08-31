@@ -80,11 +80,11 @@ const HOST_DETAILS: Record<InitHost, {
     events: Object.fromEntries([
       'SessionStart', 'PreToolUse', 'PostToolUse', 'PostCompact', 'Stop',
     ].map((event) => [event, {
-      matcher: '*',
       hook: {
         type: 'command',
-        command: 'node',
-        args: ['./node_modules/koma-miko/dist/codex-hook-cli.js'],
+        command: 'node ./node_modules/koma-miko/dist/codex-hook-cli.js',
+        timeout: 10,
+        statusMessage: 'Miko is checking the Agent Spec',
       },
     }])),
   },

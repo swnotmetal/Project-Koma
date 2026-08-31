@@ -2,8 +2,8 @@ import type { EvidenceEvent, Miko, VerificationResult } from './index.js';
 import {
   formatMikoAgentContext,
   formatMikoCompletionReceipt,
+  formatMikoDecision,
   formatMikoUserNotice,
-  toHostInteractionDecision,
 } from './index.js';
 import {
   evidenceFromSuccessfulHostTool,
@@ -90,19 +90,24 @@ export function pathsFromCodexPatch(command: unknown, cwd: string): string[] {
   return [...new Set(paths)];
 }
 
-/**
- * Recognize a deliberately tiny read-only shell subset used to reload SKILL.md.
- * Commands containing separators or redirection are rejected instead of guessed.
- */
-export function skillReadPathFromCodexShell(command: unknown, cwd: string): string | undefined {
+/** Recognize a deliberately tiny single-file read subset without retaining contents. */
+export function readPathFromCodexShell(command: unknown, cwd: string): string | undefined {
   if (!nonEmptyString(command) || /[;&|><`\r\n]/.test(command)) return undefined;
   const candidate = command.trim();
   const powerShell = candidate.match(
-    /^Get-Content(?:\s+-Raw)?\s+-LiteralPath\s+(['"])([^'"]+\/SKILL\.md)\1$/i,
+    /^Get-Content(?:\s+-Raw)?\s+-LiteralPath\s+(['"])([^'"]+)\1$/i,
   );
-  const posix = candidate.match(/^cat\s+(['"]?)([^'"]+\/SKILL\.md)\1$/i);
+  const posix = candidate.match(/^cat\s+(['"]?)([^'"]+)\1$/i);
   const pathname = powerShell?.[2] ?? posix?.[2];
   return pathname ? toProjectRelativePath(pathname, cwd) : undefined;
+}
+
+/** Backward-compatible helper for integrations that only want Skill reloads. */
+export function skillReadPathFromCodexShell(command: unknown, cwd: string): string | undefined {
+  const pathname = readPathFromCodexShell(command, cwd);
+  return pathname && /(?:^|\/)SKILL\.md$/i.test(pathname.replace(/\\/g, '/'))
+    ? pathname
+    : undefined;
 }
 
 function canonicalCodexCalls(
@@ -118,8 +123,8 @@ function canonicalCodexCalls(
   }
 
   if (tool === 'Bash' || tool === 'exec_command') {
-    const skillPath = skillReadPathFromCodexShell(input.command ?? input.cmd, cwd);
-    if (skillPath) return [{ tool: 'Read', arguments: { path: skillPath }, cwd }];
+    const readPath = readPathFromCodexShell(input.command ?? input.cmd, cwd);
+    if (readPath) return [{ tool: 'Read', arguments: { path: readPath }, cwd }];
   }
 
   if (tool === 'read_file' || tool === 'Read') {
@@ -162,15 +167,28 @@ export function codexToolSucceeded(response: unknown): boolean {
 }
 
 function decideCodexTool(result: VerificationResult): object | undefined {
-  const interaction = toHostInteractionDecision(result);
-  if (interaction === 'defer') return undefined;
-  const userNotice = formatMikoUserNotice(result);
-  const agentContext = formatMikoAgentContext(result);
+  if (result.decision === 'ALLOW') return undefined;
+  const review = result.decision === 'REVIEW';
+  const userNotice = review
+    ? [
+        `🟡 Miko review paused this action · ${result.checkpoint}`,
+        result.reason,
+        'Codex cannot open an approval prompt from PreToolUse yet. Load the missing evidence and retry, or change the Agent Spec before rerunning.',
+      ].join('\n')
+    : formatMikoUserNotice(result);
+  const agentContext = review
+    ? [
+        'Miko paused this call because Codex cannot surface a PreToolUse review choice yet.',
+        'Do not bypass the checkpoint. Load the exact missing Skill/reference and retry, or ask the user to change the Agent Spec.',
+        '',
+        formatMikoDecision(result),
+      ].join('\n')
+    : formatMikoAgentContext(result);
   return {
     systemMessage: userNotice,
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
-      permissionDecision: interaction,
+      permissionDecision: 'deny',
       permissionDecisionReason: agentContext,
     },
   };

@@ -29,8 +29,12 @@ async function writeFixture(root) {
       ['PreToolUse', 'PostToolUse', 'SessionStart', 'PostCompact', 'Stop'].map((event) => [
         event,
         [{
-          matcher: '*',
-          hooks: [{ type: 'command', command, timeout: 10_000 }],
+          hooks: [{
+            type: 'command',
+            command,
+            timeout: 10,
+            statusMessage: 'Miko is checking the Agent Spec',
+          }],
         }],
       ]),
     ),

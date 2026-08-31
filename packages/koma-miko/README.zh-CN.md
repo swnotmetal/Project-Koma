@@ -224,9 +224,12 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 alpha 也提供以下窄范围 Hook 适配器：
 
 - `koma-miko-codex-hook` 消费 Codex 的 `SessionStart`、`PreToolUse`、
-  `PostToolUse`、`PostCompact` 与 `Stop` 事件。`REVIEW` 映射到
-  `permissionDecision: ask`，`DENY` 映射到 `permissionDecision: deny`；它刻意
-  不发出 `allow`，让 Codex 自己的权限策略保持最终权威。`apply_patch` 只记录
+  `PostToolUse`、`PostCompact` 与 `Stop` 事件。Codex 当前可以解析、但尚不能
+  执行来自 `PreToolUse` 的 `permissionDecision: ask`，因此 `REVIEW` 与 `DENY`
+  都会用 `permissionDecision: deny` 暂停本次调用。review 暂停会明确说明宿主
+  限制，并让 Agent 加载缺失证据，或者请用户修改 Agent Spec。适配器刻意
+  不发出 `allow`，让 Codex 自己的权限策略保持最终权威。参见官方
+  [Codex Hooks 文档](https://learn.chatgpt.com/docs/hooks#pretooluse)。`apply_patch` 只记录
   路径元数据，并且只识别极窄的只读
   `Get-Content`/`cat` Skill 重载命令。
 - `koma-miko-gemini-hook` 消费 Gemini 的 `BeforeTool`、`AfterTool`、

@@ -259,10 +259,15 @@ See the official [platform overview](https://code.claude.com/docs/en/platforms),
 The alpha also ships narrow adapters for these host Hook surfaces:
 
 - `koma-miko-codex-hook` consumes Codex `SessionStart`, `PreToolUse`,
-  `PostToolUse`, `PostCompact`, and `Stop` events. It maps `REVIEW` to
-  `permissionDecision: ask` and `DENY` to `permissionDecision: deny`; it
-  deliberately does not emit `allow`, so Codex's own permission policy remains
-  authoritative. `apply_patch` targets
+  `PostToolUse`, `PostCompact`, and `Stop` events. Codex currently parses but
+  does not support `permissionDecision: ask` from `PreToolUse`, so both
+  `REVIEW` and `DENY` pause the proposed call with
+  `permissionDecision: deny`. A review pause explains the host limitation and
+  tells the agent to load missing evidence or ask the user to revise the Agent
+  Spec. The adapter deliberately does not emit `allow`, so Codex's own
+  permission policy remains authoritative. See the official
+  [Codex Hooks reference](https://learn.chatgpt.com/docs/hooks#pretooluse).
+  `apply_patch` targets
   are recorded as path metadata only, and the adapter recognizes a tiny,
   read-only `Get-Content`/`cat` subset for Skill reloads.
 - `koma-miko-gemini-hook` consumes Gemini `BeforeTool`, `AfterTool`,

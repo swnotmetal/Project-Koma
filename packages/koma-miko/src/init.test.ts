@@ -71,7 +71,15 @@ describe('miko init', () => {
         const settings = readJson(result.settingsPath);
         expect(Object.keys(settings.hooks).length).toBeGreaterThan(0);
         expect(JSON.stringify(settings)).toContain(`${host}-hook-cli.js`);
-        if (host === 'vscode') {
+        if (host === 'codex') {
+          expect(settings.hooks.PreToolUse[0]).not.toHaveProperty('matcher');
+          expect(settings.hooks.PreToolUse[0].hooks[0]).toMatchObject({
+            type: 'command',
+            command: 'node ./node_modules/koma-miko/dist/codex-hook-cli.js',
+            timeout: 10,
+          });
+          expect(settings.hooks.PreToolUse[0].hooks[0]).not.toHaveProperty('args');
+        } else if (host === 'vscode') {
           expect(result.settingsPath.replace(/\\/g, '/')).toContain('.github/hooks/miko.json');
           expect(settings.hooks.PreToolUse[0]).toMatchObject({ type: 'command' });
           expect(settings.hooks.PreToolUse[0]).not.toHaveProperty('hooks');

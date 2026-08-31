@@ -16,16 +16,20 @@ call, or grants a permission that the host did not grant.
 
 ## Host-specific notes
 
-Every interactive adapter follows the same rule: defer when Miko returns
-`ALLOW`, use the host's native approval path for `REVIEW`, and block the
-proposed action for `DENY`. Deferring is not an approval; the host's own policy
-remains authoritative. A denial with an exact recovery step should be handled
-by the agent without asking the user to repair evidence manually.
+Every interactive adapter defers when Miko returns `ALLOW` and blocks the
+proposed action for `DENY`. A `REVIEW` uses the host's native approval path only
+when that host can actually open one; otherwise Miko must pause safely and name
+the limitation. Deferring is not an approval; the host's own policy remains
+authoritative. A denial with an exact recovery step should be handled by the
+agent without asking the user to repair evidence manually.
 
 - Claude Code and VS Code map `REVIEW` to `permissionDecision: ask` and `DENY`
   to `permissionDecision: deny`.
-- Codex uses the same narrow `ask` / `deny` mapping and never emits an explicit
-  allow from its packaged adapter.
+- Codex currently does not support `permissionDecision: ask` from
+  `PreToolUse`. Miko therefore maps both `REVIEW` and `DENY` to a visible,
+  recoverable deny and never emits an explicit allow. This avoids Codex's
+  documented failure mode where an unsupported `ask` is ignored and the tool
+  call continues.
 - Gemini maps `REVIEW` to `decision: ask` on current interactive CLI releases
   and `DENY` to `decision: deny`; non-interactive mode may deny because no user
   is available. Project Hook fingerprints may require a one-time trust action.

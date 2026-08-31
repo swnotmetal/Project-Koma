@@ -135,7 +135,7 @@ Official references: [platform comparison](https://code.claude.com/docs/en/platf
 
 | Host | Hook path implemented | Alpha caveat |
 |---|---|---|
-| Codex CLI | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostCompact`, `Stop` | Live fixture awaits account quota; hosted/specialized tools may not emit local events |
+| Codex CLI/Desktop local project | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostCompact`, `Stop` | Project Hook requires one-time trust; `PreToolUse` cannot surface `ask`, so Miko pauses `REVIEW`; hosted/specialized tools may not emit local events |
 | Gemini CLI | `SessionStart`, `BeforeTool`, `AfterTool`, `PreCompress`, `AfterAgent` | Project Hook fingerprint needs trust; full headless live fixture timed out and needs a shorter-model rerun |
 | DeepSeek Harness | Native DSH tool/turn lifecycle | Pinned Developer Preview and peer-install workaround; not a broad future-version guarantee |
 

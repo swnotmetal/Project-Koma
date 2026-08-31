@@ -2,55 +2,60 @@
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js"
+            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js",
+            "timeout": 10,
+            "statusMessage": "Miko is checking the Agent Spec"
           }
         ]
       }
     ],
     "PreToolUse": [
       {
-        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js"
+            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js",
+            "timeout": 10,
+            "statusMessage": "Miko is checking the Agent Spec"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js"
+            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js",
+            "timeout": 10,
+            "statusMessage": "Miko is checking the Agent Spec"
           }
         ]
       }
     ],
     "PostCompact": [
       {
-        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js"
+            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js",
+            "timeout": 10,
+            "statusMessage": "Miko is checking the Agent Spec"
           }
         ]
       }
     ],
     "Stop": [
       {
-        "matcher": "*",
         "hooks": [
           {
             "type": "command",
-            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js"
+            "command": "node ./node_modules/koma-miko/dist/codex-hook-cli.js",
+            "timeout": 10,
+            "statusMessage": "Miko is checking the Agent Spec"
           }
         ]
       }

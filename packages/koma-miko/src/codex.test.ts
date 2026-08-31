@@ -5,6 +5,7 @@ import {
   codexToolSucceeded,
   handleCodexHookEvent,
   pathsFromCodexPatch,
+  readPathFromCodexShell,
   skillReadPathFromCodexShell,
 } from './codex';
 
@@ -53,6 +54,14 @@ describe('Codex adapter', () => {
     )).toBe('.agents/skills/product-design/SKILL.md');
     expect(skillReadPathFromCodexShell(
       "Get-Content -Raw -LiteralPath '.agents/skills/product-design/SKILL.md'; npm test",
+      'D:\\portfolio',
+    )).toBeUndefined();
+    expect(readPathFromCodexShell(
+      "Get-Content -Raw -LiteralPath 'docs/design-system.md'",
+      'D:\\portfolio',
+    )).toBe('docs/design-system.md');
+    expect(skillReadPathFromCodexShell(
+      "Get-Content -Raw -LiteralPath 'docs/design-system.md'",
       'D:\\portfolio',
     )).toBeUndefined();
   });
@@ -107,14 +116,44 @@ describe('Codex adapter', () => {
     expect(handleCodexHookEvent(miko, 'codex-session', patchInput).output).toBeUndefined();
   });
 
-  it('uses the host approval surface for REVIEW instead of hard-denying it', () => {
+  it('observes a required reference read through the narrow shell subset', () => {
+    const miko = createMiko({ contracts: [{
+      ...contract,
+      requires: { skills: [], references: ['docs/design-system.md'] },
+    }] });
+    miko.startTask({ sessionId: 'codex-session', taskId: 'codex-session', tags: [] });
+    const readInput = {
+      session_id: 'codex-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PostToolUse' as const,
+      tool_name: 'Bash',
+      tool_input: {
+        command: "Get-Content -Raw -LiteralPath 'docs/design-system.md'",
+      },
+      tool_response: { status: 'completed', exitCode: 0 },
+    };
+
+    handleCodexHookEvent(miko, 'codex-session', readInput);
+    expect(handleCodexHookEvent(miko, 'codex-session', patchInput).output).toBeUndefined();
+    expect(miko.getEvidence('codex-session')).toContainEqual(expect.objectContaining({
+      type: 'reference_read',
+      path: 'docs/design-system.md',
+      source: 'observed',
+    }));
+  });
+
+  it('safely pauses REVIEW because Codex PreToolUse cannot ask yet', () => {
     const miko = createMiko({ contracts: [{ ...contract, mode: 'review' }] });
     miko.startTask({ sessionId: 'codex-session', taskId: 'codex-session', tags: [] });
     const reviewed = handleCodexHookEvent(miko, 'codex-session', patchInput);
 
     expect(reviewed.verification?.decision).toBe('REVIEW');
     expect(reviewed.output).toMatchObject({
-      hookSpecificOutput: { permissionDecision: 'ask' },
+      systemMessage: expect.stringContaining('cannot open an approval prompt'),
+      hookSpecificOutput: {
+        permissionDecision: 'deny',
+        permissionDecisionReason: expect.stringContaining('cannot surface a PreToolUse review choice'),
+      },
     });
   });
 
