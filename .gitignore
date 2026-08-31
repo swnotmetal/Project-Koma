@@ -25,6 +25,7 @@ miko-apis.env
 .npmrc
 .miko/state/
 packages/koma-miko/.miko-live-*/
+/miko-vscode-ux-lab/
 
 # TypeScript artifacts
 *.tsbuildinfo
