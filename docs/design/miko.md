@@ -165,6 +165,17 @@ The adapter returns branded `SessionStart` context, but the current live
 host exposes a persistent native status surface, the activation heartbeat and
 `doctor` result are more reliable than expecting a visible green banner.
 
+After CLI trust, a separate Codex Desktop hand-test did enforce the same local
+project Hooks. Miko denied the first edit and correctly rejected a recovery
+attempt that hallucinated `.agents/skills/docs/interaction-brief.md` instead of
+the required `docs/interaction-brief.md`. The agent then loaded the exact two
+Skills/reference, recovered from its own malformed patch context, loaded the
+lab's required `local-testing` Skill before an `rg` command, and completed the
+two-file edit without asking the user to manipulate files. Reloading the
+privacy-minimized snapshot returned `ALLOW / COMPLETE / CONTRACT_SATISFIED`.
+This validates **post-trust Desktop execution**, not Desktop onboarding: the
+one-time trust still had to be made legible through CLI `/hooks` first.
+
 ### Evidence trust
 
 Every evidence event has a source:

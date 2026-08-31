@@ -96,6 +96,33 @@ The live transcript displayed the branded red denial, but only generic
 lines for successful states. Persistent green Miko presence remains a host-UX
 TODO even though the heartbeat and completion snapshot prove activation.
 
+### Codex Desktop hand-test after trust
+
+A fresh Desktop task in the same local lab then exercised the user-facing path:
+
+```text
+first apply_patch DENY
+→ grouped recovery read DENY (agent used the wrong reference path)
+→ two Skills + exact reference observed individually
+→ first retry reaches apply_patch but its indentation context is invalid
+→ rg check DENY until local-testing Skill is observed
+→ corrected two-file patch succeeds
+→ snapshot recheck returns ALLOW / COMPLETE / CONTRACT_SATISFIED
+```
+
+The wrong grouped path was `.agents/skills/docs/interaction-brief.md`; the Agent
+Spec required `docs/interaction-brief.md`. Rejecting it was correct verifier
+behavior, not a grouped-read parser regression. The later `rg` command genuinely
+matched the lab's shell Spec, so requiring `local-testing` was also expected.
+The tester did not handle files or collect debug logs; the agent recovered and
+the maintainer correlated the task with the privacy-minimized ledger afterward.
+
+Desktop made Miko perceptible through agent commentary such as “Miko paused the
+edit,” but did not expose a persistent branded green completion receipt. This is
+a post-trust functional pass with a remaining presentation gap. It does not fix
+the first-run problem: before CLI `/hooks` trust, the same Desktop project had
+silently skipped all five installed Hooks.
+
 The test also exposed an onboarding failure: before CLI `/hooks` trust, the same
 local project had five correctly installed Hooks but Codex Desktop completed an
 edit without a visible Miko intervention. Config presence and offline

@@ -111,12 +111,16 @@ shared, but let each host own its permission and text surface.
 - [x] Verify live Codex Hook activation with the existing ChatGPT login: after
   exact-hash CLI trust, `SessionStart` and `Stop` reached Miko and the local
   heartbeat ledger was written without an API key.
+- [x] Hand-test Codex Desktop after CLI trust. The first patch was denied, a
+  hallucinated reference path was rejected, the agent recovered without asking
+  the user to handle files, and the final snapshot passed COMPLETE.
 - [x] Complete a live Codex `DENY → two Skills/reference recovery → two-file
   edit → COMPLETE` fixture after fixing safe grouped reads. The final run used
   10,252 tokens and did not activate the unrelated shell Spec.
 - [ ] Find a host-native way to keep the green recovery/completion result visible;
-  current Codex CLI renders the red denial but collapses successful Miko output
-  to generic `PostToolUse Completed` / `Stop Completed` lines.
+  CLI collapses successful Miko output to generic Hook-completed lines, while
+  Desktop exposes Miko mainly through the agent's commentary and collapsed tool
+  activity rather than a persistent native verifier surface.
 - [ ] Repeat the Gemini live fixture with a short, low-latency model after the
   CLI/service latency issue is understood; the flash-lite attempt authenticated
   successfully but still hit the 180-second runner timeout.
