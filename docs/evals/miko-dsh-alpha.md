@@ -2,11 +2,12 @@
 
 Date: 2026-08-26
 
-Status: **the published `alpha.1` pair passed native tests, registry
-installation, no-model host load, and three narrow packed-artifact recovery
-runs. The current release candidate updates `koma-miko-dsh@0.1.0-alpha.2` to
-the exact `koma-miko@0.1.0-alpha.4` dependency; publication and a fresh
-registry-install check remain pending.**
+Status: **the published `koma-miko-dsh@0.1.0-alpha.5` package pins
+`koma-miko@0.1.0-alpha.7`. Native tests, registry installation, no-model host
+load, and three narrow packed-artifact recovery runs passed in the alpha line.
+The current `alpha.6` release candidate updates that exact dependency to
+`koma-miko@0.1.0-alpha.8`; publication and a fresh registry metadata check are
+pending.**
 
 ## Pinned host contract
 

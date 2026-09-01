@@ -460,6 +460,13 @@ The runner accepts at most three comma-separated context sizes from 1,000 to
 metrics, and never reads an env file. See the
 [alpha evaluation record](../../docs/evals/miko-claude-haiku-alpha.md).
 
+A separate interactive Claude CLI hand-test used an ordinary Chinese request
+to turn an unfinished static page into a client-facing page. The prompt named
+no Miko concept, Skill, Hook, or file. Claude recovered from the first Miko
+pause, loaded the project requirements, changed HTML/CSS/JavaScript, ran local
+checks, and reached COMPLETE for 3 Agent Specs with 28 observed evidence
+events. This is one bounded UX observation, not a general model benchmark.
+
 ## Alpha boundaries
 
 - **No LLM call or semantic task classifier**

@@ -33,7 +33,7 @@ Miko or model failure. V2 removed the leaked Skill name; the first Edit was
 denied, Claude loaded the Skill from Miko's guidance, and every strengthened
 assertion passed.
 
-## Human CLI UX hand-test
+## Human CLI UX hand-tests
 
 On 2026-09-01, the isolated `miko-claude-cli-lab` was exercised interactively
 with Claude Code 2.1.202 and a Console API key against the published
@@ -52,6 +52,33 @@ The resulting artifact exactly contained the required Skill marker and
 Skill, Read, and Edit metadata, but no prompt, source-code content, or tool
 output. This validates the API-key CLI path and its user-visible recovery flow;
 it does not validate Claude Desktop or subscription-only behavior.
+
+### Natural-language, multi-file pass
+
+Later on 2026-09-01, Claude Code 2.1.252 received one deliberately ordinary
+Chinese request to make an unfinished page client-ready, usable on mobile, and
+less visually noisy. The prompt did not name Miko, a Skill, a Hook, a command,
+or any target file. In the isolated lab:
+
+1. Miko denied Claude's first Bash discovery call because the lab's deliberately
+   broad local-command Spec required `local-testing`.
+2. Claude loaded `local-testing` and the relevant design, accessibility, and
+   privacy Skills, then read the product brief and existing page files.
+3. Claude rewrote `site/index.html`, `site/styles.css`, and `site/app.js`, fixed
+   a classification edge case found during its own read-only checks, and left
+   the unrelated component untouched.
+4. The Stop Hook rendered `Miko verified · COMPLETE` for 3 Agent Specs and 28
+   observed evidence events.
+
+The final ledger contains Skill, reference, file-path, tool-success, and action
+metadata but no prompt, source code, shell command, or tool output. The test also
+exposed a lab-design warning: applying a Spec to every Bash call blocks harmless
+file discovery and encourages eager Skill loading. Miko's default initializer
+does not guard Bash this broadly; production Specs should target meaningful
+boundaries rather than every exploratory command.
+
+The exact Console charge for this manual session was not recorded, so it is not
+included in the automated spend total below.
 
 ## Harness correction retained as evidence
 

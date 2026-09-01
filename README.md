@@ -112,7 +112,7 @@ Hook behavior—not a generic score for model intelligence.
 |---|---|
 | Offline host conformance | Claude, Codex, Gemini, and VS Code Copilot each reproduce `DENY → observed Skill → ALLOW`; ledger fixtures reject prompt/code/tool-response persistence |
 | Local verifier scale | 1,000 Agent Specs: **1.34 ms p95** per action; 10,001 indexed evidence events: **0.0041 ms p95**; restore 1,000 evidence events: **1.52 ms p95** |
-| Claude Code live + hand-test | One 100-Skill / ~20k-context run passed; strict recovery and an API-key CLI hand-test both completed `DENY → Skill → edit → COMPLETE`. The hand-test visibly rendered Miko's red pause, green recovery, and green completion receipt |
+| Claude Code live + hand-test | One 100-Skill / ~20k-context run passed. A natural-language Chinese request then drove a three-file product-page rewrite through 3 Agent Specs and 28 observed events, ending in visible COMPLETE without naming Miko, a Skill, or a target file in the prompt |
 | Codex CLI Technical Preview | Fixed live recovery completed `DENY → Skill/reference → edit → COMPLETE`; an interactive CLI 0.152.0 hand-test visibly rendered Miko active, recovered, and COMPLETE. Desktop also enforced after CLI activation, but onboarding and completion visibility remain unsuitable as a primary path |
 | DeepSeek Harness smoke | **3/3** narrow packed-artifact recovery runs passed; 19.425 s mean model phase |
 

@@ -392,6 +392,12 @@ runner 最多接受三个以逗号分隔、范围为 1,000–190,000 的上下�
 cache、turn 与成本。runner 不会读取 env 文件。结果见
 [alpha 评估记录](../../docs/evals/miko-claude-haiku-alpha.md)。
 
+另一次 Claude CLI 人工测试使用了一条普通中文需求，把半成品静态页面整理成
+面向客户的产品页；prompt 没有提到 Miko、Skill、Hook 或任何文件名。Claude
+从第一次 Miko 暂停中自行恢复，加载项目要求，修改 HTML/CSS/JavaScript，运行
+本地检查，并以 3 份 Agent Spec、28 条 observed evidence events 到达 COMPLETE。
+这只是一次边界清晰的 UX 观察，不是普遍模型 benchmark。
+
 ## Alpha 边界
 
 - **不调用 LLM，不做语义任务分类；**

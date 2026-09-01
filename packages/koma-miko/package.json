@@ -1,6 +1,6 @@
 {
   "name": "koma-miko",
-  "version": "0.1.0-alpha.7",
+  "version": "0.1.0-alpha.8",
   "description": "Deterministic skill and action contract verification for AI agent workflows.",
   "author": "Shuang Wu",
   "type": "module",
