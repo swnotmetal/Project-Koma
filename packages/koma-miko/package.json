@@ -18,11 +18,11 @@
     "./schema": "./schema/miko.schema.json"
   },
   "bin": {
-    "koma-miko": "./dist/cli.js",
-    "koma-miko-claude-hook": "./dist/claude-hook-cli.js",
-    "koma-miko-codex-hook": "./dist/codex-hook-cli.js",
-    "koma-miko-gemini-hook": "./dist/gemini-hook-cli.js",
-    "koma-miko-vscode-hook": "./dist/vscode-hook-cli.js"
+    "koma-miko": "dist/cli.js",
+    "koma-miko-claude-hook": "dist/claude-hook-cli.js",
+    "koma-miko-codex-hook": "dist/codex-hook-cli.js",
+    "koma-miko-gemini-hook": "dist/gemini-hook-cli.js",
+    "koma-miko-vscode-hook": "dist/vscode-hook-cli.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -67,7 +67,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/swnotmetal/Project-Koma"
+    "url": "git+https://github.com/swnotmetal/Project-Koma.git"
   },
   "publishConfig": {
     "access": "public"

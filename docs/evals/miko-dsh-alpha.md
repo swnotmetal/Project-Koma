@@ -2,12 +2,13 @@
 
 Date: 2026-08-26
 
-Status: **the published `koma-miko-dsh@0.1.0-alpha.5` package pins
-`koma-miko@0.1.0-alpha.7`. Native tests, registry installation, no-model host
-load, and three narrow packed-artifact recovery runs passed in the alpha line.
-The current `alpha.6` release candidate updates that exact dependency to
-`koma-miko@0.1.0-alpha.8`; publication and a fresh registry metadata check are
-pending.**
+Status: **the published `koma-miko-dsh@0.1.0-alpha.6` package pins
+`koma-miko@0.1.0-alpha.8`. Native tests, registry metadata, a clean packed
+install, no-model host load, and three narrow packed-artifact recovery runs
+have passed in the alpha line. The post-publication install reproduced the
+VS Code adapter probe and DSH preflight from registry artifacts; the machine's
+Node 22.18 correctly emitted the package's documented Node 22.19+ engine
+warning.**
 
 ## Pinned host contract
 

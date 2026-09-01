@@ -10,7 +10,7 @@
     ".": "./dist/index.js"
   },
   "bin": {
-    "koma-miko-dsh": "./dist/cli.js"
+    "koma-miko-dsh": "dist/cli.js"
   },
   "files": [
     "dist",
@@ -61,7 +61,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/swnotmetal/Project-Koma",
+    "url": "git+https://github.com/swnotmetal/Project-Koma.git",
     "directory": "packages/koma-miko-dsh"
   },
   "publishConfig": {
