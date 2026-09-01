@@ -93,6 +93,7 @@ describe('miko doctor', () => {
           id: 'codex-check',
           appliesWhen: { action: { tools: ['apply_patch'], pathPrefixes: ['src'] } },
           requires: { skills: ['product-design'] },
+          mode: 'enforce',
         }],
       }));
       writeFileSync(path.join(project, '.codex', 'hooks.json'), JSON.stringify({
@@ -123,6 +124,28 @@ describe('miko doctor', () => {
         message: expect.stringContaining('live Codex SessionStart'),
       });
       expect(active.checks.every((check) => check.status === 'pass')).toBe(true);
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+
+  it('warns when a Codex Agent Spec uses degraded review mode', () => {
+    const project = mkdtempSync(path.join(tmpdir(), 'miko-doctor-codex-review-'));
+    try {
+      writeFileSync(path.join(project, 'miko.json'), JSON.stringify({
+        version: 1,
+        specs: [{
+          id: 'codex-review',
+          appliesWhen: { action: { tools: ['apply_patch'], pathPrefixes: ['src'] } },
+          mode: 'review',
+        }],
+      }));
+
+      const report = doctorProject(project, { host: 'codex' });
+      expect(report.checks.find((check) => check.id === 'config')).toMatchObject({
+        status: 'warn',
+        message: expect.stringContaining('REVIEW pauses the call as deny'),
+      });
     } finally {
       rmSync(project, { recursive: true, force: true });
     }

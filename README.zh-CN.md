@@ -62,11 +62,11 @@ npx --yes koma-miko@alpha probe --host claude  # 隔离式 adapter 检查；不�
 npx koma-miko init --host claude     # 本地安装后自动配置
 ```
 
-> **Codex 是更窄的 Preview 路径，并不等同于 Claude Code。** Codex CLI
-> 必须先通过一次 `/hooks` 审阅，项目 Hook 才会运行。在我们当前的 Codex
-> Desktop 测试中，5 个已正确安装的 Hook 在 CLI 完成信任前仍未生效；仅使用
-> Desktop 的首次启用流程还不够适合作为 vibe coder 主路径。离线 `probe` 只验证
-> adapter 逻辑，不代表真实 Hook 已激活。
+> **Codex CLI 属于 Technical Preview；Codex Desktop 必须先通过 CLI
+> 激活。** CLI 必须先完成一次 `/hooks` 审阅，项目 Hook 才会运行。Miko 在
+> Codex 上主推 `enforce`，因为当前 Hook API 无法打开原生 `REVIEW` 选择；review
+> 会降级为可恢复的 pause/deny。仅用 Desktop 的 onboarding 不是 alpha 支持路径。
+> 离线 `probe` 只验证 adapter 逻辑，不代表真实 Hook 已激活。
 
 [Miko README →](./packages/koma-miko/README.zh-CN.md) ·
 [10 秒网页回放 →](https://koma-demo.swbuilds.workers.dev) ·
@@ -97,7 +97,7 @@ Miko 本身是确定性验证器，因此这里衡量的是验证开销和端到
 | 离线宿主一致性 | Claude、Codex、Gemini 与 VS Code Copilot 均复现 `DENY → 观察到 Skill → ALLOW`；账本夹具确认不保存 prompt、代码或工具响应 |
 | 本地 verifier 规模测试 | 1,000 份 Agent Spec：每次动作 **p95 1.34 ms**；10,001 条索引证据：**p95 0.0041 ms**；恢复 1,000 条证据：**p95 1.52 ms** |
 | Claude Code live + 手测 | 一次 100-Skill / 约 20k context 测试通过；严格恢复测试与 API-key CLI 手测均完成 `DENY → Skill → edit → COMPLETE`。手测中可直接看到 Miko 的红色暂停、绿色恢复与绿色完成回执 |
-| Codex live smoke | CLI 完成 `DENY → 两个 Skills + reference → 两文件 edit → COMPLETE`；信任后的 Desktop 人工测试也通过。Desktop 通过 agent 解说体现了 Miko，但仍隐藏原生绿色完成回执 |
+| Codex CLI Technical Preview | 固定 live recovery 完成 `DENY → Skill/reference → edit → COMPLETE`；CLI 0.152.0 人工测试可见 Miko active、recovered 与 COMPLETE。Desktop 在 CLI 激活后也能执行，但 onboarding 与完成状态可见性仍不适合作为主路径 |
 | DeepSeek Harness smoke | 窄范围 packed-artifact 恢复 **3/3** 通过；模型阶段平均 19.425 秒 |
 
 规模数据来自 2026-08-27 的 Node 24.19 / Windows 参考运行；可用

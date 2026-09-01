@@ -1,8 +1,9 @@
 # Koma Miko — Alpha Design
 
-Status: **Public alpha implemented with a primary Claude Code path and narrow
-Codex, Gemini, VS Code, and DeepSeek Harness mappings; stable API, smooth Codex
-Desktop onboarding, and broad host claims remain pending**.
+Status: **Public alpha implemented with a primary Claude Code path, a Codex CLI
+Technical Preview, and narrow Gemini, VS Code, and DeepSeek Harness mappings.
+Codex Desktop requires prior CLI activation; stable API and broad host claims
+remain pending**.
 
 Miko addresses a narrower, observable problem than general "agent reliability":
 an agent starts work without loading a required skill, forgets a loaded contract as
@@ -110,11 +111,13 @@ adapter returns both a user-visible `systemMessage` and agent-visible recovery
 context. This keeps Miko useful on text-only surfaces without coupling the verifier
 package to one UI toolkit.
 
-All packaged host adapters use the same interaction policy: `ALLOW` defers to
-the host's existing permission engine, `REVIEW` requests native human approval,
-and `DENY` blocks the proposed action while preserving an explicit recovery
-path for the agent. Miko does not auto-approve a tool call merely because its
-own contract is satisfied.
+All packaged host adapters keep `ALLOW` subordinate to the host's existing
+permission engine and use `DENY` to block the proposed action with an explicit
+recovery path. `REVIEW` requests native human approval where the host supports
+it. Codex PreToolUse does not currently support that choice, so its Technical
+Preview degrades `REVIEW` to a recoverable pause/deny and promotes `enforce`.
+Miko does not auto-approve a tool call merely because its own contract is
+satisfied.
 
 ### Claude surface matrix
 
@@ -140,8 +143,8 @@ Official references: [platform comparison](https://code.claude.com/docs/en/platf
 
 | Host | Hook path implemented | Alpha caveat |
 |---|---|---|
-| Codex CLI local project | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostCompact`, `Stop` | Live activation smoke verified with existing ChatGPT login; exact-hash Hook review is required once and again after command changes; `PreToolUse` cannot surface `ask`, so Miko pauses `REVIEW` |
-| Codex Desktop local project | Uses the same project Hook target | Not a primary alpha onboarding path: in the 2026-09-01 local test, five installed Hooks were inactive until CLI `/hooks` trust; Desktop did not make the missing activation obvious before an edit |
+| Codex CLI local project | `SessionStart`, `PreToolUse`, `PostToolUse`, `PostCompact`, `Stop` | Technical Preview: exact-hash Hook review is required; enforce is promoted because `PreToolUse` cannot surface `ask`. Interactive 0.152.0 visibly completed active → deny → recovered → COMPLETE |
+| Codex Desktop local project | Uses the same project Hook target | Requires prior CLI activation; it is post-trust compatible, not a standalone alpha onboarding path |
 | Gemini CLI | `SessionStart`, `BeforeTool`, `AfterTool`, `PreCompress`, `AfterAgent` | Project Hook fingerprint needs trust; full headless live fixture timed out and needs a shorter-model rerun |
 | DeepSeek Harness | Native DSH tool/turn lifecycle | Pinned Developer Preview and peer-install workaround; not a broad future-version guarantee |
 
@@ -165,10 +168,12 @@ plugin-provided Hooks remain subject to review. See the official
 [Codex Hooks reference](https://learn.chatgpt.com/docs/hooks) and
 [Codex CLI guide](https://learn.chatgpt.com/docs/codex/cli).
 
-The adapter returns branded `SessionStart` context, but the current live
-`codex exec` transcript rendered only `hook: SessionStart Completed`. Until the
-host exposes a persistent native status surface, the activation heartbeat and
-`doctor` result are more reliable than expecting a visible green banner.
+The adapter returns branded `SessionStart` context. The interactive Codex CLI
+0.152.0 hand-test visibly rendered Miko active, recovered, and COMPLETE, while
+non-interactive `codex exec` can still collapse successful output to generic
+Hook-completed events. Miko will not add model turns merely to manufacture a
+green receipt; the activation heartbeat and `doctor` remain the deterministic
+checks.
 
 After CLI trust, a separate Codex Desktop hand-test did enforce the same local
 project Hooks. Miko denied the first edit and correctly rejected a recovery

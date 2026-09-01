@@ -77,7 +77,9 @@ if (args[0] === 'demo') {
     process.exitCode = 1;
   } else {
     const requestedMode = option(args, '--mode');
-    const mode = hasFlag(args, '--enforce') ? 'enforce' : requestedMode ?? 'review';
+    const mode = hasFlag(args, '--enforce')
+      ? 'enforce'
+      : requestedMode ?? (host === 'codex' ? 'enforce' : 'review');
     if (mode !== 'review' && mode !== 'enforce') {
       process.stdout.write(`Unknown mode "${mode}". Choose review or enforce.\n`);
       process.exitCode = 1;
@@ -103,6 +105,8 @@ if (args[0] === 'demo') {
           process.stdout.write(`${formatDoctorReport(report)}\n`);
           if (result.host === 'codex') {
             process.stdout.write([
+              'CODEX CLI TECHNICAL PREVIEW: enforce is the promoted alpha mode.',
+              'Codex cannot open a native PreToolUse approval choice yet; review mode degrades to a recoverable pause/deny.',
               'ACTION REQUIRED: Codex skips project Hooks until you review and trust them.',
               'In Codex CLI, open this project, run /hooks, trust the five Miko Hooks, run one turn, then run:',
               '  npx koma-miko doctor --host codex --strict',

@@ -198,12 +198,18 @@ export function doctorProject(projectRootInput: string, options: DoctorOptions =
 
   try {
     config = loadMikoConfig(projectRoot);
+    const codexReviewCount = host === 'codex'
+      ? config.contracts.filter((contract) => contract.mode !== 'enforce').length
+      : 0;
+    const legacy = config.format !== 'agent-spec';
     checks.push({
       id: 'config',
-      status: config.format === 'agent-spec' ? 'pass' : 'warn',
-      message: config.format === 'agent-spec'
-        ? `Valid miko.json with ${config.contracts.length} Agent Spec(s).`
-        : `Valid legacy config with ${config.contracts.length} contract(s); migrate to miko.json.`,
+      status: legacy || codexReviewCount > 0 ? 'warn' : 'pass',
+      message: legacy
+        ? `Valid legacy config with ${config.contracts.length} contract(s); migrate to miko.json.`
+        : codexReviewCount > 0
+          ? `Valid miko.json with ${config.contracts.length} Agent Spec(s), but ${codexReviewCount} use review mode. Codex cannot open a native PreToolUse approval choice, so REVIEW pauses the call as deny; use enforce for the promoted Codex alpha path.`
+          : `Valid miko.json with ${config.contracts.length} Agent Spec(s).`,
     });
   } catch (error) {
     const reason = error instanceof Error ? error.message : 'Unknown config error';

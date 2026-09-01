@@ -64,12 +64,12 @@ npx --yes koma-miko@alpha probe --host claude  # isolated adapter check; no mode
 npx koma-miko init --host claude     # after local installation
 ```
 
-> **Codex is a narrower Preview path, not equivalent to Claude Code.** Codex
-> CLI requires a one-time `/hooks` review before project Hooks run. In our
-> current Codex Desktop test, five correctly installed Hooks remained inactive
-> until that review was completed in the CLI; Desktop-only onboarding is not
-> yet smooth enough for the primary vibe-coder path. An offline `probe` proves
-> adapter logic, not live Hook activation.
+> **Codex CLI is a Technical Preview; Codex Desktop requires prior CLI
+> activation.** The CLI requires a one-time `/hooks` review before project
+> Hooks run. Miko promotes `enforce` on Codex because the current Hook API
+> cannot open a native `REVIEW` choice; review therefore degrades to a
+> recoverable pause/deny. Desktop-only onboarding is not a supported alpha
+> path. An offline `probe` proves adapter logic, not live Hook activation.
 
 [Miko README →](./packages/koma-miko/README.md) ·
 [10-second web replay →](https://koma-demo.swbuilds.workers.dev) ·
@@ -113,7 +113,7 @@ Hook behavior—not a generic score for model intelligence.
 | Offline host conformance | Claude, Codex, Gemini, and VS Code Copilot each reproduce `DENY → observed Skill → ALLOW`; ledger fixtures reject prompt/code/tool-response persistence |
 | Local verifier scale | 1,000 Agent Specs: **1.34 ms p95** per action; 10,001 indexed evidence events: **0.0041 ms p95**; restore 1,000 evidence events: **1.52 ms p95** |
 | Claude Code live + hand-test | One 100-Skill / ~20k-context run passed; strict recovery and an API-key CLI hand-test both completed `DENY → Skill → edit → COMPLETE`. The hand-test visibly rendered Miko's red pause, green recovery, and green completion receipt |
-| Codex live smoke | CLI completed `DENY → two Skills + reference → two-file edit → COMPLETE`; a post-trust Desktop hand-test also passed. Desktop surfaced Miko through agent commentary but still hid the native green completion receipt |
+| Codex CLI Technical Preview | Fixed live recovery completed `DENY → Skill/reference → edit → COMPLETE`; an interactive CLI 0.152.0 hand-test visibly rendered Miko active, recovered, and COMPLETE. Desktop also enforced after CLI activation, but onboarding and completion visibility remain unsuitable as a primary path |
 | DeepSeek Harness smoke | **3/3** narrow packed-artifact recovery runs passed; 19.425 s mean model phase |
 
 The scale row is a 2026-08-27 reference run on Node 24.19 / Windows; rerun it

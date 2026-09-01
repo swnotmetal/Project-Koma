@@ -270,7 +270,10 @@ export function initProject(projectRootInput: string, options: InitOptions = {})
   if (!details) throw new Error(`Unsupported Miko host: ${host}`);
   const skill = options.skill ?? 'frontend-design';
   const pathPrefix = options.pathPrefix ?? 'src';
-  const mode = options.mode ?? 'review';
+  // Codex cannot surface PreToolUse `ask` yet, so its promoted alpha path
+  // defaults to deterministic enforcement. Other hosts retain the safer
+  // review-first starter behavior when they expose a native approval choice.
+  const mode = options.mode ?? (host === 'codex' ? 'enforce' : 'review');
   if (!skill.trim()) throw new Error('--skill must not be empty.');
   if (!pathPrefix.trim()) throw new Error('--path must not be empty.');
 

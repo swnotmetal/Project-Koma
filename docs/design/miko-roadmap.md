@@ -46,12 +46,13 @@ reproducible probe and one small result bundle to return.
 - [x] Separate Codex Hook configuration from runtime activation in `doctor`;
   require a real `SessionStart` heartbeat before strict readiness passes.
 - [x] Emit Codex `SessionStart` context plus a local activation heartbeat.
-- [ ] Make `Miko active` persistently user-visible in Codex Desktop and CLI;
-  the current live `codex exec` transcript rendered only `hook: SessionStart
-  Completed`, not the adapter's branded `systemMessage`.
-- [ ] Replace the current CLI `/hooks` detour with a genuinely clear Codex
-  Desktop trust/review path if the host exposes one. Until then, do not market
-  Desktop-only onboarding as vibe-coder-ready.
+- [x] Keep Miko on host-native Codex surfaces without adding model turns or a
+  simulated Desktop UI. Interactive CLI 0.152.0 renders the branded active,
+  recovery, and COMPLETE messages; non-interactive output may remain collapsed.
+- [x] Define the support boundary instead of hiding the `/hooks` detour: Codex
+  CLI is a Technical Preview, `enforce` is promoted, and Desktop requires prior
+  CLI activation. Revisit only when the host exposes Desktop Hook review or
+  supports `permissionDecision: ask`.
 - [ ] Add a one-command VS Code Copilot probe that creates an isolated Skill,
   Agent Spec, Hook configuration, and disposable `src/miko-probe` fixture.
 - [ ] Emit a privacy-safe probe report containing only host/version metadata,
@@ -125,10 +126,15 @@ shared, but let each host own its permission and text surface.
 - [x] Complete a live Codex `DENY → two Skills/reference recovery → two-file
   edit → COMPLETE` fixture after fixing safe grouped reads. The final run used
   10,252 tokens and did not activate the unrelated shell Spec.
-- [ ] Find a host-native way to keep the green recovery/completion result visible;
-  CLI collapses successful Miko output to generic Hook-completed lines, while
-  Desktop exposes Miko mainly through the agent's commentary and collapsed tool
-  activity rather than a persistent native verifier surface.
+- [x] Use one fixed, disposable `eval:codex-live` recovery fixture as the only
+  model-backed Codex release check. Put parser/schema regressions in offline
+  conformance tests rather than multiplying paid scenarios.
+- [x] Stop pursuing a simulated Codex Desktop verifier surface or extra model
+  turns for green receipts. Keep Desktop as post-CLI-activation compatibility
+  and wait for a host-native review/status surface.
+- [ ] Hand-test VS Code Copilot `review → permissionDecision: ask → user choice`
+  in `miko-vscode-ux-lab`; the schema and offline adapter test already pass,
+  but the actual approval UI and recovery behavior remain unverified.
 - [ ] Repeat the Gemini live fixture with a short, low-latency model after the
   CLI/service latency issue is understood; the flash-lite attempt authenticated
   successfully but still hit the 180-second runner timeout.

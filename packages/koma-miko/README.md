@@ -205,9 +205,11 @@ npm install -D koma-miko@alpha
 npx koma-miko init --host claude
 ```
 
-`init` creates a review-only starter `miko.json`, merges the required Claude
-Hooks into `.claude/settings.json` without replacing unrelated settings, backs
-up an existing settings file before changing it, and adds `.miko/state/` to
+`init` creates a review-only starter `miko.json`, except that Codex defaults to
+`enforce` because its current PreToolUse Hook cannot open a native review
+choice. It merges the required Claude Hooks into `.claude/settings.json`
+without replacing unrelated settings, backs up an existing settings file
+before changing it, and adds `.miko/state/` to
 `.gitignore`. Run it again safely; it is idempotent. Use `--skill <name>` and
 `--path <prefix>` to tailor the starter spec, or `--enforce` when you are ready
 to block missing evidence. Start a new Claude session after changing Hooks.
@@ -220,7 +222,7 @@ match your project. Miko writes session metadata under `.miko/state/`, which
 should stay ignored. Legacy `.miko/contracts.json` arrays remain readable but
 are no longer the preferred developer interface.
 
-### Codex Preview: installation is not activation
+### Codex CLI Technical Preview: installation is not activation
 
 `npx koma-miko init --host codex` can install the Agent Spec and five project
 Hooks, but it cannot make Codex trust executable project code. Non-managed
@@ -235,16 +237,25 @@ trusts them. The current reliable first-run path is:
 5. Run: npx koma-miko doctor --host codex --strict
 ```
 
+Codex initialization defaults new Agent Specs to `mode: "enforce"`. An
+explicit `--mode review` remains valid, but Codex cannot currently open the
+native PreToolUse choice requested by Miko, so `REVIEW` is reported as a
+recoverable pause/deny. `doctor --host codex --strict` warns when review-mode
+Specs are present.
+
 The last command passes the new activation check only after Miko has observed a
 real `SessionStart` heartbeat written after the current Hook config. A heartbeat
 proves at least one live session reached Miko; it does not guarantee that trust
 will survive a later Hook command change or that every Codex tool emits Hooks.
-The adapter also returns branded `SessionStart` context, but the current
-`codex exec` transcript reduced it to `hook: SessionStart Completed`; use the
-heartbeat-backed doctor result rather than assuming a persistent banner exists.
+The adapter also returns branded `SessionStart` context. Interactive Codex CLI
+0.152.0 displayed the branded active, recovered, and COMPLETE messages in the
+2026-09-01 hand-test; non-interactive `codex exec` can still collapse successful
+states to generic Hook-completed events. No extra model turn is added merely to
+manufacture a green receipt.
 
-**Codex Desktop-only onboarding is not yet a primary alpha path.** In the
-current local test, Desktop allowed an edit while all five installed project
+**Codex Desktop requires prior CLI activation and is not a supported standalone
+alpha onboarding path.** In the current local test, Desktop allowed an edit
+while all five installed project
 Hooks were still untrusted; the review became obvious only after opening Codex
 CLI. If the `codex` command is not available, do not interpret a successful
 `init`, Hook config check, or offline `probe` as protection. Miko deliberately
@@ -328,15 +339,23 @@ npx koma-miko init --host vscode --skill product-design --path src --enforce
 npx koma-miko doctor --host vscode --strict
 ```
 
+That command uses `enforce` and tests automatic denial/recovery. To test a real
+user choice instead, initialize or edit the applicable Spec to `mode: "review"`
+and ask the agent to propose the edit before loading its Skill. VS Code should
+surface Miko's `permissionDecision: "ask"` in its native approval UI. This is a
+different test from the Codex recovery prompt; live editor behavior still needs
+the documented hand-test.
+
 Start a new Copilot chat, then request an edit under `src`. The expected first
 pass is a Miko denial, followed by an explicit read of
 `.github/skills/product-design/SKILL.md` (or the same Skill under `.agents` or
-`.claude`) and a successful retry. Inspect **GitHub Copilot Chat Hooks** or run
-**Developer: Show Agent Debug Logs** to capture the real `tool_name` values.
-VS Code Agent Hooks are currently Preview and can be disabled by organization
-policy. Also, VS Code loads `.claude/settings*.json` by default; `doctor` warns
-when it sees a Miko Claude Hook that could execute alongside the dedicated
-adapter.
+`.claude`) and a successful retry. Testers should not collect raw debug logs by
+default. If no Miko message appears, run `doctor` first; only then should a
+maintainer request one bounded **Developer: Show Agent Debug Logs** capture to
+identify the real `tool_name`. VS Code Agent Hooks are currently Preview and can
+be disabled by organization policy. Also, VS Code loads
+`.claude/settings*.json` by default; `doctor` warns when it sees a Miko Claude
+Hook that could execute alongside the dedicated adapter.
 
 The integration follows the official [VS Code Agent Hooks guide](https://code.visualstudio.com/docs/agent-customization/hooks),
 [Hook schemas](https://code.visualstudio.com/docs/agents/reference/hooks-reference),
@@ -382,6 +401,11 @@ the documented Hook schema, not a live editor session. The Codex live runner
 `GEMINI_API_KEY` or `GOOGLE_API_KEY` and an official Gemini CLI entry point
 (`MIKO_GEMINI_ENTRY`). Both runners use disposable fixtures and never read an
 env file.
+
+For each Miko release, the Codex model-backed release check is intentionally
+limited to this one fixed, disposable `eval:codex-live` recovery fixture. Add
+offline conformance cases for parser or schema regressions; do not multiply paid
+Codex scenarios unless the host API changes materially.
 `npm run eval:scale -w koma-miko` uses no API key. It benchmarks 100/1,000 Agent
 Specs, 10,000 indexed evidence events, 100 overlapping specs, and snapshot
 restore while checking that terminal output remains bounded. See the dated
@@ -440,9 +464,11 @@ metrics, and never reads an env file. See the
 - **No hosted telemetry service** (the Claude adapter uses a local JSONL ledger)
 - **Cannot observe hosted tools, editor wrappers, or remote sessions that do not
   emit the configured host Hook events**
-- **Codex Desktop-only onboarding is not yet vibe-coder-ready: installed project
-  Hooks may be silently skipped until the user completes an explicit CLI trust
-  review; config presence and offline probe success do not prove activation**
+- **Codex CLI is a Technical Preview and promotes enforce mode; review degrades
+  to pause/deny because Codex PreToolUse cannot open Miko's native approval
+  choice**
+- **Codex Desktop requires prior CLI Hook activation; config presence and
+  offline probe success do not prove activation**
 - **VS Code Agent Hooks are Preview; the adapter has offline schema conformance
   but still needs a live Copilot editor pass on the tester's tool set**
 - **No automatic rewriting of tool calls**

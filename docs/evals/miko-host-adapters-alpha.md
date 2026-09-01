@@ -91,10 +91,34 @@ metadata for the two Skills, reference, and artifacts, without the prompt,
 source contents, or tool output. This is now a successful narrow CLI recovery
 fixture, not a claim about arbitrary Codex tools or Desktop behavior.
 
-The live transcript displayed the branded red denial, but only generic
-`hook: SessionStart Completed`, `PostToolUse Completed`, and `Stop Completed`
-lines for successful states. Persistent green Miko presence remains a host-UX
-TODO even though the heartbeat and completion snapshot prove activation.
+The non-interactive `codex exec` transcript displayed the branded red denial,
+but only generic `hook: SessionStart Completed`, `PostToolUse Completed`, and
+`Stop Completed` lines for successful states. The heartbeat and completion
+snapshot remain the deterministic checks for that runner.
+
+### Codex CLI interactive hand-test
+
+After installing the official standalone Codex CLI 0.152.0 and reusing the
+existing ChatGPT login, an interactive run used the same two-file UX prompt in
+the local lab. The CLI visibly rendered:
+
+```text
+🟢 Miko active
+→ 🔴 Miko paused the first patch
+→ two Skills + exact reference observed
+→ 🟢 Miko recovered
+→ local-testing observed before a fallback search command
+→ exact HTML/CSS edits applied
+→ 🟢 Miko verified COMPLETE
+```
+
+The fallback was needed because `rg` was unavailable in that terminal; Codex
+used `Select-String` after satisfying the applicable local-command Spec. The
+Stop receipt reported two Agent Specs and 16 observed evidence events, with no
+prompt, source code, or tool output persisted by Miko. This is the fixed
+interactive CLI UX baseline. Releases run only the existing disposable
+`eval:codex-live` model-backed fixture; parser and schema regressions belong in
+offline conformance tests.
 
 ### Codex Desktop hand-test after trust
 

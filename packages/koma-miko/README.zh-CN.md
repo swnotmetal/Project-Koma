@@ -176,9 +176,10 @@ npm install -D koma-miko@alpha
 npx koma-miko init --host claude
 ```
 
-`init` 会创建一个默认 `review-only` 的 starter `miko.json`，把所需 Claude
-Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已有设置前先
-备份，并把 `.miko/state/` 加入 `.gitignore`。命令可以安全重复运行。使用
+`init` 会创建一个默认 `review-only` 的 starter `miko.json`；Codex 例外，默认
+使用 `enforce`，因为当前 PreToolUse Hook 无法打开原生 review 选择。命令会把
+所需 Claude Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已有
+设置前先备份，并把 `.miko/state/` 加入 `.gitignore`。命令可以安全重复运行。使用
 `--skill <name>` 和 `--path <prefix>` 定制 starter spec；准备好阻止缺失证据
 后再加 `--enforce`。修改 Hook 后请重新启动 Claude 会话；使用 `--dry-run`
 可只预览改动。Codex、Gemini 与 VS Code Copilot 可分别使用 `--host codex`、
@@ -188,7 +189,7 @@ Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已
 `.miko/state/`，该目录应保持忽略。旧 `.miko/contracts.json` 数组仍可读取，
 但不再是推荐的开发者入口。
 
-### Codex Preview：安装不等于激活
+### Codex CLI Technical Preview：安装不等于激活
 
 `npx koma-miko init --host codex` 可以安装 Agent Spec 和 5 个项目 Hook，
 但不能代替用户让 Codex 信任可执行的项目代码。非托管 Codex Hook 会按命令的
@@ -202,15 +203,22 @@ Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已
 5. 运行：npx koma-miko doctor --host codex --strict
 ```
 
+Codex 初始化会把新 Agent Spec 默认设为 `mode: "enforce"`。显式指定
+`--mode review` 仍然有效，但 Codex 目前无法打开 Miko 请求的原生 PreToolUse
+选择，因此 `REVIEW` 会显示为可恢复的 pause/deny。项目存在 review-mode Spec
+时，`doctor --host codex --strict` 会发出警告。
+
 最后一步只有在 Miko 观察到晚于当前 Hook 配置的真实 `SessionStart` heartbeat
 后，才会通过新的 activation 检查。heartbeat 只能证明至少一个真实会话到达过
 Miko；它不能保证 Hook 命令变更后仍受信任，也不能证明每个 Codex 工具都发出 Hook。
-adapter 也会返回带 Miko 品牌的 `SessionStart` context，但当前 `codex exec`
-transcript 只显示 `hook: SessionStart Completed`；请以 heartbeat 支撑的 doctor
-结果为准，不要假设一定存在持续显示的绿色 banner。
+adapter 也会返回带 Miko 品牌的 `SessionStart` context。2026-09-01 的 Codex CLI
+0.152.0 人工测试直接显示了 active、recovered 与 COMPLETE；无交互的
+`codex exec` 仍可能把成功状态折叠成通用 Hook-completed 事件。Miko 不会仅为了
+制造绿色回执而增加额外模型回合。
 
-**仅用 Codex Desktop 的 onboarding 目前还不是主推 alpha 路径。** 在当前本地
-测试里，5 个项目 Hook 已安装但尚未信任时，Desktop 仍直接完成了编辑；直到打开
+**Codex Desktop 必须先通过 CLI 激活，不是受支持的独立 alpha onboarding
+路径。** 在当前本地测试里，5 个项目 Hook 已安装但尚未信任时，Desktop 仍直接
+完成了编辑；直到打开
 Codex CLI，审阅要求才清晰出现。如果终端中没有 `codex` 命令，不应把成功的
 `init`、Hook 配置检查或离线 `probe` 当作保护已生效。Miko 不会绕过信任决定；
 把它封装成 Codex plugin 也不会取消 Codex 的 Hook 审阅。
@@ -283,13 +291,19 @@ npx koma-miko init --host vscode --skill product-design --path src --enforce
 npx koma-miko doctor --host vscode --strict
 ```
 
+该命令使用 `enforce`，验证自动拒绝与恢复。若要测试真实用户选择，请把适用
+Spec 初始化或修改为 `mode: "review"`，并让 agent 在加载 Skill 前先提出编辑。
+VS Code 应通过原生审批 UI 展示 Miko 的 `permissionDecision: "ask"`。这与 Codex
+恢复 prompt 不是同一项测试；真实编辑器行为仍需完成下述手测。
+
 新开 Copilot chat 后，请它修改 `src` 下的文件。预期第一次被 Miko 拒绝；随后
 agent 明确读取 `.github/skills/product-design/SKILL.md`（也支持 `.agents` 或
-`.claude` 下同名 Skill），再重试成功。可查看 **GitHub Copilot Chat Hooks**
-输出，或运行 **Developer: Show Agent Debug Logs** 记录真实 `tool_name`。VS Code
-Agent Hooks 目前仍是 Preview，且组织策略可以禁用。VS Code 默认还会加载
-`.claude/settings*.json`；如果其中已有 Miko Claude Hook，`doctor` 会提示潜在的
-重复执行。
+`.claude` 下同名 Skill），再重试成功。测试者默认不需要收集原始 debug log。
+如果完全没有 Miko 消息，先运行 `doctor`；只有这一步仍无法定位时，维护者才应
+请求一次范围受限的 **Developer: Show Agent Debug Logs**，确认真实 `tool_name`。
+VS Code Agent Hooks 目前仍是 Preview，且组织策略可以禁用。VS Code 默认还会
+加载 `.claude/settings*.json`；如果其中已有 Miko Claude Hook，`doctor` 会提示
+潜在的重复执行。
 
 实现依据官方 [VS Code Agent Hooks 指南](https://code.visualstudio.com/docs/agent-customization/hooks)、
 [Hook schema](https://code.visualstudio.com/docs/agents/reference/hooks-reference) 与
@@ -327,6 +341,9 @@ Codex CLI 登录态（`MIKO_CODEX_BIN`），不需要 OpenAI API key。Gemini li
 runner（`npm run eval:gemini-live -w koma-miko`）使用父进程中的
 `GEMINI_API_KEY` 或 `GOOGLE_API_KEY` 与官方 Gemini CLI 入口
 （`MIKO_GEMINI_ENTRY`）。两个 runner 都使用一次性夹具，且不会读取 env 文件。
+每次 Miko 发布时，Codex 的模型活测刻意只运行这一条固定、一次性的
+`eval:codex-live` recovery fixture。解析器或 schema 回归应增加离线一致性用例；
+除非宿主 API 发生实质变化，不扩增付费 Codex 场景。
 `npm run eval:scale -w koma-miko` 不需要 API key；它会测试 100/1,000 份
 Agent Spec、10,000 条索引证据、100 份重叠 Spec、snapshot 恢复和终端输出上限。
 带环境信息的结果见 [scale 参考记录](../../docs/evals/miko-scale-alpha.md)；它衡量
@@ -378,9 +395,10 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
 - **100-Skills fixture 仅在约 20k tokens 的一次 Haiku 测试中通过；这不能代表 100k、190k 或近百万 token 的行为；**
 - **暂无托管遥测和云端策略服务；** Claude 适配器仅使用本地 JSONL 账本；
 - **无法观察没有发出已配置宿主 Hook 事件的云端工具、编辑器包装层或远程会话；**
-- **仅用 Codex Desktop 的 onboarding 还不够适合 vibe coder：项目 Hook 即使
-  已安装，也可能在用户完成 CLI 信任审阅前被静默跳过；配置存在和离线 probe
-  通过都不等于已经激活；**
+- **Codex CLI 属于 Technical Preview，并主推 enforce；由于 Codex PreToolUse
+  无法打开 Miko 的原生审批选择，review 会降级为 pause/deny；**
+- **Codex Desktop 必须先完成 CLI Hook 激活；配置存在和离线 probe 通过都不等于
+  已经激活；**
 - **VS Code Agent Hooks 仍是 Preview；适配器已通过离线 schema 一致性测试，
   但仍需在测试者的真实 Copilot 工具集上完成编辑器活测；**
 - **不自动改写工具调用；**

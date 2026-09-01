@@ -72,6 +72,7 @@ describe('miko init', () => {
         expect(Object.keys(settings.hooks).length).toBeGreaterThan(0);
         expect(JSON.stringify(settings)).toContain(`${host}-hook-cli.js`);
         if (host === 'codex') {
+          expect(readJson(path.join(project, 'miko.json')).specs[0].mode).toBe('enforce');
           expect(settings.hooks.PreToolUse[0]).not.toHaveProperty('matcher');
           expect(settings.hooks.PreToolUse[0].hooks[0]).toMatchObject({
             type: 'command',
@@ -80,6 +81,7 @@ describe('miko init', () => {
           });
           expect(settings.hooks.PreToolUse[0].hooks[0]).not.toHaveProperty('args');
         } else if (host === 'vscode') {
+          expect(readJson(path.join(project, 'miko.json')).specs[0].mode).toBe('review');
           expect(result.settingsPath.replace(/\\/g, '/')).toContain('.github/hooks/miko.json');
           expect(settings.hooks.PreToolUse[0]).toMatchObject({ type: 'command' });
           expect(settings.hooks.PreToolUse[0]).not.toHaveProperty('hooks');
@@ -89,6 +91,16 @@ describe('miko init', () => {
       } finally {
         rmSync(project, { recursive: true, force: true });
       }
+    }
+  });
+
+  it('allows an explicit Codex review spec while keeping enforce as the default', () => {
+    const project = temporaryProject();
+    try {
+      initProject(project, { host: 'codex', mode: 'review' });
+      expect(readJson(path.join(project, 'miko.json')).specs[0].mode).toBe('review');
+    } finally {
+      rmSync(project, { recursive: true, force: true });
     }
   });
 
