@@ -280,7 +280,9 @@ alpha 也提供以下窄范围 Hook 适配器：
 - `koma-miko-vscode-hook` 消费 VS Code 的 `SessionStart`、`PreToolUse`、
   `PostToolUse`、`PreCompact` 与 `Stop`。它使用官方文档中的嵌套
   `permissionDecision: ask | deny` 与 stop 输出，把多文件编辑拆成逐路径校验，
-  并且不会用显式 allow 覆盖 VS Code 自己的审批策略。初始化器会写入
+  把 Copilot 活测出现的 `multi_replace_string_in_file` 别名规范化为 Agent Spec
+  中稳定的 `replace_string_in_file` 工具名，并且不会用显式 allow 覆盖 VS Code
+  自己的审批策略。初始化器会写入
   `.github/hooks/miko.json`；不需要安装扩展，也不需要 Miko API key。
 
 可以让 Copilot Agent mode 针对一个已有项目 Skill 做小范围测试：
@@ -406,6 +408,8 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
 - **VS Code Agent Hooks 仍是 Preview；适配器已通过一次真实 Copilot
   Agent-mode REVIEW 恢复流程，但这不代表对不同模型、工具名、编辑器版本或
   组织策略的广泛兼容；**
+- **Copilot 可能在没有通知的情况下增加工具名；适配器只能治理已识别的别名，
+  因此每次发布仍应保留自然语言活测；**
 - **不自动改写工具调用；**
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**
 

@@ -326,8 +326,10 @@ The alpha also ships narrow adapters for these host Hook surfaces:
 - `koma-miko-vscode-hook` consumes VS Code `SessionStart`, `PreToolUse`,
   `PostToolUse`, `PreCompact`, and `Stop`. It uses the documented nested
   `permissionDecision: ask | deny` and stop outputs, splits multi-file edits
-  into separately scoped paths, and never returns an explicit allow over VS
-  Code's own approval policy. The
+  into separately scoped paths, normalizes Copilot's observed
+  `multi_replace_string_in_file` alias to the stable
+  `replace_string_in_file` Agent Spec tool name, and never returns an explicit
+  allow over VS Code's own approval policy. The
   initializer writes `.github/hooks/miko.json`; no extension or Miko API key is
   required.
 
@@ -477,6 +479,9 @@ metrics, and never reads an env file. See the
 - **VS Code Agent Hooks are Preview; the adapter has passed one live Copilot
   Agent-mode REVIEW recovery flow, not broad compatibility testing across
   models, tool names, editor versions, or organization policies**
+- **Copilot can introduce new tool names without notice; the adapter only
+  governs aliases it recognizes, so live natural-language tests remain part of
+  release validation**
 - **No automatic rewriting of tool calls**
 - **No claim that loading a skill proves the model understood, retained, or followed it**
 

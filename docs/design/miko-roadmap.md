@@ -136,6 +136,10 @@ shared, but let each host own its permission and text surface.
   in `miko-vscode-ux-lab`. The native UI exposed **Allow Once** and **Skip**;
   Skip returned Miko's REVIEW reason, the agent waited for the user's decision,
   then loaded the named Skill, retried the edit, and reached COMPLETE.
+- [x] Add a natural-language VS Code regression after a live run exposed
+  `multi_replace_string_in_file`. Normalize it to the stable
+  `replace_string_in_file` Spec tool and extract nested replacement paths; the
+  unrecognized alias previously let an in-scope edit bypass Miko entirely.
 - [ ] Repeat the Gemini live fixture with a short, low-latency model after the
   CLI/service latency issue is understood; the flash-lite attempt authenticated
   successfully but still hit the 180-second runner timeout.

@@ -87,11 +87,28 @@ function pathsFromVSCodeInput(input: Record<string, unknown>, cwd: string): stri
   for (const key of ['filePath', 'path', 'file_path']) {
     if (nonEmptyString(input[key])) values.push(input[key]);
   }
-  for (const key of ['files', 'filePaths']) {
+  for (const key of ['files', 'filePaths', 'replacements', 'edits']) {
     const candidates = input[key];
-    if (Array.isArray(candidates)) values.push(...candidates.filter(nonEmptyString));
+    if (!Array.isArray(candidates)) continue;
+    for (const candidate of candidates) {
+      if (nonEmptyString(candidate)) {
+        values.push(candidate);
+        continue;
+      }
+      if (typeof candidate !== 'object' || candidate === null || Array.isArray(candidate)) continue;
+      const item = candidate as Record<string, unknown>;
+      for (const pathKey of ['filePath', 'path', 'file_path']) {
+        if (nonEmptyString(item[pathKey])) values.push(item[pathKey]);
+      }
+    }
   }
   return [...new Set(values.map((value) => toProjectRelativePath(value, cwd)))];
+}
+
+/** Keep Agent Specs stable when Copilot renames an equivalent editor tool. */
+function canonicalVSCodeToolName(tool: string): string {
+  if (tool === 'multi_replace_string_in_file') return 'replace_string_in_file';
+  return tool;
 }
 
 /** Recognize only a single read-only terminal command that reloads SKILL.md. */
@@ -127,10 +144,11 @@ export function canonicalVSCodeCalls(
   }
 
   const paths = pathsFromVSCodeInput(input, cwd);
+  const canonicalTool = canonicalVSCodeToolName(tool);
   if (paths.length > 0) {
-    return paths.map((filePath) => ({ tool, arguments: { filePath }, cwd }));
+    return paths.map((filePath) => ({ tool: canonicalTool, arguments: { filePath }, cwd }));
   }
-  return [{ tool, arguments: {}, cwd }];
+  return [{ tool: canonicalTool, arguments: {}, cwd }];
 }
 
 function decideVSCodeTool(result: VerificationResult): object | undefined {

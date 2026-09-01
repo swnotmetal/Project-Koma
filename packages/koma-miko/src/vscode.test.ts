@@ -51,6 +51,36 @@ describe('VS Code Copilot adapter', () => {
     ]);
   });
 
+  it('normalizes Copilot multi-replace and extracts each nested target path', () => {
+    expect(canonicalVSCodeCalls('multi_replace_string_in_file', {
+      replacements: [
+        { filePath: 'src/ui/Hero.tsx', oldString: 'private-old', newString: 'private-new' },
+        { filePath: 'src/ui/Footer.tsx', oldString: 'private-old', newString: 'private-new' },
+      ],
+    }, base.cwd)).toEqual([
+      { tool: 'replace_string_in_file', arguments: { filePath: 'src/ui/Hero.tsx' }, cwd: base.cwd },
+      { tool: 'replace_string_in_file', arguments: { filePath: 'src/ui/Footer.tsx' }, cwd: base.cwd },
+    ]);
+  });
+
+  it('reviews a live Copilot multi-replace through the stable edit tool name', () => {
+    const miko = createMiko({ contracts: [{ ...contract, mode: 'review' }] });
+    miko.startTask({ sessionId: 'vscode-session', taskId: 'vscode-session', tags: [] });
+    const reviewed = handleVSCodeHookEvent(miko, 'vscode-session', {
+      ...base,
+      hook_event_name: 'PreToolUse',
+      tool_name: 'multi_replace_string_in_file',
+      tool_input: {
+        replacements: [{ filePath: 'src/ui/Hero.tsx', oldString: 'private-old', newString: 'private-new' }],
+      },
+    });
+
+    expect(reviewed.verification?.decision).toBe('REVIEW');
+    expect(reviewed.output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'ask' },
+    });
+  });
+
   it('recognizes only a narrow terminal Skill read', () => {
     expect(skillReadPathFromVSCodeTerminal(
       "Get-Content -Raw -LiteralPath '.github/skills/product-design/SKILL.md'",
