@@ -343,8 +343,13 @@ That command uses `enforce` and tests automatic denial/recovery. To test a real
 user choice instead, initialize or edit the applicable Spec to `mode: "review"`
 and ask the agent to propose the edit before loading its Skill. VS Code should
 surface Miko's `permissionDecision: "ask"` in its native approval UI. This is a
-different test from the Codex recovery prompt; live editor behavior still needs
-the documented hand-test.
+different test from the Codex recovery prompt. VS Code labels the two choices
+**Allow Once** and **Skip**: Allow Once permits only the proposed call, while
+Skip declines that call. In a live Copilot Agent-mode pass, Skip returned Miko's
+yellow REVIEW reason to the agent; after the user chose to proceed, the agent
+loaded the named Skill, retried the edit, and reached Miko COMPLETE. Skip does
+not itself authorize an automatic retry, so that contract-following path needs
+one short follow-up from the user.
 
 Start a new Copilot chat, then request an edit under `src`. The expected first
 pass is a Miko denial, followed by an explicit read of
@@ -469,8 +474,9 @@ metrics, and never reads an env file. See the
   choice**
 - **Codex Desktop requires prior CLI Hook activation; config presence and
   offline probe success do not prove activation**
-- **VS Code Agent Hooks are Preview; the adapter has offline schema conformance
-  but still needs a live Copilot editor pass on the tester's tool set**
+- **VS Code Agent Hooks are Preview; the adapter has passed one live Copilot
+  Agent-mode REVIEW recovery flow, not broad compatibility testing across
+  models, tool names, editor versions, or organization policies**
 - **No automatic rewriting of tool calls**
 - **No claim that loading a skill proves the model understood, retained, or followed it**
 

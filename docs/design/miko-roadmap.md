@@ -132,9 +132,10 @@ shared, but let each host own its permission and text surface.
 - [x] Stop pursuing a simulated Codex Desktop verifier surface or extra model
   turns for green receipts. Keep Desktop as post-CLI-activation compatibility
   and wait for a host-native review/status surface.
-- [ ] Hand-test VS Code Copilot `review → permissionDecision: ask → user choice`
-  in `miko-vscode-ux-lab`; the schema and offline adapter test already pass,
-  but the actual approval UI and recovery behavior remain unverified.
+- [x] Hand-test VS Code Copilot `review → permissionDecision: ask → user choice`
+  in `miko-vscode-ux-lab`. The native UI exposed **Allow Once** and **Skip**;
+  Skip returned Miko's REVIEW reason, the agent waited for the user's decision,
+  then loaded the named Skill, retried the edit, and reached COMPLETE.
 - [ ] Repeat the Gemini live fixture with a short, low-latency model after the
   CLI/service latency issue is understood; the flash-lite attempt authenticated
   successfully but still hit the 180-second runner timeout.

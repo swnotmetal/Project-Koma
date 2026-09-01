@@ -293,8 +293,12 @@ npx koma-miko doctor --host vscode --strict
 
 该命令使用 `enforce`，验证自动拒绝与恢复。若要测试真实用户选择，请把适用
 Spec 初始化或修改为 `mode: "review"`，并让 agent 在加载 Skill 前先提出编辑。
-VS Code 应通过原生审批 UI 展示 Miko 的 `permissionDecision: "ask"`。这与 Codex
-恢复 prompt 不是同一项测试；真实编辑器行为仍需完成下述手测。
+VS Code 会通过原生审批 UI 展示 Miko 的 `permissionDecision: "ask"`，两个按钮
+实际显示为 **Allow Once** 与 **Skip**：前者只放行当前调用，后者拒绝当前调用。
+一次真实 Copilot Agent-mode 活测中，Skip 把 Miko 的黄色 REVIEW 原因返回给
+agent；用户随后选择继续，agent 加载指定 Skill、重试编辑并到达 Miko COMPLETE。
+Skip 本身不会授权自动重试，因此遵守契约的路径还需要用户补一句简短的继续指令。
+这与 Codex 恢复 prompt 不是同一项测试。
 
 新开 Copilot chat 后，请它修改 `src` 下的文件。预期第一次被 Miko 拒绝；随后
 agent 明确读取 `.github/skills/product-design/SKILL.md`（也支持 `.agents` 或
@@ -399,8 +403,9 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
   无法打开 Miko 的原生审批选择，review 会降级为 pause/deny；**
 - **Codex Desktop 必须先完成 CLI Hook 激活；配置存在和离线 probe 通过都不等于
   已经激活；**
-- **VS Code Agent Hooks 仍是 Preview；适配器已通过离线 schema 一致性测试，
-  但仍需在测试者的真实 Copilot 工具集上完成编辑器活测；**
+- **VS Code Agent Hooks 仍是 Preview；适配器已通过一次真实 Copilot
+  Agent-mode REVIEW 恢复流程，但这不代表对不同模型、工具名、编辑器版本或
+  组织策略的广泛兼容；**
 - **不自动改写工具调用；**
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**
 
