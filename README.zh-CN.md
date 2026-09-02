@@ -55,6 +55,8 @@ Coding agent 可以声称自己加载了必需 Skill 或运行了测试，但 Mi
 如果 agent 尚未满足 Spec 就尝试修改文件，Miko 可以返回拒绝和简短的恢复提示。
 它无法读取隐藏模型上下文、证明模型真正理解了 Skill，也无法验证宿主没有暴露的
 事件。
+Claude CLI 的 guided 模式遇到真正的范围例外时，会显示一次明确的 Miko 选择：
+只允许完全相同的下一次重试，或保留当前边界。
 
 ```bash
 npx --yes koma-miko@alpha demo       # 确定性回放；无需 API key
@@ -96,7 +98,7 @@ Miko 本身是确定性验证器，因此这里衡量的是验证开销和端到
 |---|---|
 | 离线宿主一致性 | Claude、Codex、Gemini 与 VS Code Copilot 均复现 `DENY → 观察到 Skill → ALLOW`；账本夹具确认不保存 prompt、代码或工具响应 |
 | 本地 verifier 规模测试 | 1,000 份 Agent Spec：每次动作 **p95 1.34 ms**；10,001 条索引证据：**p95 0.0041 ms**；恢复 1,000 条证据：**p95 1.52 ms** |
-| Claude Code live + 手测 | 一次 100-Skill / 约 20k context 测试通过；随后一条不提 Miko、Skill 或目标文件的自然中文需求，驱动三文件产品页改造通过 3 份 Agent Spec 与 28 条 observed events，最终显示 COMPLETE |
+| Claude Code live + 手测 | 一次 100-Skill / 约 20k context 测试通过；自然中文需求驱动三文件改造通过 3 份 Agent Spec 与 28 条 observed events；另用 Haiku 4.5 实测可见的 `Allow once` 与 `Keep current scope` 两条策略例外路径 |
 | Codex CLI Technical Preview | 固定 live recovery 完成 `DENY → Skill/reference → edit → COMPLETE`；CLI 0.152.0 人工测试可见 Miko active、recovered 与 COMPLETE。Desktop 在 CLI 激活后也能执行，但 onboarding 与完成状态可见性仍不适合作为主路径 |
 | DeepSeek Harness smoke | 窄范围 packed-artifact 恢复 **3/3** 通过；模型阶段平均 19.425 秒 |
 

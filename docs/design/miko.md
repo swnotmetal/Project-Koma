@@ -113,10 +113,11 @@ result plus a plain-text rendering. A host adapter owns the final interaction:
 - Desktop/IDE: show the same text in the native transcript/permission dialog;
 - non-interactive runner: emit JSON and an exit status for automation.
 
-For Claude Code, `REVIEW` maps to native `ask`, `DENY` maps to `deny`, and the
-adapter returns both a user-visible `systemMessage` and agent-visible recovery
-context. This keeps Miko useful on text-only surfaces without coupling the verifier
-package to one UI toolkit.
+For Claude Code, the low-level `REVIEW` mapping remains native `ask` and `DENY`
+maps to `deny`. The packaged adapter adds a visible guided-policy handshake:
+Miko pauses the action, asks `Allow once | Keep current scope`, and binds an
+approval to one exact retry. This keeps Miko useful on text-only surfaces
+without coupling the verifier package to one UI toolkit.
 
 All packaged host adapters keep `ALLOW` subordinate to the host's existing
 permission engine and use `DENY` to block the proposed action with an explicit

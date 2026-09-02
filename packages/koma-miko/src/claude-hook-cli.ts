@@ -15,7 +15,11 @@ import path from 'node:path';
 import { createMiko } from './index.js';
 import type { EvidenceEvent, Miko, MikoContract, MikoTaskSnapshot } from './index.js';
 import { handleClaudeHookEvent } from './claude-code.js';
-import type { ClaudeHookInput } from './claude-code.js';
+import type {
+  ClaudeHookInput,
+  ClaudeReviewAuditEvent,
+  ClaudeReviewHandshakeState,
+} from './claude-code.js';
 import { loadMikoConfig } from './config.js';
 
 type LedgerRecord =
@@ -38,12 +42,14 @@ type LedgerRecord =
       reasonCode: string;
       contractIds: string[];
       missing?: string[];
-    };
+    }
+  | ({ taskId: string } & ClaudeReviewAuditEvent);
 
 interface PersistedSnapshot {
   version: 1;
   ledgerBytes: number;
   task: MikoTaskSnapshot;
+  review?: ClaudeReviewHandshakeState;
 }
 
 function readJson(pathname: string): unknown {
@@ -116,7 +122,7 @@ function restoreState(
   contracts: MikoContract[],
   paths: { ledger: string; snapshot: string },
   sessionId: string,
-): { miko: Miko; taskId: string; started: boolean } {
+): { miko: Miko; taskId: string; started: boolean; reviewState: ClaudeReviewHandshakeState } {
   const taskId = sessionId;
   const snapshot = readSnapshot(paths.snapshot);
   if (snapshot && snapshot.task.sessionId === sessionId && snapshot.task.taskId === taskId) {
@@ -124,7 +130,7 @@ function restoreState(
     try {
       miko.restoreTask(snapshot.task);
       applyLedgerRecords(miko, taskId, readLedgerTail(paths.ledger, snapshot.ledgerBytes));
-      return { miko, taskId, started: true };
+      return { miko, taskId, started: true, reviewState: snapshot.review ?? {} };
     } catch {
       // Contract changes or a stale/corrupt snapshot fall back to the audit log.
     }
@@ -135,7 +141,7 @@ function restoreState(
   const miko = createMiko({ contracts });
   miko.startTask({ sessionId, taskId, tags: [] });
   applyLedgerRecords(miko, taskId, records);
-  return { miko, taskId, started };
+  return { miko, taskId, started, reviewState: {} };
 }
 
 function compactSnapshot(snapshot: MikoTaskSnapshot): MikoTaskSnapshot {
@@ -156,11 +162,13 @@ function saveSnapshot(
   pathname: string,
   ledgerPath: string,
   snapshot: MikoTaskSnapshot,
+  reviewState: ClaudeReviewHandshakeState,
 ): void {
   const persisted: PersistedSnapshot = {
     version: 1,
     ledgerBytes: existsSync(ledgerPath) ? statSync(ledgerPath).size : 0,
     task: compactSnapshot(snapshot),
+    ...(reviewState.pending || reviewState.approved ? { review: reviewState } : {}),
   };
   writeFileSync(pathname, `${JSON.stringify(persisted)}\n`, 'utf8');
 }
@@ -173,13 +181,13 @@ function main(): void {
 
   const contracts = loadContracts(input.cwd);
   const statePaths = statePathsFor(input);
-  const { miko, taskId, started } = restoreState(contracts, statePaths, input.session_id);
+  const { miko, taskId, started, reviewState } = restoreState(contracts, statePaths, input.session_id);
   if (!started) {
     appendLedger(statePaths.ledger, { type: 'task_started', sessionId: input.session_id, taskId });
   }
 
   const activeBefore = new Set(miko.getActiveContractIds(taskId));
-  const handled = handleClaudeHookEvent(miko, taskId, input);
+  const handled = handleClaudeHookEvent(miko, taskId, input, reviewState);
   for (const contractId of miko.getActiveContractIds(taskId)) {
     if (!activeBefore.has(contractId)) {
       appendLedger(statePaths.ledger, { type: 'contract_activated', taskId, contractId });
@@ -209,8 +217,18 @@ function main(): void {
       ...(handled.verification.missing ? { missing: handled.verification.missing } : {}),
     });
   }
+  for (const reviewEvent of handled.reviewAudit ?? []) {
+    appendLedger(statePaths.ledger, { taskId, ...reviewEvent });
+  }
   const snapshot = miko.snapshotTask(taskId);
-  if (snapshot) saveSnapshot(statePaths.snapshot, statePaths.ledger, snapshot);
+  if (snapshot) {
+    saveSnapshot(
+      statePaths.snapshot,
+      statePaths.ledger,
+      snapshot,
+      handled.reviewState ?? reviewState,
+    );
+  }
   if (handled.output) process.stdout.write(JSON.stringify(handled.output));
 }
 

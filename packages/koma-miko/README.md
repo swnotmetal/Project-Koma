@@ -139,7 +139,8 @@ Choose the interaction once during initialization, then override it per Spec:
 
 - `guided` (default except Codex): missing Skills, references, and completion
   evidence pause for agent recovery; allowlist, risk, and path exceptions ask
-  the user through the host's native approval UI.
+  the user. Claude CLI uses a branded `Allow once | Keep current scope`
+  handshake; other hosts use the strongest review surface they expose.
 - `review`: every missing-evidence gap asks the user. This is intentionally
   approval-heavy and can interrupt one multi-edit task more than once.
 - `enforce`: evidence gaps and policy violations deny the proposed action.
@@ -196,16 +197,17 @@ agent without asking the user to repair Miko state manually. The shared
 `defer | ask | deny`; the packaged Claude adapter intentionally emits no
 explicit `allow` even though the lower-level Claude mapper can produce one.
 
-**Claude CLI REVIEW visibility limitation:** in a live Claude Code 2.1.257
-default-permission session, Claude merged Miko's `ask` into its ordinary Edit
-dialog. The action was still review-gated, and choosing No prevented the edit,
-but the dialog omitted Miko's name and `permissionDecisionReason`. A companion
-`PermissionRequest` `systemMessage` prototype was also hidden by the live CLI
-and was not shipped. Do not enable session-wide edit auto-approval merely to
-make Miko's yellow notice more visible: an isolated catch-all lab tried that
-configuration and the reason was still absent before a No decision. Treat the
-local ledger as the reliable record of why REVIEW occurred; the native dialog
-may look like an ordinary host permission prompt.
+**Claude CLI guided review:** for an allowlist, risk, or path exception, Miko
+first shows its yellow reason and asks Claude to open one branded question with
+`Allow once` and `Keep current scope`. An approval is SHA-256-bound to the full
+normalized tool call, consumed by one exact retry, and cannot approve a changed
+or later action. The ledger stores only the fingerprint and bounded review
+metadata. A real Claude Code 2.1.257 / Haiku 4.5 run exercised both choices:
+Allow once performed the exact edit and Keep current scope made no edit.
+
+Raw `mode: "review"` preparation gaps still use Claude's native `ask` mapping.
+That dialog may omit Miko attribution and can be approval-heavy, so `guided`
+remains the default. Miko does not enable session-wide edit auto-approval.
 
 The included `koma-miko-claude-hook` executable provides a minimal durable
 Claude Code adapter. It observes automatic `Skill` calls, direct `/skill-name`

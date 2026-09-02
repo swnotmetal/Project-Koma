@@ -2,8 +2,8 @@
 
 Date: 2026-08-26
 
-Status: **the published `koma-miko-dsh@0.1.0-alpha.7` package pins
-`koma-miko@0.1.0-alpha.9`. Native tests, registry metadata, a clean packed
+Status: **the published `koma-miko-dsh@0.1.0-alpha.8` package pins
+`koma-miko@0.1.0-alpha.10`. Native tests, registry metadata, a clean packed
 install, no-model host load, and three narrow packed-artifact recovery runs
 have passed in the alpha line. The post-publication install reproduced the
 VS Code adapter probe and DSH preflight from registry artifacts; the machine's

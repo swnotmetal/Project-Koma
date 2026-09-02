@@ -28,7 +28,9 @@ describe('miko init', () => {
       expect(readJson(path.join(project, 'miko.json')).specs[0].requires.skills[0].name)
         .toBe('my-design-skill');
       const settings = readJson(path.join(project, '.claude', 'settings.json'));
+      expect(settings.hooks.SessionStart).toHaveLength(1);
       expect(settings.hooks.PreToolUse).toHaveLength(1);
+      expect(settings.hooks.PostToolUse[0].matcher).toContain('AskUserQuestion');
       expect(settings.hooks.PostCompact).toHaveLength(1);
       expect(readFileSync(path.join(project, '.gitignore'), 'utf8')).toContain('.miko/state/');
     } finally {

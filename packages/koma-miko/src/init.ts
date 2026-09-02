@@ -36,6 +36,13 @@ const HOST_DETAILS: Record<InitHost, {
   claude: {
     settingsRelativePath: path.join('.claude', 'settings.json'),
     events: {
+      SessionStart: {
+        hook: {
+          type: 'command',
+          command: 'node',
+          args: ['${CLAUDE_PROJECT_DIR}/node_modules/koma-miko/dist/claude-hook-cli.js'],
+        },
+      },
       UserPromptExpansion: {
         matcher: '',
         hook: {
@@ -53,7 +60,7 @@ const HOST_DETAILS: Record<InitHost, {
         },
       },
       PostToolUse: {
-        matcher: 'Skill|Read|Edit|Write',
+        matcher: 'Skill|Read|Edit|Write|AskUserQuestion',
         hook: {
           type: 'command',
           command: 'node',

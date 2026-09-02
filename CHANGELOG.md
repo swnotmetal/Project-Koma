@@ -2,6 +2,28 @@
 
 All notable changes to Koma will be documented in this file.
 
+## Miko alpha.10 / DSH alpha.8 - 2026-09-02
+
+### Added
+
+- Add a visible Claude CLI handshake for guided policy exceptions: Miko pauses
+  the action, asks `Allow once` or `Keep current scope`, and binds an approval
+  to the exact tool call with a privacy-safe fingerprint.
+- Persist review request, decision, and one-time consumption metadata in the
+  local ledger without storing prompts, source code, or tool output.
+
+### Changed
+
+- Keep deterministic preparation recovery automatic; ask the user only when a
+  guided Spec encounters a genuine allowlist, risk, or path exception.
+- Pin `koma-miko-dsh@0.1.0-alpha.8` to `koma-miko@0.1.0-alpha.10`.
+
+### Verified
+
+- A real Claude CLI 2.1.257 / Haiku 4.5 session visibly completed `Miko pause
+  → Allow once → exact edit → Miko verified`; a separate run kept the current
+  scope and made no edit.
+
 ## Miko alpha.9 / DSH alpha.7 - 2026-09-02
 
 ### Added

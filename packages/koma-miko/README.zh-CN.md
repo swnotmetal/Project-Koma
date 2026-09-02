@@ -132,7 +132,9 @@ miko.verifyCompletion('new-settings-page');
 初始化时选择一次交互方式，之后仍可在 `miko.json` 中按 Spec 调整：
 
 - `guided`（除 Codex 外的默认值）：缺 Skill、参考资料或完成证据时暂停当前动作，
-  让 agent 自动补齐；allowlist、风险或路径例外才调用宿主的用户选择界面。
+  让 agent 自动补齐；allowlist、风险或路径例外才询问用户。Claude CLI 使用带
+  Miko 标识的 `Allow once | Keep current scope`；其他宿主使用其能提供的最强
+  review 界面。
 - `review`：每个缺失证据都询问用户，适合有意采用审批密集流程的项目；一个
   多次编辑任务可能产生多次询问。
 - `enforce`：缺失证据和策略违规都拒绝当前动作。明确列入 `deny` 的工具在任何
@@ -165,14 +167,16 @@ agent 上下文与本地账本。
 `defer | ask | deny`；包内 Claude adapter 即使底层 mapper 能生成 `allow`，也会
 刻意对 `ALLOW` 不输出显式放行。
 
-**Claude CLI 的 REVIEW 可见性限制：**在 Claude Code 2.1.257 默认权限模式的
-真实测试中，Claude 会把 Miko 返回的 `ask` 合并进普通 Edit 确认框。动作仍然受
-review 约束，选择 No 也确实阻止编辑，但界面可能不显示 Miko 名称与
-`permissionDecisionReason`。我们还实测了一个配套的 `PermissionRequest`
-`systemMessage` 原型，CLI 同样没有展示，因此没有发布。不要为了让黄色提示更明显
-而开启整段会话的编辑自动批准：隔离 lab 即使使用覆盖全部写入的 Spec 并预先允许
-Edit/Write，在用户选择 No 之前仍不显示原因。REVIEW 的原因应以本地账本为可靠
-记录，原生确认框可能看起来只像普通宿主权限提示。
+**Claude CLI 的 guided review：**遇到 allowlist、风险或路径例外时，Miko 会
+先显示黄色原因，再让 Claude 打开一个带 Miko 标识的问题，只提供 `Allow once`
+与 `Keep current scope`。允许一次会用 SHA-256 绑定完整、规范化后的工具调用，
+只供完全相同的下一次重试消费；修改后的调用或后续动作不能复用。账本只记录
+fingerprint 与有界的 review 元数据。Claude Code 2.1.257 / Haiku 4.5 真实测试
+已覆盖两个选项：Allow once 只完成目标编辑，Keep current scope 未产生编辑。
+
+原始 `mode: "review"` 的准备证据缺口仍使用 Claude 原生 `ask`；该确认框可能不
+显示 Miko 名称，且审批较频繁，因此 `guided` 仍是默认值。Miko 不会开启整段
+会话的编辑自动批准。
 
 包内的 `koma-miko-claude-hook` 提供最小可用的持久化 Claude Code 适配器：
 它观察自动 `Skill` 调用、用户直接输入的 `/skill-name`、`Read`、`Edit` 与

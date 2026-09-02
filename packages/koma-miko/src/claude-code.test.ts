@@ -23,6 +23,17 @@ function start() {
 }
 
 describe('Claude Code adapter', () => {
+  it('shows one concise Miko lifecycle receipt when the session starts', () => {
+    const handled = handleClaudeHookEvent(start(), 'claude-session', {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'SessionStart',
+    });
+    expect(handled.output).toMatchObject({
+      systemMessage: expect.stringContaining('Miko active'),
+    });
+  });
+
   it('normalizes host absolute paths to project-relative paths', () => {
     expect(toProjectRelativePath(
       'D:\\portfolio\\src\\components\\Hero.tsx',
@@ -102,7 +113,7 @@ describe('Claude Code adapter', () => {
     });
   });
 
-  it('keeps guided preparation automatic and asks only for a policy exception', () => {
+  it('keeps guided preparation automatic and completes one visible policy handshake', () => {
     const guided: MikoContract = {
       ...contract,
       mode: 'guided',
@@ -127,8 +138,86 @@ describe('Claude Code adapter', () => {
     const reviewed = handleClaudeHookEvent(miko, 'claude-session', edit);
     expect(reviewed.verification).toMatchObject({ decision: 'REVIEW', reasonCode: 'RISK_TOO_HIGH' });
     expect(reviewed.output).toMatchObject({
-      hookSpecificOutput: { permissionDecision: 'ask' },
+      hookSpecificOutput: { permissionDecision: 'deny' },
     });
+    expect(reviewed.reviewState?.pending).toBeDefined();
+    expect(JSON.stringify(reviewed.reviewState)).not.toContain('private content');
+
+    const pending = reviewed.reviewState!.pending!;
+    const naturalQuestion = 'Allow editing src/components/Hero.tsx for this change?';
+    const questionInput = {
+      questions: [{
+        question: naturalQuestion,
+        header: 'Miko review',
+        options: [
+          { label: 'Allow once', description: 'Permit only this exact action.' },
+          { label: 'Keep current scope', description: 'Do not run the action.' },
+        ],
+        multiSelect: false,
+      }],
+    };
+    const approved = handleClaudeHookEvent(miko, 'claude-session', {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PostToolUse',
+      tool_name: 'AskUserQuestion',
+      tool_input: questionInput,
+      tool_response: { answers: { [naturalQuestion]: 'Allow once' } },
+    }, reviewed.reviewState);
+    expect(approved.reviewState?.approved?.id).toBe(pending.id);
+    expect(approved.output).toMatchObject({
+      systemMessage: expect.stringContaining('approved one exact exception'),
+    });
+
+    const allowedOnce = handleClaudeHookEvent(
+      miko, 'claude-session', edit, approved.reviewState,
+    );
+    expect(allowedOnce.output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'allow' },
+    });
+    expect(allowedOnce.reviewState).toEqual({});
+
+    const reviewedAgain = handleClaudeHookEvent(miko, 'claude-session', edit, allowedOnce.reviewState);
+    expect(reviewedAgain.output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'deny' },
+    });
+  });
+
+  it('keeps scope when the user declines a visible policy handshake', () => {
+    const scoped: MikoContract = {
+      id: 'scope',
+      appliesWhen: { action: { tools: ['Edit'] } },
+      actions: {
+        scope: { tools: ['Edit'], allowedPathPrefixes: ['src/ui'], argumentNames: ['file_path'] },
+      },
+      mode: 'guided',
+    };
+    const miko = createMiko({ contracts: [scoped] });
+    miko.startTask({ sessionId: 'claude-session', taskId: 'claude-session', tags: [] });
+    const edit = {
+      session_id: 'claude-session', cwd: 'D:\\portfolio', hook_event_name: 'PreToolUse' as const,
+      tool_name: 'Edit', tool_input: { file_path: 'package.json', new_string: 'secret' },
+    };
+    const reviewed = handleClaudeHookEvent(miko, 'claude-session', edit);
+    const pending = reviewed.reviewState!.pending!;
+    const naturalQuestion = 'Allow editing package.json for this project-name change?';
+    const declined = handleClaudeHookEvent(miko, 'claude-session', {
+      session_id: 'claude-session', cwd: 'D:\\portfolio', hook_event_name: 'PostToolUse',
+      tool_name: 'AskUserQuestion',
+      tool_input: { questions: [{
+        question: naturalQuestion,
+        header: 'Miko review',
+        options: [{ label: 'Allow once' }, { label: 'Keep current scope' }],
+      }] },
+      tool_response: { answers: { [naturalQuestion]: 'Keep current scope' } },
+    }, reviewed.reviewState);
+
+    expect(declined.reviewState).toEqual({});
+    expect(declined.output).toMatchObject({
+      systemMessage: expect.stringContaining('kept the current scope'),
+    });
+    expect(handleClaudeHookEvent(miko, 'claude-session', edit, declined.reviewState).output)
+      .toMatchObject({ hookSpecificOutput: { permissionDecision: 'deny' } });
   });
 
   it('invalidates context-fresh skill evidence after Claude compaction', () => {

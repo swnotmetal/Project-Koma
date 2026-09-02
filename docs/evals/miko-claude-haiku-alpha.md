@@ -136,6 +136,25 @@ assertion, not verified accessibility. COMPLETE means the declared Agent Spec
 obligations were observed; it must not be presented as general output quality
 or Skill comprehension.
 
+### Visible one-time review handshake
+
+The attribution failure above was resolved in the next package candidate with
+a bounded Claude CLI handshake rather than broad edit auto-approval. In two
+real Claude Code 2.1.257 / Haiku 4.5 sessions, an out-of-scope `package.json`
+edit first displayed Miko's yellow `PATH_OUT_OF_SCOPE` pause and then opened a
+single `Miko review` question.
+
+- `Keep current scope` produced a visible Miko receipt and no edit.
+- `Allow once` approved only the exact fingerprinted retry, displayed `Miko
+  allowed one exact exception`, performed the requested one-line edit, and
+  ended with Miko COMPLETE.
+
+The approval is consumed before the tool runs and a later identical action
+requires a fresh decision. The ledger records request, decision, and
+consumption metadata, but not the source text, prompt, or tool output. Raw
+review-mode preparation gaps retain Claude's native approval limitation;
+guided mode reserves this explicit handshake for policy exceptions.
+
 ## Harness correction retained as evidence
 
 The first 20k attempt and a 1k diagnostic selected the correct Skill but did not
