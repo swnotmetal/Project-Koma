@@ -165,6 +165,15 @@ agent 上下文与本地账本。
 `defer | ask | deny`；包内 Claude adapter 即使底层 mapper 能生成 `allow`，也会
 刻意对 `ALLOW` 不输出显式放行。
 
+**Claude CLI 的 REVIEW 可见性限制：**在 Claude Code 2.1.257 默认权限模式的
+真实测试中，Claude 会把 Miko 返回的 `ask` 合并进普通 Edit 确认框。动作仍然受
+review 约束，选择 No 也确实阻止编辑，但界面可能不显示 Miko 名称与
+`permissionDecisionReason`。我们还实测了一个配套的 `PermissionRequest`
+`systemMessage` 原型，CLI 同样没有展示，因此没有发布。不要为了让黄色提示更明显
+而开启整段会话的编辑自动批准：隔离 lab 即使使用覆盖全部写入的 Spec 并预先允许
+Edit/Write，在用户选择 No 之前仍不显示原因。REVIEW 的原因应以本地账本为可靠
+记录，原生确认框可能看起来只像普通宿主权限提示。
+
 包内的 `koma-miko-claude-hook` 提供最小可用的持久化 Claude Code 适配器：
 它观察自动 `Skill` 调用、用户直接输入的 `/skill-name`、`Read`、`Edit` 与
 `Write` 事件；使用仅含必要元数据、并记录非 ALLOW 决策的本地 JSONL 账本；

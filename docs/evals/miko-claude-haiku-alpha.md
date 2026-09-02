@@ -100,6 +100,42 @@ directly motivated `guided` mode: deterministic evidence gaps pause for agent
 recovery, while genuinely judgment-dependent policy exceptions use native
 user choice. No claim about Claude Desktop parity follows from this CLI test.
 
+### Guided policy exception and hidden attribution
+
+On 2026-09-02, the lab then used published `koma-miko@0.1.0-alpha.9` with
+`mode: "guided"` and an ordinary Chinese request to improve a small product
+page. Missing testing, design, accessibility, and reference evidence produced
+red Miko pauses; Claude loaded the named materials and retried without user
+intervention. The turn completed with 3 Agent Specs and 20 observed evidence
+events.
+
+A follow-up requested an edit to `src/components/Hero.tsx`, outside the Spec's
+allowed client-page files. Miko recorded `REVIEW / PRE_ACTION /
+PATH_OUT_OF_SCOPE`. Allowing the native prompt executed that one edit. A fresh
+session requested an out-of-scope `package.json` edit; choosing No ended the
+turn, left the package unchanged, and produced no PostToolUse edit evidence.
+The safety and user-choice semantics therefore worked.
+
+The attribution UX did not. With Claude's default Edit permission still active,
+the CLI merged Miko's `ask` into a generic diff plus Yes/No dialog and displayed
+neither Miko's name nor its supplied reason. A narrow `PermissionRequest`
+companion hook emitted the intended `systemMessage` in offline hook replay but
+the same Claude CLI did not render it during a live permission dialog. The
+prototype was reverted rather than shipped. Enabling broad edit auto-approval
+was then tested only inside the isolated lab with a catch-all write Spec. A No
+decision still showed only Claude's generic rejection, so the permission
+override was removed; it neither fixed pre-decision attribution nor provided an
+acceptable onboarding workaround. The earlier visible yellow notice occurred
+after an approved call returned Hook output to the transcript, not before the
+user made the choice.
+
+This run also exposed an evidence-language boundary: Claude claimed “complete
+accessibility,” while the active Spec proved only that accessibility guidance
+was loaded and selected artifacts changed. That statement is an unsupported
+assertion, not verified accessibility. COMPLETE means the declared Agent Spec
+obligations were observed; it must not be presented as general output quality
+or Skill comprehension.
+
 ## Harness correction retained as evidence
 
 The first 20k attempt and a 1k diagnostic selected the correct Skill but did not

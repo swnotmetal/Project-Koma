@@ -196,6 +196,17 @@ agent without asking the user to repair Miko state manually. The shared
 `defer | ask | deny`; the packaged Claude adapter intentionally emits no
 explicit `allow` even though the lower-level Claude mapper can produce one.
 
+**Claude CLI REVIEW visibility limitation:** in a live Claude Code 2.1.257
+default-permission session, Claude merged Miko's `ask` into its ordinary Edit
+dialog. The action was still review-gated, and choosing No prevented the edit,
+but the dialog omitted Miko's name and `permissionDecisionReason`. A companion
+`PermissionRequest` `systemMessage` prototype was also hidden by the live CLI
+and was not shipped. Do not enable session-wide edit auto-approval merely to
+make Miko's yellow notice more visible: an isolated catch-all lab tried that
+configuration and the reason was still absent before a No decision. Treat the
+local ledger as the reliable record of why REVIEW occurred; the native dialog
+may look like an ordinary host permission prompt.
+
 The included `koma-miko-claude-hook` executable provides a minimal durable
 Claude Code adapter. It observes automatic `Skill` calls, direct `/skill-name`
 expansions, `Read`, `Edit`, and `Write` events; persists a privacy-minimized
