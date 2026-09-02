@@ -56,7 +56,7 @@ The developer-facing project file is `miko.json`:
           { "name": "product-design", "reloadAfterCompaction": true }
         ]
       },
-      "mode": "enforce"
+      "mode": "guided"
     }
   ]
 }
@@ -97,7 +97,7 @@ const miko = createMiko({
         { type: 'check_passed', name: 'targeted-tests' },
       ],
     },
-    mode: 'review',
+    mode: 'guided',
   }],
 });
 
@@ -107,7 +107,8 @@ miko.startTask({
   tags: ['ui'],
 });
 
-// Missing preparation is REVIEW in review mode (DENY in enforce mode).
+// Guided mode pauses this deterministic gap for agent recovery, without asking
+// the user to approve the same edit repeatedly.
 miko.verifyPreparation('new-settings-page');
 
 miko.record({
@@ -130,9 +131,19 @@ miko.verifyAction({
   arguments: { path: 'src/ui/Settings.tsx' },
 });
 
-// REVIEW until both completion checks have been recorded.
+// Guided mode pauses completion until both checks have been recorded.
 miko.verifyCompletion('new-settings-page');
 ```
+
+Choose the interaction once during initialization, then override it per Spec:
+
+- `guided` (default except Codex): missing Skills, references, and completion
+  evidence pause for agent recovery; allowlist, risk, and path exceptions ask
+  the user through the host's native approval UI.
+- `review`: every missing-evidence gap asks the user. This is intentionally
+  approval-heavy and can interrupt one multi-edit task more than once.
+- `enforce`: evidence gaps and policy violations deny the proposed action.
+  Explicitly denied tools always deny in every mode.
 
 Every result is machine-readable and explainable:
 
@@ -205,14 +216,16 @@ npm install -D koma-miko@alpha
 npx koma-miko init --host claude
 ```
 
-`init` creates a review-only starter `miko.json`, except that Codex defaults to
+`init` creates a `guided` starter `miko.json`, except that Codex defaults to
 `enforce` because its current PreToolUse Hook cannot open a native review
-choice. It merges the required Claude Hooks into `.claude/settings.json`
+choice. Guided mode keeps routine missing-evidence recovery with the agent and
+asks the user only about policy exceptions. It merges the required Claude Hooks into `.claude/settings.json`
 without replacing unrelated settings, backs up an existing settings file
 before changing it, and adds `.miko/state/` to
 `.gitignore`. Run it again safely; it is idempotent. Use `--skill <name>` and
-`--path <prefix>` to tailor the starter spec, or `--enforce` when you are ready
-to block missing evidence. Start a new Claude session after changing Hooks.
+`--path <prefix>` to tailor the starter spec, or choose once with
+`--mode guided|review|enforce`; the generated mode can later be changed per
+Spec. Start a new Claude session after changing Hooks.
 Use `--dry-run` to preview changes. Codex, Gemini, and VS Code Copilot layouts
 can be initialized with `--host codex`, `--host gemini`, or `--host vscode`
 (`--host copilot` is an alias).
@@ -342,8 +355,9 @@ npx koma-miko doctor --host vscode --strict
 ```
 
 That command uses `enforce` and tests automatic denial/recovery. To test a real
-user choice instead, initialize or edit the applicable Spec to `mode: "review"`
-and ask the agent to propose the edit before loading its Skill. VS Code should
+user choice instead, use a `guided` Spec whose preparation is already satisfied
+and propose a risk, allowlist, or path exception. `review` remains available
+for intentionally approval-heavy missing-evidence testing. VS Code should
 surface Miko's `permissionDecision: "ask"` in its native approval UI. This is a
 different test from the Codex recovery prompt. VS Code labels the two choices
 **Allow Once** and **Skip**: Allow Once permits only the proposed call, while

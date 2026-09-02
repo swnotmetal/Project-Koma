@@ -91,11 +91,18 @@ applicable contracts, and observable events. Miko returns one of three decisions
 | Decision | Meaning |
 |---|---|
 | `ALLOW` | The applicable contract is satisfied |
-| `DENY` | An objective contract violation exists |
-| `REVIEW` | Evidence is missing or the rule requires judgment |
+| `DENY` | The action must pause; in guided mode this also covers deterministic evidence that the agent can repair |
+| `REVIEW` | The host should ask the user for a genuine policy judgment |
 
-`REVIEW` deliberately leaves the response to the host: ask the agent to load a
-skill, request human approval, run a reviewer, or stop.
+Agent Specs select the interaction once and may override it per Spec:
+
+- `guided` is the recommended vibe-coding mode. Missing Skills, references, or
+  completion evidence produce a recoverable `DENY`; allowlist, risk, and path
+  exceptions produce `REVIEW` for host-native user choice.
+- `review` asks the user for every missing-evidence gap and is intentionally
+  approval-heavy.
+- `enforce` denies both evidence gaps and policy violations. An explicitly
+  denied tool is never reviewable.
 
 ### UI ownership
 
@@ -212,21 +219,21 @@ silently select the correct Skill on the model's behalf.
 task submitted
       │
       ▼
-┌──────────────────┐   missing required skill   ┌──────────┐
-│ 1. PREPARE       ├───────────────────────────►│ REVIEW   │
-│ required skills  │                            └──────────┘
+┌──────────────────┐   missing required skill   ┌───────────────┐
+│ 1. PREPARE       ├───────────────────────────►│ RECOVER / ASK │
+│ required skills  │                            └───────────────┘
 └────────┬─────────┘
          │ evidence: skill_loaded / reference_read
          ▼
-┌──────────────────┐   forbidden or risky call  ┌──────────┐
-│ 2. PRE-ACTION    ├───────────────────────────►│ DENY     │
-│ tool + arguments │                            └──────────┘
+┌──────────────────┐   forbidden or risky call  ┌───────────────┐
+│ 2. PRE-ACTION    ├───────────────────────────►│ DENY / REVIEW │
+│ tool + arguments │                            └───────────────┘
 └────────┬─────────┘
          │ evidence: tool_succeeded / artifact_changed
          ▼
-┌──────────────────┐   missing test/render/etc. ┌──────────┐
-│ 3. COMPLETE      ├───────────────────────────►│ REVIEW   │
-│ obligations      │                            └──────────┘
+┌──────────────────┐   missing test/render/etc. ┌───────────────┐
+│ 3. COMPLETE      ├───────────────────────────►│ RECOVER / ASK │
+│ obligations      │                            └───────────────┘
 └────────┬─────────┘
          ▼
        ALLOW
@@ -291,7 +298,7 @@ type MikoContract = {
       | { type: 'check_passed'; name: string }
     >;
   };
-  mode?: 'review' | 'enforce';
+  mode?: 'guided' | 'review' | 'enforce';
 };
 ```
 
@@ -327,7 +334,7 @@ Example for the motivating UI case:
       { "type": "check_passed", "name": "targeted-tests" }
     ]
   },
-  "mode": "review"
+  "mode": "guided"
 }
 ```
 

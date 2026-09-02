@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import type { DoctorHost } from './doctor.js';
+import type { ContractMode } from './index.js';
 
 export type InitHost = DoctorHost;
 
@@ -8,7 +9,7 @@ export interface InitOptions {
   host?: InitHost;
   skill?: string;
   pathPrefix?: string;
-  mode?: 'review' | 'enforce';
+  mode?: ContractMode;
   dryRun?: boolean;
 }
 
@@ -156,7 +157,7 @@ function starterConfig(
   host: InitHost,
   skill: string,
   pathPrefix: string,
-  mode: 'review' | 'enforce',
+  mode: ContractMode,
 ): JsonObject {
   return {
     $schema: './node_modules/koma-miko/schema/miko.schema.json',
@@ -270,10 +271,10 @@ export function initProject(projectRootInput: string, options: InitOptions = {})
   if (!details) throw new Error(`Unsupported Miko host: ${host}`);
   const skill = options.skill ?? 'frontend-design';
   const pathPrefix = options.pathPrefix ?? 'src';
-  // Codex cannot surface PreToolUse `ask` yet, so its promoted alpha path
-  // defaults to deterministic enforcement. Other hosts retain the safer
-  // review-first starter behavior when they expose a native approval choice.
-  const mode = options.mode ?? (host === 'codex' ? 'enforce' : 'review');
+  // Guided mode removes routine approval fatigue: deterministic evidence gaps
+  // pause the action for agent recovery, while policy exceptions use a native
+  // user decision. Codex cannot surface that decision yet, so it stays strict.
+  const mode = options.mode ?? (host === 'codex' ? 'enforce' : 'guided');
   if (!skill.trim()) throw new Error('--skill must not be empty.');
   if (!pathPrefix.trim()) throw new Error('--path must not be empty.');
 

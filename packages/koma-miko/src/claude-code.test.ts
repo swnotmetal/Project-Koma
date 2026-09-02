@@ -102,6 +102,35 @@ describe('Claude Code adapter', () => {
     });
   });
 
+  it('keeps guided preparation automatic and asks only for a policy exception', () => {
+    const guided: MikoContract = {
+      ...contract,
+      mode: 'guided',
+      actions: { maxRisk: 'low' },
+    };
+    const miko = createMiko({ contracts: [guided] });
+    miko.startTask({ sessionId: 'claude-session', taskId: 'claude-session', tags: [] });
+    const edit = {
+      session_id: 'claude-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PreToolUse' as const,
+      tool_name: 'Edit',
+      tool_input: { file_path: 'src/components/Hero.tsx' },
+    };
+
+    expect(handleClaudeHookEvent(miko, 'claude-session', edit).output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'deny' },
+    });
+    miko.record({
+      taskId: 'claude-session', type: 'skill_loaded', name: 'frontend-design', source: 'observed',
+    });
+    const reviewed = handleClaudeHookEvent(miko, 'claude-session', edit);
+    expect(reviewed.verification).toMatchObject({ decision: 'REVIEW', reasonCode: 'RISK_TOO_HIGH' });
+    expect(reviewed.output).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'ask' },
+    });
+  });
+
   it('invalidates context-fresh skill evidence after Claude compaction', () => {
     const freshContract: MikoContract = {
       ...contract,

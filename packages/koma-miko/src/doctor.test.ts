@@ -151,6 +151,28 @@ describe('miko doctor', () => {
     }
   });
 
+  it('warns when a Codex Agent Spec uses guided mode with degraded user decisions', () => {
+    const project = mkdtempSync(path.join(tmpdir(), 'miko-doctor-codex-guided-'));
+    try {
+      writeFileSync(path.join(project, 'miko.json'), JSON.stringify({
+        version: 1,
+        specs: [{
+          id: 'codex-guided',
+          appliesWhen: { action: { tools: ['apply_patch'], pathPrefixes: ['src'] } },
+          mode: 'guided',
+        }],
+      }));
+
+      const report = doctorProject(project, { host: 'codex' });
+      expect(report.checks.find((check) => check.id === 'config')).toMatchObject({
+        status: 'warn',
+        message: expect.stringContaining('guided or review mode'),
+      });
+    } finally {
+      rmSync(project, { recursive: true, force: true });
+    }
+  });
+
   it('does not mistake an unrelated Codex state file for a live Hook heartbeat', () => {
     const project = mkdtempSync(path.join(tmpdir(), 'miko-doctor-codex-state-'));
     try {

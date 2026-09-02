@@ -53,7 +53,7 @@ Agent 指令是有用的引导，但不等于强制约束。Skill 可能没有�
           { "name": "product-design", "reloadAfterCompaction": true }
         ]
       },
-      "mode": "enforce"
+      "mode": "guided"
     }
   ]
 }
@@ -92,7 +92,7 @@ const miko = createMiko({
         { type: 'check_passed', name: 'targeted-tests' },
       ],
     },
-    mode: 'review',
+    mode: 'guided',
   }],
 });
 
@@ -102,7 +102,7 @@ miko.startTask({
   tags: ['ui'],
 });
 
-// 未记录 product-design 与 design-system 时返回 REVIEW。
+// guided 会暂停这个可确定修复的缺口，让 agent 自行补齐，而不是反复询问用户。
 miko.verifyPreparation('new-settings-page');
 
 miko.record({
@@ -125,12 +125,18 @@ miko.verifyAction({
   arguments: { path: 'src/ui/Settings.tsx' },
 });
 
-// 直到完成证据齐全前都返回 REVIEW。
+// guided 会暂停完成流程，直到两项检查证据齐全。
 miko.verifyCompletion('new-settings-page');
 ```
 
-`mode: 'review'` 会把缺失证据映射为 `REVIEW`；`mode: 'enforce'` 则映射为
-`DENY`。明确越权的工具、风险或路径在两种模式下都会返回 `DENY`。
+初始化时选择一次交互方式，之后仍可在 `miko.json` 中按 Spec 调整：
+
+- `guided`（除 Codex 外的默认值）：缺 Skill、参考资料或完成证据时暂停当前动作，
+  让 agent 自动补齐；allowlist、风险或路径例外才调用宿主的用户选择界面。
+- `review`：每个缺失证据都询问用户，适合有意采用审批密集流程的项目；一个
+  多次编辑任务可能产生多次询问。
+- `enforce`：缺失证据和策略违规都拒绝当前动作。明确列入 `deny` 的工具在任何
+  模式下都直接拒绝。
 
 终端文字采用有阶段含义、且长度受限的开发者红绿灯；即使许多 Agent Spec
 重叠，也只展开最重要的前三项：
@@ -176,12 +182,14 @@ npm install -D koma-miko@alpha
 npx koma-miko init --host claude
 ```
 
-`init` 会创建一个默认 `review-only` 的 starter `miko.json`；Codex 例外，默认
-使用 `enforce`，因为当前 PreToolUse Hook 无法打开原生 review 选择。命令会把
+`init` 会创建一个默认 `guided` 的 starter `miko.json`；Codex 例外，默认
+使用 `enforce`，因为当前 PreToolUse Hook 无法打开原生 review 选择。guided
+把可确定补救的缺失证据交给 agent，只在策略例外上询问用户。命令会把
 所需 Claude Hook 合并进 `.claude/settings.json`（不会替换无关设置），修改已有
 设置前先备份，并把 `.miko/state/` 加入 `.gitignore`。命令可以安全重复运行。使用
-`--skill <name>` 和 `--path <prefix>` 定制 starter spec；准备好阻止缺失证据
-后再加 `--enforce`。修改 Hook 后请重新启动 Claude 会话；使用 `--dry-run`
+`--skill <name>` 和 `--path <prefix>` 定制 starter spec，也可通过
+`--mode guided|review|enforce` 初始化时选择一次，之后在 `miko.json` 中按 Spec
+调整。修改 Hook 后请重新启动 Claude 会话；使用 `--dry-run`
 可只预览改动。Codex、Gemini 与 VS Code Copilot 可分别使用 `--host codex`、
 `--host gemini` 或 `--host vscode`（`--host copilot` 是别名）。
 
@@ -293,8 +301,9 @@ npx koma-miko init --host vscode --skill product-design --path src --enforce
 npx koma-miko doctor --host vscode --strict
 ```
 
-该命令使用 `enforce`，验证自动拒绝与恢复。若要测试真实用户选择，请把适用
-Spec 初始化或修改为 `mode: "review"`，并让 agent 在加载 Skill 前先提出编辑。
+该命令使用 `enforce`，验证自动拒绝与恢复。若要测试真实用户选择，优先使用
+准备证据已经齐全的 `guided` Spec，再提出风险、allowlist 或路径例外；`review`
+保留给有意进行审批密集型缺失证据测试的场景。
 VS Code 会通过原生审批 UI 展示 Miko 的 `permissionDecision: "ask"`，两个按钮
 实际显示为 **Allow Once** 与 **Skip**：前者只放行当前调用，后者拒绝当前调用。
 一次真实 Copilot Agent-mode 活测中，Skip 把 Miko 的黄色 REVIEW 原因返回给

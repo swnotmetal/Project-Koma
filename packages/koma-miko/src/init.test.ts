@@ -24,7 +24,7 @@ describe('miko init', () => {
       expect(result.configCreated).toBe(true);
       expect(result.settingsCreated).toBe(true);
       expect(result.gitignoreChanged).toBe(true);
-      expect(readJson(path.join(project, 'miko.json')).specs[0].mode).toBe('review');
+      expect(readJson(path.join(project, 'miko.json')).specs[0].mode).toBe('guided');
       expect(readJson(path.join(project, 'miko.json')).specs[0].requires.skills[0].name)
         .toBe('my-design-skill');
       const settings = readJson(path.join(project, '.claude', 'settings.json'));
@@ -81,7 +81,7 @@ describe('miko init', () => {
           });
           expect(settings.hooks.PreToolUse[0].hooks[0]).not.toHaveProperty('args');
         } else if (host === 'vscode') {
-          expect(readJson(path.join(project, 'miko.json')).specs[0].mode).toBe('review');
+          expect(readJson(path.join(project, 'miko.json')).specs[0].mode).toBe('guided');
           expect(result.settingsPath.replace(/\\/g, '/')).toContain('.github/hooks/miko.json');
           expect(settings.hooks.PreToolUse[0]).toMatchObject({ type: 'command' });
           expect(settings.hooks.PreToolUse[0]).not.toHaveProperty('hooks');

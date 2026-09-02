@@ -165,7 +165,10 @@
         "requires": { "$ref": "#/$defs/requires" },
         "actions": { "$ref": "#/$defs/actions" },
         "completion": { "$ref": "#/$defs/completion" },
-        "mode": { "enum": ["review", "enforce"] }
+        "mode": {
+          "enum": ["guided", "review", "enforce"],
+          "description": "guided auto-recovers deterministic evidence gaps and asks about policy exceptions; review asks for every gap; enforce denies both"
+        }
       }
     }
   }

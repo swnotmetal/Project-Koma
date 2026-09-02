@@ -23,6 +23,12 @@ the limitation. Deferring is not an approval; the host's own policy remains
 authoritative. A denial with an exact recovery step should be handled by the
 agent without asking the user to repair evidence manually.
 
+For new Specs, prefer `guided`: missing preparation or completion evidence is
+deterministic and should be repaired by the agent, while allowlist, risk, and
+path exceptions need a user decision. Use `review` only when every evidence gap
+should interrupt the user, and `enforce` when policy exceptions must not be
+overridden. Explicit `actions.deny` entries always deny.
+
 - Claude Code and VS Code map `REVIEW` to `permissionDecision: ask` and `DENY`
   to `permissionDecision: deny`.
 - Codex currently does not support `permissionDecision: ask` from

@@ -11,7 +11,7 @@ function help(): string {
   return [
     'koma-miko demo',
     'koma-miko probe [--host claude|codex|gemini|vscode] [--json]',
-    'koma-miko init [--project <path>] [--host claude|codex|gemini|vscode] [--skill <name>] [--path <prefix>] [--mode review|enforce] [--enforce] [--dry-run]',
+    'koma-miko init [--project <path>] [--host claude|codex|gemini|vscode] [--skill <name>] [--path <prefix>] [--mode guided|review|enforce] [--enforce] [--dry-run]',
     'koma-miko doctor [--project <path>] [--host claude|codex|gemini|vscode] [--json] [--strict]',
     '',
     'Runs a deterministic, no-API Agent Spec replay.',
@@ -79,9 +79,9 @@ if (args[0] === 'demo') {
     const requestedMode = option(args, '--mode');
     const mode = hasFlag(args, '--enforce')
       ? 'enforce'
-      : requestedMode ?? (host === 'codex' ? 'enforce' : 'review');
-    if (mode !== 'review' && mode !== 'enforce') {
-      process.stdout.write(`Unknown mode "${mode}". Choose review or enforce.\n`);
+      : requestedMode ?? (host === 'codex' ? 'enforce' : 'guided');
+    if (mode !== 'guided' && mode !== 'review' && mode !== 'enforce') {
+      process.stdout.write(`Unknown mode "${mode}". Choose guided, review, or enforce.\n`);
       process.exitCode = 1;
     } else {
       try {
@@ -114,7 +114,9 @@ if (args[0] === 'demo') {
               'Miko cannot safely automate the host trust decision.',
             ].join('\n') + '\n');
           } else {
-            process.stdout.write('Edit miko.json to match your project, then start a new host session.\n');
+            process.stdout.write(mode === 'guided'
+              ? 'GUIDED (recommended): the agent repairs deterministic evidence gaps; policy exceptions ask you. Edit miko.json per Spec, then start a new host session.\n'
+              : `MODE ${mode.toUpperCase()}: edit miko.json per Spec, then start a new host session.\n`);
           }
           if (!report.ok) process.exitCode = 1;
         }

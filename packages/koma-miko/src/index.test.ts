@@ -328,6 +328,51 @@ describe('Koma Miko alpha', () => {
     expect(miko.verifyPreparation('strict-ui').decision).toBe('DENY');
   });
 
+  it('guides deterministic recovery but asks the user about policy exceptions', () => {
+    const guidedContract: MikoContract = { ...uiContract, id: 'ui-guided', mode: 'guided' };
+    const miko = createMiko({ contracts: [guidedContract] });
+    miko.startTask({ sessionId: 'session-guided', taskId: 'guided-ui', tags: ['ui'] });
+
+    expect(miko.verifyPreparation('guided-ui').decision).toBe('DENY');
+    miko.record({
+      taskId: 'guided-ui', type: 'skill_loaded', name: 'product-design', source: 'observed',
+    });
+    miko.record({
+      taskId: 'guided-ui', type: 'reference_read', path: 'docs/design-system.md', source: 'observed',
+    });
+
+    expect(miko.verifyAction({
+      taskId: 'guided-ui', tool: 'write_file', risk: 'high',
+      arguments: { path: 'src/ui/Settings.tsx' },
+    }).decision).toBe('REVIEW');
+    expect(miko.verifyAction({
+      taskId: 'guided-ui', tool: 'write_file', risk: 'medium',
+      arguments: { path: 'src/server/Settings.tsx' },
+    }).decision).toBe('REVIEW');
+    expect(miko.verifyAction({
+      taskId: 'guided-ui', tool: 'delete_file', risk: 'high',
+      arguments: { path: 'src/ui/Settings.tsx' },
+    }).decision).toBe('DENY');
+    const completion = miko.verifyCompletion('guided-ui');
+    expect(completion.decision).toBe('DENY');
+    expect(formatMikoUserNotice(completion)).toContain('paused completion');
+    expect(formatMikoAgentContext(completion)).toContain('finish again');
+  });
+
+  it('keeps omitted legacy mode strict for policy violations', () => {
+    const legacyModeContract: MikoContract = {
+      id: 'legacy-policy',
+      appliesWhen: { taskTags: ['legacy'] },
+      actions: { maxRisk: 'low' },
+    };
+    const miko = createMiko({ contracts: [legacyModeContract] });
+    miko.startTask({ sessionId: 'legacy-session', taskId: 'legacy-task', tags: ['legacy'] });
+
+    expect(miko.verifyAction({
+      taskId: 'legacy-task', tool: 'write_file', risk: 'high',
+    }).decision).toBe('DENY');
+  });
+
   it('does not let an unrelated enforce contract upgrade a review-only gap to DENY', () => {
     const enforceContract: MikoContract = {
       id: 'safe-actions',

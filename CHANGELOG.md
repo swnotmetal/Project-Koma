@@ -2,6 +2,26 @@
 
 All notable changes to Koma will be documented in this file.
 
+## Miko alpha.9 / DSH alpha.7 - 2026-09-02
+
+### Added
+
+- Add `guided` enforcement mode: deterministic preparation and completion gaps
+  pause for automatic recovery, while genuine policy exceptions ask the user.
+- Expose the mode through `miko.json`, the schema, initializer, doctor output,
+  bilingual package documentation, and adapter tests.
+
+### Changed
+
+- Default new Claude Code, Gemini CLI, and VS Code setups to `guided`; keep the
+  Codex Technical Preview on `enforce` until its review UX improves.
+- Pin `koma-miko-dsh@0.1.0-alpha.7` to `koma-miko@0.1.0-alpha.9`.
+
+### Verified
+
+- 193 tests, workspace typechecks, hook conformance, package builds, audit demo,
+  DSH no-model preflight, npm pack checks, and fresh registry installs passed.
+
 ## [0.1.0-alpha.1] - 2026-08-26
 
 ### Fixed

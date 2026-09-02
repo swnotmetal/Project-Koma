@@ -12,7 +12,7 @@
 export type MikoDecision = 'ALLOW' | 'DENY' | 'REVIEW';
 export type MikoCheckpoint = 'PREPARE' | 'PRE_ACTION' | 'COMPLETE';
 export type RiskLevel = 'low' | 'medium' | 'high';
-export type ContractMode = 'review' | 'enforce';
+export type ContractMode = 'guided' | 'review' | 'enforce';
 export type EvidenceSource = 'observed' | 'asserted' | 'external';
 export type ContextAdvanceReason = 'compaction' | 'resume' | 'manual';
 
@@ -67,7 +67,7 @@ export interface MikoContract {
     references?: string[];
   };
   actions?: {
-    /** When present, tools outside this list are denied. */
+    /** When present, tools outside this list follow the Spec's policy mode. */
     allow?: string[];
     deny?: string[];
     maxRisk?: RiskLevel;
@@ -82,7 +82,11 @@ export interface MikoContract {
   completion?: {
     evidence: EvidenceRequirement[];
   };
-  /** Missing evidence is REVIEW by default; enforce mode makes it DENY. */
+  /**
+   * `guided` asks the agent to repair deterministic evidence gaps and asks the
+   * user only about policy exceptions. `review` asks the user for every gap;
+   * `enforce` denies both gaps and exceptions. Omission retains legacy review.
+   */
   mode?: ContractMode;
 }
 
@@ -291,8 +295,9 @@ function validateContract(contract: MikoContract, index: number): MikoContract {
     throw new Error(`${label}.appliesWhen must select taskTags or an action`);
   }
 
-  if (contract.mode !== undefined && contract.mode !== 'review' && contract.mode !== 'enforce') {
-    throw new Error(`${label}.mode must be "review" or "enforce"`);
+  if (contract.mode !== undefined &&
+      contract.mode !== 'guided' && contract.mode !== 'review' && contract.mode !== 'enforce') {
+    throw new Error(`${label}.mode must be "guided", "review", or "enforce"`);
   }
 
   if (contract.requires !== undefined) {
@@ -460,7 +465,13 @@ function hasAssertedEvidence(
 }
 
 function missingDecision(contracts: MikoContract[]): MikoDecision {
-  return contracts.some((contract) => contract.mode === 'enforce') ? 'DENY' : 'REVIEW';
+  return contracts.some((contract) => contract.mode === 'guided' || contract.mode === 'enforce')
+    ? 'DENY'
+    : 'REVIEW';
+}
+
+function policyDecision(contract: MikoContract): MikoDecision {
+  return contract.mode === 'guided' || contract.mode === 'review' ? 'REVIEW' : 'DENY';
 }
 
 function result(
@@ -761,10 +772,20 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
           return result('DENY', 'TOOL_DENIED', `Tool "${input.tool}" is explicitly denied.`, [contract.id]);
         }
         if (actions.allow !== undefined && !actions.allow.includes(input.tool)) {
-          return result('DENY', 'TOOL_NOT_ALLOWED', `Tool "${input.tool}" is outside the allowlist.`, [contract.id]);
+          return result(
+            policyDecision(contract),
+            'TOOL_NOT_ALLOWED',
+            `Tool "${input.tool}" is outside the allowlist.`,
+            [contract.id],
+          );
         }
         if (actions.maxRisk && RISK_RANK[input.risk] > RISK_RANK[actions.maxRisk]) {
-          return result('DENY', 'RISK_TOO_HIGH', `Risk "${input.risk}" exceeds "${actions.maxRisk}".`, [contract.id]);
+          return result(
+            policyDecision(contract),
+            'RISK_TOO_HIGH',
+            `Risk "${input.risk}" exceeds "${actions.maxRisk}".`,
+            [contract.id],
+          );
         }
 
         const scope = actions.scope;
@@ -779,7 +800,12 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
           const normalized = normalizeRelativePath(candidate);
           const prefixes = scope.allowedPathPrefixes.map((prefix) => normalizeRelativePath(prefix)!);
           if (normalized === null || !prefixes.some((prefix) => isPathWithin(normalized, prefix))) {
-            return result('DENY', 'PATH_OUT_OF_SCOPE', `Path "${candidate}" is outside the allowed scope.`, [contract.id]);
+            return result(
+              policyDecision(contract),
+              'PATH_OUT_OF_SCOPE',
+              `Path "${candidate}" is outside the allowed scope.`,
+              [contract.id],
+            );
           }
         }
       }
@@ -889,6 +915,8 @@ export function formatMikoDecision(
   if (result.reasonCode === 'PREPARATION_EVIDENCE_MISSING' ||
       result.reasonCode === 'SKILL_DECLARED_BUT_NOT_OBSERVED') {
     lines.push('Next: load the required skill/reference, then retry the blocked action.');
+  } else if (result.reasonCode === 'COMPLETION_EVIDENCE_MISSING') {
+    lines.push('Next: produce the exact missing check/review/artifact evidence, then finish again.');
   }
   return lines.join('\n');
 }
@@ -896,6 +924,10 @@ export function formatMikoDecision(
 function isRecoverablePreparation(result: VerificationResult): boolean {
   return result.reasonCode === 'PREPARATION_EVIDENCE_MISSING' ||
     result.reasonCode === 'SKILL_DECLARED_BUT_NOT_OBSERVED';
+}
+
+function isRecoverableCompletion(result: VerificationResult): boolean {
+  return result.reasonCode === 'COMPLETION_EVIDENCE_MISSING';
 }
 
 /** A short, host-facing status that keeps Miko visible without exposing ledger detail. */
@@ -916,6 +948,14 @@ export function formatMikoUserNotice(result: VerificationResult): string {
     ].join('\n');
   }
 
+  if (isRecoverableCompletion(result)) {
+    return [
+      '🔴 Miko paused completion · COMPLETE',
+      'Required test, review, or artifact evidence is missing.',
+      'The agent can produce the exact missing evidence and finish again.',
+    ].join('\n');
+  }
+
   return [
     `🔴 Miko blocked this action · ${result.checkpoint}`,
     result.reason,
@@ -929,6 +969,8 @@ export function formatMikoAgentContext(result: VerificationResult): string {
     ? 'Miko requires the user to choose. Do not bypass this checkpoint or retry unchanged.'
     : isRecoverablePreparation(result)
       ? 'Miko paused this call. Briefly attribute the pause to Miko, load the exact missing Skill/reference, then retry the original action.'
+      : isRecoverableCompletion(result)
+        ? 'Miko paused completion. Briefly attribute the pause to Miko, produce the exact missing check/review/artifact evidence, then finish again.'
       : 'Miko blocked this call. Briefly attribute the block to Miko and do not retry the same action unchanged.';
   return `${instruction}\n\n${formatMikoDecision(result)}`;
 }

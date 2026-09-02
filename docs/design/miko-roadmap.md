@@ -94,6 +94,15 @@ reproducible probe and one small result bundle to return.
   red denial, green recovery, and green COMPLETE receipt; the exact artifact
   and privacy-minimized ledger also matched. This does not establish Claude
   Desktop subscription availability or UX parity.
+- [x] Hand-test Claude CLI `REVIEW → native user choice` on 2026-09-02. Claude
+  exposed `Yes / accept edits for this session / No`; `No` returned only the
+  host's generic rejection, while `Yes` executed the edit before Claude loaded
+  Miko's missing Skills/reference. This validated the mapping but showed that
+  missing deterministic preparation should not be the default review prompt.
+- [x] Add `guided` Agent Spec mode and make it the non-Codex initializer
+  default: deterministic preparation/completion gaps pause for agent recovery;
+  only allowlist, risk, or path exceptions request host-native user judgment.
+  Keep `review` as an explicit approval-heavy mode and `enforce` as strict.
 - [ ] Run a paired 850k-900k / 100-Skill Sonnet evaluation only after the harness
   is stable and a separate campaign budget is approved.
 

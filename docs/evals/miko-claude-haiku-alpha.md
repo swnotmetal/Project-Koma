@@ -1,6 +1,6 @@
 # Miko Claude Haiku alpha evaluation
 
-Date: 2026-08-26; updated 2026-09-01
+Date: 2026-08-26; updated 2026-09-02
 
 This record covers two narrow Claude Code behaviors. It does **not** establish
 reliability for arbitrary tasks, hosts, models, or near-million-token contexts.
@@ -79,6 +79,26 @@ boundaries rather than every exploratory command.
 
 The exact Console charge for this manual session was not recorded, so it is not
 included in the automated spend total below.
+
+### Native REVIEW choice pass
+
+On 2026-09-02, Claude Code 2.1.257 ran the same isolated lab with the page Spec
+temporarily changed to `mode: "review"`. An ordinary Chinese request asked only
+to make the headline and primary-button copy sound more natural.
+
+Miko recorded `REVIEW / PREPARATION_EVIDENCE_MISSING`, and Claude opened its
+native edit approval with `Yes`, session-wide edit approval, and `No`. Choosing
+`No` prevented the edit but returned only Claude's generic user-rejection text;
+the agent did not automatically follow Miko's recovery. Choosing `Yes` allowed
+the edit before the missing Skills and product brief were loaded. Claude then
+saw Miko's yellow context and loaded them after the fact. A two-call edit also
+required two approvals.
+
+The result validates Claude's `permissionDecision: ask` mapping, but rejects
+approval-heavy missing-preparation prompts as the default vibe-coding UX. It
+directly motivated `guided` mode: deterministic evidence gaps pause for agent
+recovery, while genuinely judgment-dependent policy exceptions use native
+user choice. No claim about Claude Desktop parity follows from this CLI test.
 
 ## Harness correction retained as evidence
 

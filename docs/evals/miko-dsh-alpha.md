@@ -2,8 +2,8 @@
 
 Date: 2026-08-26
 
-Status: **the published `koma-miko-dsh@0.1.0-alpha.6` package pins
-`koma-miko@0.1.0-alpha.8`. Native tests, registry metadata, a clean packed
+Status: **the published `koma-miko-dsh@0.1.0-alpha.7` package pins
+`koma-miko@0.1.0-alpha.9`. Native tests, registry metadata, a clean packed
 install, no-model host load, and three narrow packed-artifact recovery runs
 have passed in the alpha line. The post-publication install reproduced the
 VS Code adapter probe and DSH preflight from registry artifacts; the machine's
@@ -117,11 +117,12 @@ The restart decision for the first alpha is now explicit: every DSH
 resume/restart begins a fresh Miko evidence epoch. Skills, references, artifact
 changes, and checks must be observed again; durable replay is deferred.
 
-The final public `alpha` tags point to `.1`. The `.1` correction updates release
-metadata and public documentation after `.0` shipped with a stale
-"not published" README; verifier and adapter runtime behavior are unchanged.
-Installing `koma-miko-dsh@alpha` into a fresh registry-only DSH profile resolved
-both `.1` packages and loaded the bundle successfully.
+The current public `alpha` tags point to Miko `.9` and the DSH adapter `.7`.
+Installing both tags into a fresh registry-only directory resolved the exact
+Miko dependency, passed the Claude adapter probe, and reported the DSH preflight
+as ready. Node 22.18 emitted the expected engine warning because the DSH preview
+requires Node 22.19+; that warning is documented and does not affect Miko's
+standalone adapters.
 
 ## Claim boundary
 
