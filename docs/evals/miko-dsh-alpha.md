@@ -117,7 +117,8 @@ The restart decision for the first alpha is now explicit: every DSH
 resume/restart begins a fresh Miko evidence epoch. Skills, references, artifact
 changes, and checks must be observed again; durable replay is deferred.
 
-The current public `alpha` tags point to Miko `.9` and the DSH adapter `.7`.
+The current public `alpha` and `latest` tags point to Miko `.10` and the DSH
+adapter `.8`.
 Installing both tags into a fresh registry-only directory resolved the exact
 Miko dependency, passed the Claude adapter probe, and reported the DSH preflight
 as ready. Node 22.18 emitted the expected engine warning because the DSH preview

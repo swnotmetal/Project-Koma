@@ -440,6 +440,11 @@ For each Miko release, the Codex model-backed release check is intentionally
 limited to this one fixed, disposable `eval:codex-live` recovery fixture. Add
 offline conformance cases for parser or schema regressions; do not multiply paid
 Codex scenarios unless the host API changes materially.
+Publishing either Miko alpha package runs a mandatory `postpublish` guard that
+sets both npm `alpha` and `latest` to the exact published version and reads the
+tags back from the registry. A mismatch fails the release command. The
+dedicated `Publish Miko alpha` workflow publishes Miko before its exactly pinned
+DSH adapter; do not replace it with ad-hoc tag commands.
 `npm run eval:scale -w koma-miko` uses no API key. It benchmarks 100/1,000 Agent
 Specs, 10,000 indexed evidence events, 100 overlapping specs, and snapshot
 restore while checking that terminal output remains bounded. See the dated

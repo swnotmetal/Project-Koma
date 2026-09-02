@@ -41,7 +41,8 @@
     "eval:claude-scale-live": "npm run build && node ./evals/claude-scale-live.mjs",
     "eval:claude-scale-dry": "npm run build && node ./evals/claude-scale-live.mjs --dry-run",
     "prepack": "npm run build",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postpublish": "node ../../scripts/sync-npm-dist-tags.mjs"
   },
   "files": [
     "assets",
@@ -70,7 +71,8 @@
     "url": "git+https://github.com/swnotmetal/Project-Koma.git"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "alpha"
   },
   "homepage": "https://github.com/swnotmetal/Project-Koma#readme"
 }

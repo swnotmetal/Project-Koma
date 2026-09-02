@@ -372,6 +372,10 @@ runner（`npm run eval:gemini-live -w koma-miko`）使用父进程中的
 每次 Miko 发布时，Codex 的模型活测刻意只运行这一条固定、一次性的
 `eval:codex-live` recovery fixture。解析器或 schema 回归应增加离线一致性用例；
 除非宿主 API 发生实质变化，不扩增付费 Codex 场景。
+发布任一 Miko alpha 包时，强制 `postpublish` guard 会把 npm 的 `alpha` 与
+`latest` 同步到刚发布的精确版本，再从 registry 反查确认；不一致会让发布命令
+失败。专用的 `Publish Miko alpha` workflow 会先发布 Miko，再发布精确锁定它的
+DSH adapter；不应再用临时手写的标签命令替代该流程。
 `npm run eval:scale -w koma-miko` 不需要 API key；它会测试 100/1,000 份
 Agent Spec、10,000 条索引证据、100 份重叠 Spec、snapshot 恢复和终端输出上限。
 带环境信息的结果见 [scale 参考记录](../../docs/evals/miko-scale-alpha.md)；它衡量

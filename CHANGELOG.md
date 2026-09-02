@@ -2,6 +2,16 @@
 
 All notable changes to Koma will be documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Make every Miko and DSH alpha publish synchronize both npm `alpha` and
+  `latest` tags to the package version, then verify the result against the
+  registry. This closes the path that left default installs several patches
+  behind the documented alpha.
+- Add CI release invariants and a dedicated, serialized Miko publish workflow.
+
 ## Miko alpha.10 / DSH alpha.8 - 2026-09-02
 
 ### Added

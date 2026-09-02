@@ -24,7 +24,8 @@
     "eval:dsh-live": "npm run build && node ./evals/live.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run src/index.test.ts",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "postpublish": "node ../../scripts/sync-npm-dist-tags.mjs"
   },
   "engines": {
     "node": "^22.19.0 || >=24.0.0"
