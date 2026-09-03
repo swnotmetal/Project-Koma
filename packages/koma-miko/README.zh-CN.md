@@ -4,10 +4,11 @@
   <img src="./assets/miko-lockup.png" alt="Koma Miko" width="420" />
 </p>
 
-面向 AI agent 工作流的确定性 skill / action 契约验证器。
+为 **Claude Code 和 Codex CLI** 检查必需的 Skill 读取。
 
-可以把每份 Contract 理解成开发者维护的 **Agent Spec（智能体测试用例）**：
-它像测试代码一样约束 agent 如何准备、行动和完成任务，而不是企业治理控制台。
+Agent 未读必需 Skill 就尝试修改受保护文件时，Miko 会暂停动作、指出缺失证据，
+让 agent 补读后重试。项目要求写在开发者维护的 `miko.json` **Agent Spec** 中。
+Miko 本地运行，MIT 开源，验证器不调用 LLM。
 
 Miko 在三个可观察节点检查证据：
 
@@ -15,13 +16,88 @@ Miko 在三个可观察节点检查证据：
 2. **动作之前** — 工具、风险等级与路径范围是否符合契约；
 3. **完成之前** — 测试、UI 渲染检查或其他交付义务是否真的执行。
 
-公开 alpha 已发布：
+## 快速开始
+
+在项目根目录按你使用的宿主配置。Miko 不会安装 Skill；生成的 `miko.json`
+需要填写项目已有的 Skill 和路径。公开 alpha 的 API 在首次稳定版之前仍可能调整。
+初始示例使用 `frontend-design` 和 `src`；请按项目实际名称修改，或在 `init`
+时传入 `--skill <name> --path <prefix>`。
+
+### Claude Code
 
 ```sh
-npm install koma-miko@alpha
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
 ```
 
-首次稳定版之前 API 仍可能调整。
+编辑 `miko.json` 后检查配置：
+
+```sh
+npx koma-miko doctor --host claude --strict
+```
+
+修改 Hooks 后启动新的 Claude Code 会话，请它对配置路径做一次小改动。准备证据
+缺失时，预期流程是 `编辑暂停 → 读取必需 Skill/参考文档 → 重试编辑`。
+如果 agent 已经读过所需资料，就不必发生恢复暂停。检查依赖宿主启用并发出配置的
+Hook 事件。
+
+<a id="codex-setup"></a>
+
+### Codex CLI（Technical Preview）
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host codex --enforce
+```
+
+按项目实际情况编辑 `miko.json`。在该项目打开 Codex CLI，运行 `/hooks`，
+审阅并信任五个 Miko Hooks，再运行一个小任务。
+
+```sh
+npx koma-miko doctor --host codex --strict
+```
+
+**安装不等于激活。** Codex 会跳过尚未信任的项目 Hooks。Codex Desktop 必须先
+通过 CLI 激活，不支持仅用 Desktop 完成 alpha 首次配置。Codex 主推 `enforce`；
+`review` 会降级为可恢复的暂停/拒绝，而不是原生审批选择。
+
+想先看效果？[浏览器回放](https://koma-demo.swbuilds.workers.dev) 无需安装；
+`npx --yes koma-miko@alpha demo` 可运行无需 API key 的确定性终端回放。
+两者都是演示，不代表真实宿主已启用。
+
+<a id="host-support"></a>
+
+## 当前宿主支持
+
+方向核对于 **2026-09-03**。以下是窄范围 alpha 路径，不保证不同编辑器、模型或
+组织策略下的体验完全一致。
+
+| 宿主 | 当前范围 |
+|---|---|
+| **Claude Code** | 主要 alpha 路径；CLI 拒绝、恢复、完成，以及 guided 范围例外已有真实测试。 |
+| **Codex CLI** | 主攻方向，**Technical Preview**；明确完成 Hook 信任后，固定恢复流程已通过。 |
+| Codex Desktop | 在 CLI 激活后有测试；不承诺独立首次配置，状态展示依赖宿主与 agent 转述。 |
+| Gemini CLI | 移出主动开发；离线一致性通过，记录中的真实模型测试超时。 |
+| VS Code Copilot | 适配开发暂停，等待试用者实际使用；保留代码和有限的真实观察记录。 |
+| DeepSeek Harness | 面向固定 Developer Preview 的独立[实验适配器](../koma-miko-dsh/README.md)，不是主要首次使用路径。 |
+
+已测版本与限制见带日期的 [Claude 评估](../../docs/evals/miko-claude-haiku-alpha.md)
+和[宿主评估](../../docs/evals/miko-host-adapters-alpha.md)。
+
+<a id="when-to-use-miko"></a>
+
+## 什么时候适合使用 Miko
+
+如果项目已有 Skills 或参考资料，而你反复需要确认 agent 是否在编辑前加载过，
+Miko 可以帮忙检查。集成能记录可信完成证据时，也可以把它设为完成要求。
+
+单个固定检查用原生 Hook 就够了。Miko 提供可复用 Spec、读取记录、压缩后的
+重载要求、恢复提示与本地证据账本。它不能证明理解、阻止每次错误编辑，或检查
+绕过已配置宿主事件的动作。
+
+**不需要 MCP server。** Miko 的拦截依靠宿主 Hooks。一个由模型自行选择是否
+调用的工具，本身不能要求其他工具执行前必须经过检查。Koma 已有的 MCP servers
+属于 Gate 和 Core。
 
 ## 为什么
 
@@ -158,8 +234,13 @@ CLI、桌面端或 IDE 使用各自原生的文字与审批界面渲染同一结
 所有 adapter 现在统一使用一套可感知状态语言：DENY 显示
 `🔴 Miko 已暂停/拦截`，REVIEW 显示 `🟡 Miko 需要你的决定`，新观察到的证据
 补齐 PREPARE 时显示 `🟢 Miko 已恢复`，活动 Agent Spec 到达 COMPLETE 时显示
-精简的 `🟢 Miko 已验证` 收据。面向用户的状态保持简短；精确缺失项只进入
-agent 上下文与本地账本。
+一行 `🟢 Miko 已验证` 收据。没有适用 Spec 时，结束状态是
+`⚪ Miko 已启用 · 未命中适用规则，未作验证`。它只说明配置的选择条件没有匹配，
+不代表回答正确或任务不需要 Skill。精确缺失项只进入 agent 上下文与本地账本。
+
+紧凑结束回执与 Codex `PostToolUse` 状态转述需要 `0.1.0-alpha.11` 或更高版本；
+旧安装需要更新。
+
 包内所有 adapter 统一遵守一条交互规则：`ALLOW` 只表示 Miko 不反对，仍由宿主
 自身的权限策略决定；`REVIEW` 调用宿主原生审批；`DENY` 只拦截当前动作，并把
 恢复信息交给 agent。可恢复的拒绝应由 agent 自行补齐证据并重试，不要求用户
@@ -203,8 +284,8 @@ npx koma-miko init --host claude
 `--skill <name>` 和 `--path <prefix>` 定制 starter spec，也可通过
 `--mode guided|review|enforce` 初始化时选择一次，之后在 `miko.json` 中按 Spec
 调整。修改 Hook 后请重新启动 Claude 会话；使用 `--dry-run`
-可只预览改动。Codex、Gemini 与 VS Code Copilot 可分别使用 `--host codex`、
-`--host gemini` 或 `--host vscode`（`--host copilot` 是别名）。
+可只预览改动。另一条主攻路径见 [Codex 配置](#codex-setup)；保留的实验宿主
+配置见[其他适配器](#other-adapters)。
 
 初始化器不会覆盖已有的 `miko.json`；请按项目实际情况编辑它。会话元数据写入
 `.miko/state/`，该目录应保持忽略。旧 `.miko/contracts.json` 数组仍可读取，
@@ -237,6 +318,13 @@ adapter 也会返回带 Miko 品牌的 `SessionStart` context。2026-09-01 的 C
 `codex exec` 仍可能把成功状态折叠成通用 Hook-completed 事件。Miko 不会仅为了
 制造绿色回执而增加额外模型回合。
 
+为兼容隐藏成功 Hook 消息的界面，Codex 还会收到精简的 `PostToolUse` 状态，
+提示 agent 在下一条正常进度消息里转述。同一回合的相同被动提示去重；适用
+Spec 集合或状态改变时可以再次提示。宿主没有 `turn_id` 时，在 `Stop` 重置去重。
+提示只描述**截至该检查点**的证据，不批准整段回答；启动时另提示转述一次已启用状态。
+这不会增加模型回合或原生权限批准。agent 转述不是 Desktop 常驻 UI；完全不调用
+工具的回合，仍依赖宿主如何展示结束消息。
+
 **Codex Desktop 必须先通过 CLI 激活，不是受支持的独立 alpha onboarding
 路径。** 在当前本地测试里，5 个项目 Hook 已安装但尚未信任时，Desktop 仍直接
 完成了编辑；直到打开
@@ -249,13 +337,8 @@ Codex CLI，审阅要求才清晰出现。如果终端中没有 `codex` 命令�
 ```sh
 npx koma-miko probe --host claude
 npx koma-miko probe --host codex
-npx koma-miko probe --host gemini
-npx koma-miko probe --host vscode
-npx koma-miko doctor
-npx koma-miko doctor --strict --json
-npx koma-miko doctor --host codex
-npx koma-miko doctor --host gemini --strict
-npx koma-miko doctor --host vscode --strict
+npx koma-miko doctor --host claude --strict
+npx koma-miko doctor --host codex --strict
 ```
 
 `probe` 会在隔离 fixture 中让所选 adapter 完整走一遍
@@ -277,9 +360,9 @@ Hooks 和 Skills；云端/远程会话的配置来源不同，企业策略也可
 [Desktop 共享配置](https://code.claude.com/docs/en/desktop) 与
 [VS Code 配置](https://code.claude.com/docs/en/ide-integrations)。
 
-## Codex、Gemini 与 VS Code Copilot 宿主适配器
+## Codex 适配器细节
 
-alpha 也提供以下窄范围 Hook 适配器：
+Codex 适配器把宿主事件交给 Miko 的共享验证器：
 
 - `koma-miko-codex-hook` 消费 Codex 的 `SessionStart`、`PreToolUse`、
   `PostToolUse`、`PostCompact` 与 `Stop` 事件。Codex 当前可以解析、但尚不能
@@ -290,6 +373,20 @@ alpha 也提供以下窄范围 Hook 适配器：
   [Codex Hooks 文档](https://learn.chatgpt.com/docs/hooks#pretooluse)。`apply_patch` 只记录
   路径元数据，并且只识别极窄的只读
   `Get-Content`/`cat` Skill 重载命令。
+<a id="other-adapters"></a>
+
+## 其他适配器
+
+以下实现为已有使用者及历史测试保留。Gemini 已移出主动开发；Copilot 开发暂停，
+等待实际试用者。包里保留实现，不代表它们与 Claude Code 或 Codex CLI 有同等
+支持程度。DeepSeek Harness 使用独立的[实验包](../koma-miko-dsh/README.md)。
+
+<details>
+<summary>Gemini 与 VS Code Copilot 配置及实现细节</summary>
+
+初始化器仍接受 `--host gemini` 和 `--host vscode`（`--host copilot` 是别名）；
+使用 `probe`、`doctor` 时选择同一宿主。
+
 - `koma-miko-gemini-hook` 消费 Gemini 的 `BeforeTool`、`AfterTool`、
   `SessionStart`、`PreCompress` 与 `AfterAgent` 事件。`DENY` 映射到 Gemini
   原生的 `decision: deny`，`REVIEW` 映射到当前 CLI 的交互式
@@ -343,6 +440,8 @@ VS Code Agent Hooks 目前仍是 Preview，且组织策略可以禁用。VS Code
 算作 observed evidence；当前 alpha 的恢复路径要求可观察的 `read_file` 或极窄
 的只读终端读取命令。配置示例见 [`examples/codex`](./examples/codex)、
 [`examples/gemini`](./examples/gemini) 与 [`examples/vscode`](./examples/vscode)。
+
+</details>
 
 ## 自动化回放
 
@@ -440,8 +539,8 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
 - **VS Code Agent Hooks 仍是 Preview；适配器已通过一次真实 Copilot
   Agent-mode REVIEW 恢复流程，但这不代表对不同模型、工具名、编辑器版本或
   组织策略的广泛兼容；**
-- **Copilot 可能在没有通知的情况下增加工具名；适配器只能治理已识别的别名，
-  因此每次发布仍应保留自然语言活测；**
+- **Copilot 可能在没有通知的情况下增加工具名；适配器只能治理已识别的别名。
+  恢复主动支持前需要重新活测；当前适配开发暂停；**
 - **不自动改写工具调用；**
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**
 

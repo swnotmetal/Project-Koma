@@ -1,14 +1,20 @@
 # Koma — Online Demo
 
-A zero-friction, interactive demo of four Koma defenses:
+A browser replay of Miko's required Skill checks for **Claude Code**, with setup
+links for **Claude Code and Codex CLI**. Codex CLI remains a Technical Preview;
+Codex Desktop requires prior CLI Hook activation.
+
+- **Miko** — guided CLI simulation of a blocked write, agent recovery, trusted
+  completion evidence, and post-compaction Skill reload. Opens first and makes
+  no model calls. See [current host support](../../packages/koma-miko/README.md#host-support).
+
+The other tabs show independent Koma application packages:
 
 - **Gate** — semantic prompt-injection firewall (real LLM classifier)
 - **Scout** — scenario-first request terminal showing bad uploads and bot bursts
   stopped before transcription or an LLM
 - **Core** — attacker-vs-backend terminal showing why a scraped public index yields
   zero protected content while authorized retrieval still works
-- **Miko** — guided CLI simulation of a blocked write, agent recovery, trusted
-  completion evidence, and post-compaction Skill reload
 
 This demo runs the actual `koma-gate` npm package (LLM classifier), **not** a
 keyword list. The API key stays server-side and is never sent to the browser.
@@ -123,3 +129,17 @@ more than the provider's own quota.
 
 The classifier is fail-closed: if the LLM call errors, input is blocked rather
 than passed through.
+
+## Visit count
+
+The footer's approximate visit count uses `GET /api/visits` to read and a
+same-origin `POST /api/visits` to increment. It reuses the existing Durable Object
+binding with a separate `visits` instance, so it needs no new resource or schema
+migration and cannot consume the classifier's daily budget. Storage contains
+only `{ count, since }` and survives deployments.
+
+The browser counts once per tab session using a sessionStorage flag. Refreshes
+read the existing count; browsers that block sessionStorage are read-only.
+This is not a unique-person or bot-free metric and does not backfill old visits.
+The counter hides itself on failure. Use `dev:cf` to test persistent counting;
+the standalone Node demo has no Cloudflare storage binding and hides the counter.

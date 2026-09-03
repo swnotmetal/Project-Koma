@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, readdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const timeoutMs = 180_000;
@@ -21,9 +21,10 @@ function assertThat(condition, message) {
 }
 
 async function writeFixture(root) {
-  const node = process.execPath.replaceAll('\\', '/');
-  const hook = join(packageRoot, 'dist', 'codex-hook-cli.js').replaceAll('\\', '/');
-  const command = `\"${node}\" \"${hook}\"`;
+  const hook = pathToFileURL(join(packageRoot, 'dist', 'codex-hook-cli.js')).href;
+  // Match init's quote-free command shape; Windows Codex can misparse quoted
+  // executable paths. The local wrapper keeps checkout paths out of the shell.
+  const command = 'node ./.codex/miko-hook.mjs';
   const hooks = {
     hooks: Object.fromEntries(
       ['PreToolUse', 'PostToolUse', 'SessionStart', 'PostCompact', 'Stop'].map((event) => [
@@ -77,6 +78,7 @@ export, and change only the visible text requested by the user.
 `;
   const files = new Map([
     ['.codex/hooks.json', `${JSON.stringify(hooks, null, 2)}\n`],
+    ['.codex/miko-hook.mjs', `import ${JSON.stringify(hook)};\n`],
     ['.agents/skills/product-design/SKILL.md', skill],
     ['docs/design-system.md', '# Fixture design system\n\nThe Hero heading must remain an `h1`.\n'],
     ['miko.json', `${JSON.stringify(spec, null, 2)}\n`],
@@ -113,6 +115,9 @@ function runCodex(root, stateDir) {
     '--cd', root,
     '--skip-git-repo-check',
     '--ephemeral',
+    // Trust only this generated fixture for this invocation. Hook trust alone
+    // does not load the project config layer in a fresh temporary directory.
+    '-c', `projects.${JSON.stringify(root)}.trust_level="trusted"`,
     '--dangerously-bypass-hook-trust',
     '--approve-for-me',
     '--json',
@@ -164,7 +169,7 @@ async function analyze(root, stateDir, events) {
 
 async function main() {
   await readFile(join(packageRoot, 'dist', 'codex-hook-cli.js'), 'utf8');
-  const temporary = await mkdtemp(join(tmpdir(), 'koma-miko-codex-live-'));
+  const temporary = await realpath(await mkdtemp(join(tmpdir(), 'koma-miko-codex-live-')));
   const root = join(temporary, 'fixture');
   const stateDir = join(temporary, 'state');
   const keep = process.env.MIKO_CODEX_KEEP_TEMP === '1';
@@ -174,6 +179,7 @@ async function main() {
     await writeFixture(root);
     const startedAt = performance.now();
     const events = runCodex(root, stateDir);
+    if (keep) await writeFile(join(temporary, 'events.json'), JSON.stringify(events, null, 2), 'utf8');
     console.log(JSON.stringify({
       status: 'PASS',
       durationMs: Math.round(performance.now() - startedAt),

@@ -72,4 +72,17 @@ describe('demo Durable Object rate limiter', () => {
     expect(storage.values.has('day:2026-08-24')).toBe(false);
     expect(storage.values.get('day:2026-08-25')).toBe(1);
   });
+
+  it('counts visits durably without consuming rate limits or the model budget', async () => {
+    const read = () => new Request('https://do/visits');
+    const visit = () => new Request('https://do/visits', { method: 'POST' });
+    expect(await (await limiter.fetch(read())).json()).toEqual({ count: 0, since: null });
+    const first = await (await limiter.fetch(visit())).json();
+    expect(first).toEqual({ count: 1, since: '2026-08-25T10:00:00.000Z' });
+    expect(await (await limiter.fetch(read())).json()).toEqual(first);
+    await limiter.alarm();
+    const restarted = new RateLimiter({ storage }, {});
+    expect(await (await restarted.fetch(visit())).json()).toEqual({ ...first, count: 2 });
+    expect([...storage.values.keys()]).toEqual(['visits']);
+  });
 });

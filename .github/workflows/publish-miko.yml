@@ -24,8 +24,8 @@ jobs:
 
       - run: npm ci
       - run: npm test
-      - run: npm run typecheck -w koma-miko -w koma-miko-dsh
       - run: npm run build -w koma-miko -w koma-miko-dsh
+      - run: npm run typecheck -w koma-miko -w koma-miko-dsh
 
       - name: Publish Miko, then synchronize alpha/latest
         run: npm publish -w koma-miko --provenance

@@ -277,6 +277,25 @@ async function handleFeedback(request, env, pathname) {
 
 const CORE_TIERS = new Set(['public', 'premium', 'enterprise']);
 
+async function handleVisits(request, env) {
+  if (!['GET', 'POST'].includes(request.method)) {
+    return json({ error: 'GET or POST /api/visits only' }, 405, { Allow: 'GET, POST' });
+  }
+  if (request.method === 'POST' && request.headers.get('Origin') !== new URL(request.url).origin) {
+    return json({ error: 'Same-origin requests only.' }, 403);
+  }
+  if (!env.RATE_LIMITER) return json({ error: 'Visit count unavailable.' }, 503);
+  try {
+    // Separate storage instance: counting visits never consumes the demo's LLM budget.
+    const counter = env.RATE_LIMITER.get(env.RATE_LIMITER.idFromName('visits'));
+    const response = await counter.fetch('https://do/visits', { method: request.method });
+    if (!response.ok) throw new Error('Counter unavailable');
+    return json(await response.json(), 200);
+  } catch {
+    return json({ error: 'Visit count unavailable.' }, 503);
+  }
+}
+
 // Core runs the real koma-core package with an in-memory adapter. Modern
 // Workers compatibility dates expose node:crypto, including hkdfSync.
 async function handleCore(request) {
@@ -328,6 +347,9 @@ async function handleCore(request) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.pathname === '/api/visits') {
+      return handleVisits(request, env);
+    }
     if (url.pathname === '/api/classify') {
       return handleClassify(request, env);
     }

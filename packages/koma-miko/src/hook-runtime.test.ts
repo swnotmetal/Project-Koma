@@ -127,6 +127,41 @@ afterEach(() => {
 });
 
 describe('persistent Hook runtime recovery', () => {
+  it('relays passive status once per turn or status change without bypassing recovery', () => {
+    const { root, stateDir } = fixture();
+    const read = { ...referenceReadInput(), turn_id: 'first' };
+    const notice = run(read, root, stateDir);
+    expect(notice).toMatchObject({ hookSpecificOutput: {
+      hookEventName: 'PostToolUse',
+      additionalContext: expect.stringContaining('no Agent Spec applies'),
+    } });
+    expect(JSON.stringify(notice)).not.toMatch(/permissionDecision|"decision"|private reference body/);
+    expect(run(read, root, stateDir)).toBeUndefined();
+    expect(run({ ...read, turn_id: 'second' }, root, stateDir)).toEqual(notice);
+    expect(run({ ...read, turn_id: 'second' }, root, stateDir)).toBeUndefined();
+
+    expect(run(editInput(), root, stateDir)).toMatchObject({
+      hookSpecificOutput: { permissionDecision: 'deny' },
+    });
+    expect(run({ ...read, turn_id: 'second' }, root, stateDir)).toBeUndefined();
+    expect(run(skillReadInput(), root, stateDir)).toMatchObject({
+      systemMessage: expect.stringContaining('Miko recovered'),
+    });
+    // Preparation alone cannot claim completion while the artifact is missing.
+    expect(run(referenceReadInput(), root, stateDir)).toBeUndefined();
+    expect(run(editInput(), root, stateDir)).toBeUndefined();
+    const verified = run(artifactInput(), root, stateDir);
+    expect(verified).toMatchObject({ hookSpecificOutput: {
+      additionalContext: expect.stringContaining('1 active Agent Spec(s) satisfied so far'),
+    } });
+    expect(run(referenceReadInput(), root, stateDir)).toBeUndefined();
+    const stopped = run({ ...base, hook_event_name: 'Stop', stop_hook_active: false }, root, stateDir);
+    expect(stopped).toMatchObject({ systemMessage: expect.stringContaining('Miko verified · COMPLETE') });
+    expect(JSON.stringify(stopped)).not.toContain('"decision":"block"');
+    // Older hosts without turn_id fall back to the existing Stop boundary.
+    expect(run(referenceReadInput(), root, stateDir)).toEqual(verified);
+  });
+
   it('replays ledger records appended after a saved snapshot checkpoint', () => {
     const { root, stateDir } = fixture();
     const edit = editInput();

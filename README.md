@@ -1,18 +1,25 @@
 # Koma
 
-### Verify what coding agents actually did. Protect the AI apps they build.
+### Miko: required Skill checks for Claude Code and Codex
 
-Koma is a TypeScript toolkit for observable AI boundaries. **Miko** checks
-coding-agent Skills, tool actions, and completion evidence against local Agent
-Specs. **Gate, Scout, and Core** protect prompt input, perimeter resources, and
-retrieval.
+Keep reminding your coding agent to read a required Skill before editing?
+**Miko** checks for observable Skill reads before protected edits. When evidence
+is missing, it pauses the action and tells the agent what to load before retrying.
+It runs locally, makes no LLM calls, and is free and open source.
+
+The current focus is **Claude Code and Codex CLI**. Miko is part of Koma;
+the separate **Gate, Scout, and Core** packages cover AI application input,
+request limits, and retrieval. You do not need them to use Miko.
 
 ```bash
 npm install -D koma-miko@alpha
 npx koma-miko init --host claude
 ```
 
-Building an LLM endpoint instead? Start with `npm install koma-gate`.
+Edit the generated `miko.json` to name your project's Skills and protected paths,
+then start a new Claude Code session.
+**Using Codex?** Follow the [Codex setup and one-time Hook review](./packages/koma-miko/README.md#codex-setup).
+Codex CLI is a Technical Preview; Desktop requires prior CLI activation.
 
 <p align="center">
   <img src="logo/logobanner.png" alt="Koma" width="600" />
@@ -25,7 +32,6 @@ Building an LLM endpoint instead? Start with `npm install koma-gate`.
   <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/koma-miko-dsh"><img alt="koma-miko-dsh" src="https://img.shields.io/npm/v/koma-miko-dsh/alpha?label=DSH%20adapter&color=C25E38&style=flat-square" /></a>
   <br />
   <a href="https://koma-demo.swbuilds.workers.dev"><img alt="Miko live demo" src="https://img.shields.io/badge/Miko_demo-10--sec_replay-C25E38?style=flat-square" /></a>
   <img alt="Gate benchmark" src="https://img.shields.io/badge/Gate_eval-98.8%25_recall_0%25_FPR-6e3abe?style=flat-square" />
@@ -43,7 +49,7 @@ Building an LLM endpoint instead? Start with `npm install koma-gate`.
 
 ---
 
-### Featured Alpha: Miko
+### Miko for Claude Code and Codex
 
 <p align="center">
   <img src="packages/koma-miko/assets/miko-lockup.png" alt="Koma Miko" width="420" />
@@ -74,8 +80,20 @@ npx koma-miko init --host claude     # after local installation
 > path. An offline `probe` proves adapter logic, not live Hook activation.
 
 [Miko README →](./packages/koma-miko/README.md) ·
-[10-second web replay →](https://koma-demo.swbuilds.workers.dev) ·
-[DeepSeek Harness adapter →](./packages/koma-miko-dsh/README.md)
+[Current host support →](./packages/koma-miko/README.md#host-support) ·
+[10-second web replay →](https://koma-demo.swbuilds.workers.dev)
+
+Claude Code is the primary alpha workflow. Codex CLI has a verified narrow
+recovery flow with the activation limits above. Gemini is outside active
+development; Copilot adapter work is paused pending a real tester. Existing
+adapters and their dated results remain available in the
+[adapter documentation](./packages/koma-miko/README.md#other-adapters).
+
+**Why use Miko instead of writing a Hook?** A small native Hook is enough for a
+single fixed check. Miko packages project Specs, observed-read tracking,
+post-compaction reload requirements, recovery messages, and completion evidence
+so you can maintain those checks together. Neither approach proves the model
+understood the instructions. See [when Miko helps](./packages/koma-miko/README.md#when-to-use-miko).
 
 ---
 
@@ -142,7 +160,7 @@ I threw **1,769 real prompt-injection attacks** at Koma Gate in fail-closed mode
 
 ---
 
-### Quick Start
+### Application-side quick start: Gate
 
 ```ts
 import { createGeneralKnowledgeGuard } from 'koma-gate';
@@ -181,7 +199,7 @@ curl http://localhost:8080/self-test
 
 Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
 
-**MCP servers** — expose Koma to AI agents directly:
+**Application-side MCP servers** — these belong to Gate and Core, not Miko:
 
 - `koma-gate-mcp` — `classify_input` tool for prompt-injection checks. [README →](./packages/koma-gate-mcp/README.md)
 - `koma-core-mcp` — `search_docs` + `retrieve_doc` for protected RAG retrieval. [README →](./packages/koma-core-mcp/README.md)
@@ -197,17 +215,20 @@ Each package works standalone. Stack them: Gate filters → Scout throttles → 
 
 ---
 
-### Using an AI coding agent?
+### Using an agent to set up Miko?
 
 Tell it:
 
-> *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
+> "Read the Miko README, then help me configure koma-miko for my existing Skills and protected paths. Use the setup for my host and explain any activation step I must complete."
 
 For a coding-agent repository, install Miko and run
-`npx koma-miko init --host claude`; then edit the generated `miko.json` to name
-the Skills, paths, and completion evidence that matter to the project.
+`npx koma-miko init --host claude` or follow the
+[Codex setup](./packages/koma-miko/README.md#codex-setup). Edit the generated
+`miko.json` to name the Skills, paths, and completion evidence that matter to
+the project. Miko does not install the Skills themselves.
 
-Koma is designed for both human and agent discoverability — including two [MCP servers](./packages/koma-gate-mcp/README.md). See [llms.txt](./llms.txt).
+See [llms.txt](./llms.txt) for documentation entry points. Miko uses host Hooks;
+it does not require an MCP server.
 
 ---
 
@@ -215,7 +236,9 @@ Koma is designed for both human and agent discoverability — including two [MCP
 
 - **Minimal dependency surface.** Miko, Gate, and Core have no third-party runtime dependencies; Scout declares Express as a peer.
 - **No model-output execution.** Miko observes host events; Gate, Scout, and Core classify, rate-limit, or store. None executes generated code.
-- **Fail-open by default.** A broken optional guard does not take down the app; security-first deployments can set `failOpen: false`.
+- **Package-specific failure behavior.** Gate defaults to fail-open and can use
+  `failOpen: false`. Miko follows each Agent Spec's mode; an enforce-mode
+  missing-evidence check denies the applicable action.
 - **CodeQL on every push.** Targets OWASP LLM01.
 - **MIT licensed.**
 

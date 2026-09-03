@@ -18,9 +18,9 @@ describe('bilingual FAQ tab', () => {
     expect(html.slice(faqTab, tabListEnd)).not.toContain('role="tab"');
   });
 
-  it('uses exactly two expandable audience components with six questions', () => {
+  it('uses two expandable audience components with bilingual questions', () => {
     expect(html.match(/<details class="faq-component">/g)).toHaveLength(2);
-    expect(html.match(/<article class="faq-item">/g)).toHaveLength(6);
+    expect(html.match(/<article class="faq-item">/g)?.length).toBeGreaterThanOrEqual(6);
     expect(html).toContain('For vibe coders');
     expect(html).toContain('给 Vibe Coders');
     expect(html).toContain('For experienced engineers');

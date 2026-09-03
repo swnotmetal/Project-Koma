@@ -34,6 +34,8 @@ export interface HostBeforeToolResult {
 
 export interface HostHookHandlingResult {
   output?: object;
+  /** Deduplicate only passive status, never denial or recovery output. */
+  passiveNoticeKey?: string;
   evidence: EvidenceEvent[];
   verification?: VerificationResult;
   contextAdvance?: ReturnType<Miko['advanceContext']>;

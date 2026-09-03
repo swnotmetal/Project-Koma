@@ -15,7 +15,7 @@ function tabPanelMarkup(id, nextId) {
 describe('package install calls to action', () => {
   it('shows one contextual install card in every product tab', () => {
     expect(html.match(/class="install-card"/g)).toHaveLength(4);
-    expect(html).toContain('id="miko-install-title">Keep Claude Code on-spec');
+    expect(html).toContain('id="miko-install-title">Start with Claude Code');
     expect(html).toContain('id="gate-install-title">Guard an LLM endpoint');
     expect(html).toContain('id="scout-install-title">Protect a voice or upload boundary');
     expect(html).toContain('id="core-install-title">Separate search from protected content');

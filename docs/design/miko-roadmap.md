@@ -1,6 +1,6 @@
 # Miko Developer Roadmap
 
-Status: working product memory and TODO for the public alpha.
+Status: public alpha roadmap. Focus reviewed 2026-09-03: **Claude Code and Codex CLI**.
 
 ## Positioning
 
@@ -11,8 +11,23 @@ traffic-light result while an agent works.
 
 Preferred product sentence:
 
-> Miko is a local contract verifier for Claude Code, Codex, Gemini, VS Code Copilot, and later MCP agent tools.
+> Miko checks required Skill reads and completion evidence in Claude Code and Codex CLI workflows.
 > It checks observable preparation, action, and completion evidence.
+
+Claude Code is the primary alpha path. Codex CLI is a Technical Preview with
+explicit Hook trust; Desktop requires prior CLI activation. Gemini is outside
+active development. Copilot adapter work is paused until a tester can use it.
+Existing adapters and completed experiments remain in this roadmap as history;
+unchecked items are candidates, not release commitments. See
+[current support](../../packages/koma-miko/README.md#host-support).
+
+## Next review: week of 2026-09-07
+
+- [ ] Review one reproducible Claude/Codex missing-Skill recovery case, including
+  why evidence expired and whether recovery caused repeated or unnecessary pauses.
+- [ ] Decide whether a Miko MCP interface solves a concrete user workflow that
+  existing Hooks and CLI commands cannot cover. Evaluation only; no server
+  implementation or publication is committed. See [MCP scope](#mcp-adapter).
 
 Do not claim "first", "tamper-proof", "100% compliant", or that Miko eliminates
 hallucination. `observed` evidence is only as trustworthy as the local host and
@@ -53,7 +68,7 @@ reproducible probe and one small result bundle to return.
   CLI is a Technical Preview, `enforce` is promoted, and Desktop requires prior
   CLI activation. Revisit only when the host exposes Desktop Hook review or
   supports `permissionDecision: ask`.
-- [ ] Add a one-command VS Code Copilot probe that creates an isolated Skill,
+- [ ] **Paused until tester availability:** add a one-command VS Code Copilot probe that creates an isolated Skill,
   Agent Spec, Hook configuration, and disposable `src/miko-probe` fixture.
 - [ ] Emit a privacy-safe probe report containing only host/version metadata,
   Hook event order, tool names, argument-key names, and Miko decisions; never
@@ -114,7 +129,7 @@ The paid model eval must distinguish:
 4. compliance failure — the Skill was loaded but its rule was not followed;
 5. host failure — permissions or missing Hook capability blocked progress.
 
-## Codex and Gemini adapters
+## Host adapters: Codex focus and earlier experiments
 
 The first cross-host slice is intentionally small: keep the verifier protocol
 shared, but let each host own its permission and text surface.
@@ -149,7 +164,7 @@ shared, but let each host own its permission and text surface.
   `multi_replace_string_in_file`. Normalize it to the stable
   `replace_string_in_file` Spec tool and extract nested replacement paths; the
   unrecognized alias previously let an in-scope edit bypass Miko entirely.
-- [ ] Repeat the Gemini live fixture with a short, low-latency model after the
+- [ ] **Deferred; outside active development:** repeat the Gemini live fixture with a short, low-latency model after the
   CLI/service latency issue is understood; the flash-lite attempt authenticated
   successfully but still hit the 180-second runner timeout.
 
@@ -177,8 +192,22 @@ alpha prerequisites:
 
 ## MCP adapter
 
-MCP is the next adapter candidate, not part of the current alpha. The valuable
-scope is a business-contract interceptor, not a generic MCP security gateway:
+Miko has no MCP server in the current alpha. An MCP server is **not required**
+for the Claude Code / Codex Skill-checking path or for directory submission.
+Koma's existing `koma-gate-mcp` and `koma-core-mcp` packages serve different
+application-side purposes.
+
+An ordinary MCP tool is callable by the model; exposing `verify` does not force
+the model to call it before editing through another tool. Enforcement still
+needs a host Hook or a mandatory forwarding boundary. See the official
+[MCP tool model](https://modelcontextprotocol.io/specification/2025-11-25/server/tools).
+
+At the next review, first identify a real need for read-only status or evidence
+inspection that `doctor` and existing host messages do not meet. Build only if
+there is a concrete caller and an acceptance case. Directory visibility alone
+is not a sufficient reason to add a server.
+
+A separate, deferred interceptor experiment could inspect a proposed MCP call:
 
 1. inspect a proposed MCP tool call before forwarding it;
 2. require observed reference/test/approval evidence;
@@ -189,7 +218,7 @@ scope is a business-contract interceptor, not a generic MCP security gateway:
 
 - [x] Define a host-neutral `beforeTool` / `afterTool` adapter protocol (used by
   the Codex and Gemini bridges).
-- [ ] Build one narrow deploy-tool fixture requiring `deploy-guide.md` and a
+- [ ] **Deferred, not next week's build commitment:** one narrow deploy-tool fixture requiring `deploy-guide.md` and a
   trusted test result.
 - [ ] Measure false denials, recovery behavior, and added latency before making
   ecosystem claims.

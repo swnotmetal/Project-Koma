@@ -1,17 +1,22 @@
 # Koma（狛犬）
 
-### 验证编程 agent 真实做过什么，也保护它们构建的 AI 应用。
+### Miko：为 Claude Code 和 Codex 检查必需的 Skill 读取
 
-Koma 是一套面向可观察 AI 边界的 TypeScript 工具。**Miko** 根据本地 Agent
-Spec 检查 coding agent 的 Skill、工具动作与完成证据；**Gate、Scout 和 Core**
-分别保护 prompt 输入、外围资源与检索边界。
+总要提醒编程 agent 先读必需的 Skill，再修改文件？**Miko** 在受保护的编辑前
+检查可观察的 Skill 读取证据。缺少证据时，它暂停动作，告诉 agent 要补读什么，
+再让它重试。本地运行，验证器不调用 LLM，免费开源。
+
+当前主攻 **Claude Code 和 Codex CLI**。Miko 属于 Koma；独立的 **Gate、Scout
+和 Core** 分别处理 AI 应用输入、请求限制和检索。使用 Miko 不需要安装其他包。
 
 ```bash
 npm install -D koma-miko@alpha
 npx koma-miko init --host claude
 ```
 
-如果你正在构建 LLM endpoint，可以从 `npm install koma-gate` 开始。
+在生成的 `miko.json` 中填写项目已有的 Skill 和受保护路径，再启动新的 Claude
+Code 会话。**使用 Codex？** 请按 [Codex 配置与首次 Hook 审阅](./packages/koma-miko/README.zh-CN.md#codex-setup)
+操作。Codex CLI 属于 Technical Preview；Desktop 必须先通过 CLI 激活。
 
 <p align="center">
   <img src="logo/logobanner.png" alt="Koma" width="600" />
@@ -24,7 +29,6 @@ npx koma-miko init --host claude
   <a href="https://www.npmjs.com/package/koma-gate"><img alt="koma-gate" src="https://img.shields.io/npm/v/koma-gate?label=koma-gate&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-scout"><img alt="koma-scout" src="https://img.shields.io/npm/v/koma-scout?label=koma-scout&color=3178c6&style=flat-square" /></a>
   <a href="https://www.npmjs.com/package/koma-core"><img alt="koma-core" src="https://img.shields.io/npm/v/koma-core?label=koma-core&color=3178c6&style=flat-square" /></a>
-  <a href="https://www.npmjs.com/package/koma-miko-dsh"><img alt="koma-miko-dsh" src="https://img.shields.io/npm/v/koma-miko-dsh/alpha?label=DSH%20adapter&color=C25E38&style=flat-square" /></a>
   <br />
   <a href="https://koma-demo.swbuilds.workers.dev"><img alt="Miko live demo" src="https://img.shields.io/badge/Miko_demo-10--sec_replay-C25E38?style=flat-square" /></a>
   <img alt="Gate benchmark" src="https://img.shields.io/badge/Gate实测-98.8%25召回_0%25误拦-6e3abe?style=flat-square" />
@@ -42,7 +46,7 @@ npx koma-miko init --host claude
 
 ---
 
-### 当前主推：Miko Alpha
+### 面向 Claude Code 和 Codex 的 Miko Alpha
 
 <p align="center">
   <img src="packages/koma-miko/assets/miko-lockup.png" alt="Koma Miko" width="420" />
@@ -71,8 +75,16 @@ npx koma-miko init --host claude     # 本地安装后自动配置
 > 离线 `probe` 只验证 adapter 逻辑，不代表真实 Hook 已激活。
 
 [Miko README →](./packages/koma-miko/README.zh-CN.md) ·
-[10 秒网页回放 →](https://koma-demo.swbuilds.workers.dev) ·
-[DeepSeek Harness adapter →](./packages/koma-miko-dsh/README.md)
+[当前宿主支持 →](./packages/koma-miko/README.zh-CN.md#host-support) ·
+[10 秒网页回放 →](https://koma-demo.swbuilds.workers.dev)
+
+Claude Code 是主要 alpha 使用路径；Codex CLI 已有窄范围恢复验证，但仍有上述
+激活限制。Gemini 移出主动开发范围；Copilot 适配开发暂停，等待实际试用者。
+已有适配器和历史测试保留在 [适配器文档](./packages/koma-miko/README.zh-CN.md#other-adapters)。
+
+**为什么不直接写一个 Hook？** 单个固定检查用原生 Hook 就够了。Miko 把项目
+Spec、读取记录、压缩后的重载要求、恢复提示和完成证据放在一起维护。两者都
+不能证明模型理解了指令。参见 [什么时候适合使用 Miko](./packages/koma-miko/README.zh-CN.md#when-to-use-miko)。
 
 ---
 
@@ -125,7 +137,7 @@ verifier。付费样本刻意保持很小，**不能证明普遍的模型、长�
 
 ---
 
-### 快速开始
+### 应用侧快速开始：Gate
 
 ```ts
 import { createGeneralKnowledgeGuard } from 'koma-gate';
@@ -166,17 +178,19 @@ curl http://localhost:8080/self-test
 
 ---
 
-### 使用 AI 编程助手？
+### 用编程助手配置 Miko？
 
 告诉它：
 
-> *"Add Koma to protect this AI endpoint. Use koma-gate for prompt injection, koma-scout for perimeter abuse, and koma-core for protected RAG retrieval. Each works standalone."*
+> “先读 Miko README，再按我使用的宿主，为项目已有的 Skill 和受保护路径配置 koma-miko。说明哪些激活步骤需要我完成。”
 
 对于 coding-agent 项目，安装 Miko 后运行
-`npx koma-miko init --host claude`，再在生成的 `miko.json` 中填写项目真正关心的
-Skill、路径与完成证据。
+`npx koma-miko init --host claude`，或按 [Codex 配置](./packages/koma-miko/README.zh-CN.md#codex-setup)
+操作，再在生成的 `miko.json` 中填写项目真正关心的 Skill、路径与完成证据。
+Miko 不会安装 Skill 本身。
 
-Koma 同时为人类和 AI agent 的可发现性而设计。参见 [llms.txt](./llms.txt)。
+[llms.txt](./llms.txt) 提供文档入口。Miko 使用宿主 Hooks，不需要 MCP server。
+仓库已有的 MCP servers 属于 Gate 和 Core。
 
 ---
 
@@ -184,7 +198,8 @@ Koma 同时为人类和 AI agent 的可发现性而设计。参见 [llms.txt](./
 
 - **最小依赖面。** Miko、Gate 与 Core 没有第三方运行时依赖；Scout 仅将 Express 声明为 peer dependency。
 - **不执行模型输出。** Miko 观察宿主事件；Gate、Scout、Core 负责分类、限流或存储，均不执行生成代码。
-- **默认 fail-open。** 可选守卫故障时不拖垮应用；安全优先的部署可设置 `failOpen: false`。
+- **各包的失败行为不同。** Gate 默认 fail-open，可设置 `failOpen: false`；
+  Miko 按每份 Agent Spec 的模式执行，enforce 模式缺失证据时拒绝适用动作。
 - **每次推送 CodeQL。** 覆盖 OWASP LLM01。
 - **MIT 协议。**
 

@@ -466,6 +466,21 @@ describe('Koma Miko alpha', () => {
       .toContain('Miko verified');
   });
 
+  it('keeps passive completion distinct from verification and never disguises a missing check', () => {
+    const idle = createMiko({ contracts: [] });
+    idle.startTask({ sessionId: 'chat', taskId: 'chat', tags: [] });
+    const presence = formatMikoCompletionReceipt(idle.verifyCompletion('chat'));
+    expect(presence).toContain('Miko active');
+    expect(presence).not.toMatch(/Miko verified|COMPLETE/);
+    expect(presence?.split('\n')).toHaveLength(1);
+    expect(formatMikoCompletionReceipt(idle.verifyPreparation('chat'))).toBeUndefined();
+
+    const guarded = startUiTask();
+    expect(formatMikoCompletionReceipt(guarded.verifyCompletion('settings-page'))).toBeUndefined();
+    recordPreparation(guarded);
+    expect(formatMikoCompletionReceipt(guarded.verifyCompletion('settings-page'))).toBeUndefined();
+  });
+
   it('renders a bounded developer traffic-light summary without truncating machine evidence', () => {
     const contracts: MikoContract[] = Array.from({ length: 6 }, (_, index) => ({
       id: `spec-${index}`,

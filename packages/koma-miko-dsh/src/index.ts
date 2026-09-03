@@ -84,20 +84,14 @@ function formatDshCompletionReceipt(
   result: VerificationResult,
   observedEvidenceCount: number,
 ): string | undefined {
-  if (
-    result.decision !== 'ALLOW' ||
-    result.checkpoint !== 'COMPLETE' ||
-    result.reasonCode !== 'CONTRACT_SATISFIED' ||
-    result.contractIds.length === 0
-  ) {
-    return undefined;
+  if (result.decision !== 'ALLOW' || result.checkpoint !== 'COMPLETE') return undefined;
+  if (result.reasonCode === 'NO_APPLICABLE_CONTRACT' && result.contractIds.length === 0) {
+    return '⚪ Miko active · no Agent Spec applied; no verification claimed.';
   }
-  return [
-    '🟢 Miko verified · COMPLETE',
+  if (result.reasonCode !== 'CONTRACT_SATISFIED' || result.contractIds.length === 0) return undefined;
+  return '🟢 Miko verified · COMPLETE · ' +
     `${result.contractIds.length} Agent Spec${result.contractIds.length === 1 ? '' : 's'} satisfied · ` +
-      `${observedEvidenceCount} observed evidence event${observedEvidenceCount === 1 ? '' : 's'}.`,
-    'Prompts, source code, and tool output were not stored.',
-  ].join('\n');
+    `${observedEvidenceCount} observed evidence event${observedEvidenceCount === 1 ? '' : 's'}.`;
 }
 
 export interface CheckEvidenceRule {

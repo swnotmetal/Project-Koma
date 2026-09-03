@@ -1,7 +1,7 @@
 {
   "name": "koma-miko",
-  "version": "0.1.0-alpha.10",
-  "description": "Deterministic skill and action contract verification for AI agent workflows.",
+  "version": "0.1.0-alpha.11",
+  "description": "Local Skill-read and completion-evidence checks for Claude Code and Codex CLI workflows.",
   "author": "Shuang Wu",
   "type": "module",
   "main": "./dist/index.js",
@@ -58,21 +58,23 @@
     "ai",
     "agents",
     "skills",
+    "claude-code",
+    "claude",
+    "codex",
     "contracts",
     "guardrails",
     "hooks",
-    "typescript",
-    "vscode",
-    "copilot"
+    "typescript"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/swnotmetal/Project-Koma.git"
+    "url": "git+https://github.com/swnotmetal/Project-Koma.git",
+    "directory": "packages/koma-miko"
   },
   "publishConfig": {
     "access": "public",
     "tag": "alpha"
   },
-  "homepage": "https://github.com/swnotmetal/Project-Koma#readme"
+  "homepage": "https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-miko/README.md"
 }

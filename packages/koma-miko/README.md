@@ -4,11 +4,12 @@
   <img src="./assets/miko-lockup.png" alt="Koma Miko" width="420" />
 </p>
 
-Deterministic skill and action contract verification for AI agent workflows.
+Local checks for required Skill reads in **Claude Code and Codex CLI**.
 
-Think of each contract as an **Agent Spec**: a developer-owned executable test
-for how an agent prepares, acts, and completes work—not an enterprise policy
-console.
+When an agent tries to edit a protected file before reading a required Skill,
+Miko pauses the action, names the missing evidence, and gives the agent a path
+to retry. You define the requirements in a project-owned `miko.json`
+**Agent Spec**. Miko runs locally, is MIT licensed, and makes no LLM calls.
 
 Miko checks observable evidence at three points:
 
@@ -16,13 +17,94 @@ Miko checks observable evidence at three points:
 2. **Pre-action** — is the proposed tool, risk, and path scope allowed?
 3. **Complete** — did the required tests, reviews, or artifacts actually happen?
 
-Install the public alpha with:
+## Quick start
+
+Use the setup for your host from the project root. Miko does not install Skills;
+the generated `miko.json` must name Skills and paths that exist in your project.
+The public alpha API may change before the first stable release.
+The starter uses `frontend-design` and `src`; replace them if your project uses
+different names, or pass `--skill <name> --path <prefix>` to `init`.
+
+### Claude Code
 
 ```sh
-npm install koma-miko@alpha
+npm install -D koma-miko@alpha
+npx koma-miko init --host claude
 ```
 
-Its API may change before the first stable release.
+Edit `miko.json`, then check the configuration:
+
+```sh
+npx koma-miko doctor --host claude --strict
+```
+
+Start a new Claude Code session after changing Hooks. Ask for a small edit under
+the configured path. If preparation is missing, the expected flow is
+`edit paused → required Skill/reference read → edit retried`.
+If the agent already read the required material, no recovery pause is needed.
+The checks require the host to enable and emit the configured Hook events.
+
+<a id="codex-setup"></a>
+
+### Codex CLI (Technical Preview)
+
+```sh
+npm install -D koma-miko@alpha
+npx koma-miko init --host codex --enforce
+```
+
+Edit `miko.json` to match your project. Open Codex CLI in that project, run
+`/hooks`, review and trust the five Miko Hooks, then run one small turn.
+
+```sh
+npx koma-miko doctor --host codex --strict
+```
+
+**Installation is not activation.** Codex skips untrusted project Hooks.
+Codex Desktop requires prior CLI activation; Desktop-only onboarding is not a
+supported alpha path. Codex uses `enforce`; `review` degrades to a recoverable
+pause/deny rather than a native approval choice.
+
+Want to inspect the behavior first? The [browser replay](https://koma-demo.swbuilds.workers.dev)
+needs no installation. `npx --yes koma-miko@alpha demo` runs a deterministic
+terminal replay without an API key. Both are demonstrations, not live host tests.
+
+<a id="host-support"></a>
+
+## Current host support
+
+Focus reviewed **2026-09-03**. These are narrow alpha paths, not a promise of
+identical behavior across editors, models, or organization policies.
+
+| Host | Current scope |
+|---|---|
+| **Claude Code** | Primary alpha workflow; CLI denial, recovery, completion, and guided scope exceptions have been exercised live. |
+| **Codex CLI** | Primary focus, **Technical Preview**; a fixed live recovery flow passed after explicit Hook trust. |
+| Codex Desktop | Tested after CLI activation; no standalone onboarding promise. Status presentation depends on the host and agent relay. |
+| Gemini CLI | Outside active development. Offline conformance passed; the recorded live attempt timed out. |
+| VS Code Copilot | Adapter work paused until a tester can use it. Existing code and limited live observations remain available. |
+| DeepSeek Harness | Separate experimental [adapter](../koma-miko-dsh/README.md) for a pinned Developer Preview; not the primary onboarding path. |
+
+See the dated [Claude](../../docs/evals/miko-claude-haiku-alpha.md) and
+[host-adapter](../../docs/evals/miko-host-adapters-alpha.md) evaluations for the
+tested versions and limitations.
+
+<a id="when-to-use-miko"></a>
+
+## When to use Miko
+
+Use Miko when you already have project Skills or references and repeatedly need
+to check that an agent loaded them before editing. It can also require trusted
+completion evidence when your integration records that evidence.
+
+A small native Hook is enough for one fixed check. Miko adds reusable Specs,
+observed-read tracking, reload requirements after compaction, recovery text,
+and a local evidence ledger. It cannot prove comprehension, prevent every bad
+edit, or check actions that bypass the configured host events.
+
+**No MCP server is needed.** Miko's enforcement comes from host Hooks. A tool
+that the model may choose to call cannot by itself require those checks before
+other tools run. Koma's existing MCP servers belong to Gate and Core.
 
 ## Why
 
@@ -185,9 +267,15 @@ renders the same structured decision using its native text/approval surface.
 Those native surfaces now use one visible status language across adapters:
 `🔴 Miko paused/blocked` for DENY, `🟡 Miko needs your decision` for REVIEW,
 `🟢 Miko recovered` when newly observed evidence clears PREPARE, and a compact
-`🟢 Miko verified` receipt when the active Agent Specs reach COMPLETE. The
-user-facing status stays short; exact missing evidence remains in agent context
-and the local ledger.
+`🟢 Miko verified` one-line receipt when the active Agent Specs reach COMPLETE.
+When no Spec applies, the closing status is `⚪ Miko active · no Agent Spec
+applied; no verification claimed.` This means the configured selectors did not
+match; it does not mean the answer is correct or no Skill is needed. Exact
+missing evidence remains in agent context and the local ledger.
+
+The compact closing receipt and Codex `PostToolUse` status relay require
+`0.1.0-alpha.11` or later. Older installations need to be updated.
+
 Packaged adapters apply one interaction rule consistently: an `ALLOW` defers to
 the host's existing permission policy, a `REVIEW` opens the host's native
 approval path, and a `DENY` blocks only the proposed action while giving the
@@ -239,9 +327,9 @@ before changing it, and adds `.miko/state/` to
 `--path <prefix>` to tailor the starter spec, or choose once with
 `--mode guided|review|enforce`; the generated mode can later be changed per
 Spec. Start a new Claude session after changing Hooks.
-Use `--dry-run` to preview changes. Codex, Gemini, and VS Code Copilot layouts
-can be initialized with `--host codex`, `--host gemini`, or `--host vscode`
-(`--host copilot` is an alias).
+Use `--dry-run` to preview changes. For the other primary path, follow the
+[Codex setup](#codex-setup). Retained experimental layouts are documented under
+[other adapters](#other-adapters).
 
 The initializer does not overwrite an existing `miko.json`; edit that file to
 match your project. Miko writes session metadata under `.miko/state/`, which
@@ -279,6 +367,15 @@ The adapter also returns branded `SessionStart` context. Interactive Codex CLI
 states to generic Hook-completed events. No extra model turn is added merely to
 manufacture a green receipt.
 
+For hosts that hide successful Hook messages, Codex also receives a short
+`PostToolUse` status to relay in its next normal progress message. Identical
+passive statuses are suppressed within a turn; a changed applicable Spec set or
+status can be reported again. Without `turn_id`, deduplication resets at `Stop`.
+These messages describe observed checks **so far**, not approval of the whole
+answer. Startup asks for one active notice. No extra model turn or native
+permission approval is introduced; agent relay is not a persistent Desktop UI,
+and a tool-free turn still relies on the host's closing-message presentation.
+
 **Codex Desktop requires prior CLI activation and is not a supported standalone
 alpha onboarding path.** In the current local test, Desktop allowed an edit
 while all five installed project
@@ -293,13 +390,8 @@ Run an entirely offline preflight before spending model credits:
 ```sh
 npx koma-miko probe --host claude
 npx koma-miko probe --host codex
-npx koma-miko probe --host gemini
-npx koma-miko probe --host vscode
-npx koma-miko doctor
-npx koma-miko doctor --strict --json
-npx koma-miko doctor --host codex
-npx koma-miko doctor --host gemini --strict
-npx koma-miko doctor --host vscode --strict
+npx koma-miko doctor --host claude --strict
+npx koma-miko doctor --host codex --strict
 ```
 
 `probe` runs the selected adapter through an isolated `DENY -> evidence ->
@@ -324,9 +416,9 @@ See the official [platform overview](https://code.claude.com/docs/en/platforms),
 [Desktop shared configuration](https://code.claude.com/docs/en/desktop), and
 [VS Code settings](https://code.claude.com/docs/en/ide-integrations).
 
-## Codex, Gemini, and VS Code Copilot host adapters
+## Codex adapter details
 
-The alpha also ships narrow adapters for these host Hook surfaces:
+The Codex adapter maps the host's events to Miko's shared verifier:
 
 - `koma-miko-codex-hook` consumes Codex `SessionStart`, `PreToolUse`,
   `PostToolUse`, `PostCompact`, and `Stop` events. Codex currently parses but
@@ -340,6 +432,22 @@ The alpha also ships narrow adapters for these host Hook surfaces:
   `apply_patch` targets
   are recorded as path metadata only, and the adapter recognizes a tiny,
   read-only `Get-Content`/`cat` subset for Skill reloads.
+<a id="other-adapters"></a>
+
+## Other adapters
+
+These implementations are retained for existing users and historical tests.
+Gemini is outside active development. Copilot work is paused pending real
+tester availability. Their presence in the package does not imply the same
+support level as Claude Code or Codex CLI. DeepSeek Harness has its own
+[experimental package](../koma-miko-dsh/README.md).
+
+<details>
+<summary>Gemini and VS Code Copilot setup and implementation details</summary>
+
+The initializer still accepts `--host gemini` and `--host vscode`
+(`--host copilot` is an alias). Use the same host with `probe` or `doctor`.
+
 - `koma-miko-gemini-hook` consumes Gemini `BeforeTool`, `AfterTool`,
   `SessionStart`, `PreCompress`, and `AfterAgent` events. It maps `DENY` to
   `decision: deny`, maps `REVIEW` to the current CLI's interactive
@@ -404,6 +512,8 @@ path requires an observable `read_file` or narrowly recognized read-only
 terminal command. See [`examples/codex`](./examples/codex),
 [`examples/gemini`](./examples/gemini), and
 [`examples/vscode`](./examples/vscode).
+
+</details>
 
 ## Automated replay
 
@@ -519,8 +629,8 @@ events. This is one bounded UX observation, not a general model benchmark.
   Agent-mode REVIEW recovery flow, not broad compatibility testing across
   models, tool names, editor versions, or organization policies**
 - **Copilot can introduce new tool names without notice; the adapter only
-  governs aliases it recognizes, so live natural-language tests remain part of
-  release validation**
+  governs aliases it recognizes. Repeat live testing before resuming active
+  support; current adapter work is paused**
 - **No automatic rewriting of tool calls**
 - **No claim that loading a skill proves the model understood, retained, or followed it**
 

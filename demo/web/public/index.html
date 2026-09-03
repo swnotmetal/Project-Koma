@@ -3,12 +3,13 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Koma — Four defenses, one live demo</title>
-  <meta name="description" content="Try four Koma defenses: Miko keeps coding agents on-spec, Gate classifies prompts, Scout drops abusive traffic, and Core gates content." />
+  <title>Miko — Skill checks for Claude Code and Codex | Koma</title>
+  <meta name="description" content="Miko checks required Skill reads before protected edits. Watch a Claude Code recovery replay, then try the Claude Code or Codex CLI alpha setup. No LLM calls in the verifier." />
   <meta name="theme-color" content="#FAFAFA" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Koma — Keep AI coding agents on-spec" />
-  <meta property="og:description" content="Watch Miko block a premature Claude Code edit, guide recovery, and verify trusted evidence. Plus Gate, Scout, and Core." />
+  <meta property="og:title" content="Miko — Skill checks for Claude Code and Codex" />
+  <meta property="og:description" content="Watch Miko pause an edit, request a missing Skill read, and check completion evidence. Claude Code alpha; Codex CLI Technical Preview requires Hook activation." />
+  <link rel="canonical" href="https://koma-demo.swbuilds.workers.dev/" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23C25E38'/%3E%3Ctext x='16' y='22' font-family='Arial' font-size='18' font-weight='700' text-anchor='middle' fill='%23FFFFFF'%3EK%3C/text%3E%3C/svg%3E" />
   <style>
@@ -410,8 +411,8 @@
     <div class="brand">
       <img class="logo" src="/lognobg.png" alt="Koma logo" />
       <div>
-        <h1>Koma</h1>
-        <div class="sub">Four defenses, one demo: <strong>Miko</strong> keeps coding agents on-spec · <strong>Gate</strong> classifies prompts · <strong>Scout</strong> drops abusive traffic · <strong>Core</strong> gates content.</div>
+        <h1>Koma · Miko</h1>
+        <div class="sub">Required Skill checks for <strong>Claude Code</strong> and <strong>Codex CLI</strong>. Start with Miko's recovery replay; explore Gate, Scout, and Core for AI application checks.</div>
       </div>
       <a class="gh-link" href="https://github.com/swnotmetal/Project-Koma" target="_blank" rel="noopener">GitHub ↗</a>
     </div>
@@ -709,7 +710,7 @@
         <div>
           <div class="miko-title-row">
             <img class="miko-brand-mark" src="/miko-mark.png" alt="Miko logo" />
-            <h2>See Miko catch an AI agent cutting corners.</h2>
+            <h2>Claude skipped a required Skill. Miko pauses the edit.</h2>
           </div>
           <p class="lead">You ask Claude to change a UI. It tries to write before loading your design Skill. Miko blocks the write, tells Claude exactly what is missing, and lets it retry—inside the CLI you already use.</p>
         </div>
@@ -726,8 +727,8 @@
       <section class="install-card" aria-labelledby="miko-install-title">
         <div>
           <span class="install-kicker">Install Miko · Alpha</span>
-          <h3 class="install-title" id="miko-install-title">Keep Claude Code on-spec</h3>
-          <a class="install-docs" href="https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-miko/README.md" target="_blank" rel="noopener">See Codex, Gemini, and Copilot setup ↗</a>
+          <h3 class="install-title" id="miko-install-title">Start with Claude Code</h3>
+          <a class="install-docs" href="https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-miko/README.md#codex-setup" target="_blank" rel="noopener">Codex CLI setup · Technical Preview ↗</a>
         </div>
         <div class="install-shell">
           <div class="install-command-row">
@@ -735,7 +736,8 @@
 npx koma-miko init --host claude</code></pre>
             <button class="install-copy" type="button" data-copy-target="install-miko-command" data-default-label="Copy Miko setup" data-success-label="Miko setup copied">Copy Miko setup</button>
           </div>
-          <p class="install-note">Paste both lines in the project root. The initializer creates the Agent Spec and Claude hook configuration.</p>
+          <p class="install-note">Run in the project root. Edit the generated miko.json to name existing Skills and protected paths, then start a new Claude Code session. Miko does not install Skills.</p>
+          <p class="install-note">Codex requires a one-time /hooks review in the CLI. Codex Desktop requires prior CLI activation; installation alone does not enable checks.</p>
         </div>
       </section>
 
@@ -819,8 +821,16 @@ npx koma-miko init --host claude</code></pre>
             <article class="faq-item">
               <h3 class="faq-question"><span lang="en">Which Koma package should I try first?</span><span lang="zh-CN">我应该先试哪个 Koma 包？</span></h3>
               <div class="faq-answer">
-                <p lang="en">Start with the expensive mistake you want to prevent: Miko for coding agents skipping project rules; Gate for prompt injection or off-topic input; Scout for abusive voice/upload traffic; Core for searchable metadata whose payload must stay protected. Each package works alone.</p>
-                <p lang="zh-CN">从你最想避免的昂贵错误开始：Agent 忽略项目规则用 Miko；Prompt 注入或跑题输入用 Gate；恶意语音/上传流量用 Scout；需要“索引可搜索、正文受保护”用 Core。每个包都可以独立使用。</p>
+                <p lang="en">If you use Claude Code or Codex CLI and keep checking whether required Skills were read, start with Miko. For AI application code, Gate checks prompt scope, Scout checks request and audio limits, and Core separates search metadata from protected content. Each package works alone.</p>
+                <p lang="zh-CN">如果你使用 Claude Code 或 Codex CLI，总要确认 agent 是否读过必需 Skill，可以先试 Miko。对于 AI 应用，Gate 检查 Prompt 范围，Scout 检查请求与音频限制，Core 分离搜索元数据和受保护正文。各包独立使用。</p>
+              </div>
+            </article>
+
+            <article class="faq-item">
+              <h3 class="faq-question"><span lang="en">Which hosts should I use with Miko?</span><span lang="zh-CN">Miko 目前主推哪些宿主？</span></h3>
+              <div class="faq-answer">
+                <p lang="en">Claude Code is the primary alpha workflow. Codex CLI is a Technical Preview: review and trust Miko's project Hooks, run a turn, then check with <code>npx koma-miko doctor --host codex --strict</code>. Codex Desktop requires prior CLI activation. Gemini is outside active development; Copilot adapter work is paused. See <a href="https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-miko/README.md#host-support" target="_blank" rel="noopener">current host support</a>.</p>
+                <p lang="zh-CN">Claude Code 是主要 alpha 路径。Codex CLI 属于 Technical Preview：先审阅并信任 Miko 项目 Hooks、运行一个任务，再用 <code>npx koma-miko doctor --host codex --strict</code> 检查。Codex Desktop 必须先通过 CLI 激活。Gemini 移出主动开发；Copilot 适配开发暂停。</p>
               </div>
             </article>
 
@@ -883,8 +893,10 @@ npx koma-miko init --host claude</code></pre>
 
   <footer class="wrap">
     <div>Open source — <a href="https://github.com/swnotmetal/Project-Koma" target="_blank" rel="noopener">github.com/swnotmetal/Project-Koma</a> · Miko · Gate · Scout · Core · FAQ</div>
+    <div id="visit-counter" hidden><span id="visit-count"></span> visits · <a href="/privacy.html#visits">About this count</a></div>
   </footer>
 
+  <script src="/visits.js" defer></script>
   <script>
     // ---- Tabs (ARIA + keyboard) ----
     const tabs = Array.from(document.querySelectorAll('.tab'));

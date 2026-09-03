@@ -24,6 +24,9 @@ pnpm-debug.log*
 miko-apis.env
 .npmrc
 .miko/state/
+# Personal third-party skill installations (retain their upstream licenses locally)
+/.agents/skills/
+/.agents/vendor/
 packages/koma-miko/.miko-live-*/
 /miko-vscode-ux-lab/
 /miko-codex-ux-lab/
@@ -47,3 +50,9 @@ __pycache__/
 
 # Drafts (Reddit posts, social media copy)
 drafts/
+
+# Local product handoffs, research, outreach, and personal profile drafts
+/docs/product/
+# Machine-local agent configuration (references the ignored personal skills)
+/.codex/
+/miko.json

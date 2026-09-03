@@ -1,7 +1,14 @@
 # Miko host-adapter alpha evaluation
 
-Date: 2026-08-27. These are narrow integration signals for the pinned host
-versions, not reliability claims about any model or editor.
+Initial record: 2026-08-27; later dated observations are included below.
+These are narrow integration signals for pinned host versions, not reliability
+claims about any model or editor.
+
+> **Current focus (2026-09-03): Claude Code and Codex CLI.** Start with the
+> [current support table and setup](../../packages/koma-miko/README.md#host-support).
+> The Codex section below includes successful recovery runs after the initial
+> quota failure. Gemini is outside active development; Copilot adapter work is
+> paused. The historical results below do not imply equal support across hosts.
 
 ## Offline conformance
 
@@ -27,10 +34,14 @@ decision shape. It also splits `editFiles` arrays into independently checked
 paths and verifies that edit content and `tool_response` are absent from the
 ledger.
 
-This is not yet a live-editor pass. VS Code tool names can vary by model and
+At the time of the initial 2026-08-27 record, this was not yet a live-editor pass.
+Later limited REVIEW/Skip recovery and edit-alias observations are recorded in
+the [adapter details](../../packages/koma-miko/README.md#other-adapters).
+VS Code tool names can vary by model and
 request, and native Copilot Skill injection might not emit an observable read.
-The first tester run should capture Agent Debug Logs and confirm the exact tool
-names plus an explicit `SKILL.md` recovery read before widening the profile.
+Before resuming active support, confirm the actual tool names and an explicit
+`SKILL.md` recovery read. Start with `doctor`; request a bounded debug capture
+only if needed to explain a concrete failure.
 
 ## DeepSeek Harness
 

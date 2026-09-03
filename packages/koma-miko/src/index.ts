@@ -991,27 +991,26 @@ export function formatMikoRecoveryNotice(
   ].join('\n');
 }
 
-/** A privacy-safe receipt for a guarded turn that satisfies its active Agent Specs. */
+/** A one-line receipt; no matching Spec is presence, never verification. */
 export function formatMikoCompletionReceipt(
   result: VerificationResult,
   observedEvidenceCount?: number,
 ): string | undefined {
   if (
     result.decision !== 'ALLOW' ||
-    result.checkpoint !== 'COMPLETE' ||
-    result.reasonCode !== 'CONTRACT_SATISFIED' ||
-    result.contractIds.length === 0
+    result.checkpoint !== 'COMPLETE'
   ) {
     return undefined;
   }
+  if (result.reasonCode === 'NO_APPLICABLE_CONTRACT' && result.contractIds.length === 0) {
+    return '⚪ Miko active · no Agent Spec applied; no verification claimed.';
+  }
+  if (result.reasonCode !== 'CONTRACT_SATISFIED' || result.contractIds.length === 0) return undefined;
   const evidence = observedEvidenceCount === undefined
     ? undefined
     : `${observedEvidenceCount} observed evidence event${observedEvidenceCount === 1 ? '' : 's'}`;
-  return [
-    '🟢 Miko verified · COMPLETE',
-    `${result.contractIds.length} Agent Spec${result.contractIds.length === 1 ? '' : 's'} satisfied${evidence ? ` · ${evidence}` : ''}.`,
-    'Prompts, source code, and tool output were not stored.',
-  ].join('\n');
+  return '🟢 Miko verified · COMPLETE · ' +
+    `${result.contractIds.length} Agent Spec${result.contractIds.length === 1 ? '' : 's'} satisfied${evidence ? ` · ${evidence}` : ''}.`;
 }
 
 /**

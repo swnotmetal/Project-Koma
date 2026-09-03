@@ -55,6 +55,7 @@ interface PersistedSnapshot {
   version: 1;
   ledgerBytes: number;
   task: MikoTaskSnapshot;
+  passiveNoticeKey?: string;
 }
 
 function readJson(pathname: string): unknown {
@@ -146,7 +147,7 @@ function restoreState(
   contracts: MikoContract[],
   paths: { ledger: string; snapshot: string },
   sessionId: string,
-): { miko: Miko; taskId: string; started: boolean } {
+): { miko: Miko; taskId: string; started: boolean; passiveNoticeKey?: string } {
   const taskId = sessionId;
   const snapshot = readSnapshot(paths.snapshot);
   if (snapshot && snapshot.task.sessionId === sessionId && snapshot.task.taskId === taskId) {
@@ -154,7 +155,7 @@ function restoreState(
     try {
       miko.restoreTask(snapshot.task);
       applyLedgerRecords(miko, taskId, readLedgerTail(paths.ledger, snapshot.ledgerBytes));
-      return { miko, taskId, started: true };
+      return { miko, taskId, started: true, passiveNoticeKey: snapshot.passiveNoticeKey };
     } catch {
       // Changed contracts or a stale/corrupt snapshot fall back to the audit log.
     }
@@ -182,11 +183,14 @@ function compactSnapshot(snapshot: MikoTaskSnapshot): MikoTaskSnapshot {
   return { ...snapshot, evidence };
 }
 
-function saveSnapshot(pathname: string, ledgerPath: string, snapshot: MikoTaskSnapshot): void {
+function saveSnapshot(
+  pathname: string, ledgerPath: string, snapshot: MikoTaskSnapshot, passiveNoticeKey?: string,
+): void {
   const persisted: PersistedSnapshot = {
     version: 1,
     ledgerBytes: existsSync(ledgerPath) ? statSync(ledgerPath).size : 0,
     task: compactSnapshot(snapshot),
+    ...(passiveNoticeKey === undefined ? {} : { passiveNoticeKey }),
   };
   writeFileSync(pathname, `${JSON.stringify(persisted)}\n`, 'utf8');
 }
@@ -201,7 +205,7 @@ export function handlePersistentHookInput<TInput extends PersistentHookInput>(
 
   const contracts = loadContracts(input, options);
   const statePaths = statePathsFor(input, options);
-  const { miko, taskId, started } = restoreState(contracts, statePaths, input.session_id);
+  const { miko, taskId, started, passiveNoticeKey } = restoreState(contracts, statePaths, input.session_id);
   if (!started) {
     appendLedger(statePaths.ledger, { type: 'task_started', sessionId: input.session_id, taskId });
   }
@@ -239,8 +243,14 @@ export function handlePersistentHookInput<TInput extends PersistentHookInput>(
     });
   }
   const snapshot = miko.snapshotTask(taskId);
-  if (snapshot) saveSnapshot(statePaths.snapshot, statePaths.ledger, snapshot);
-  return handled.output;
+  const nextNoticeKey = input.hook_event_name === 'Stop' || handled.contextAdvance?.advanced ||
+    (handled.verification && handled.verification.decision !== 'ALLOW')
+    ? undefined
+    : handled.passiveNoticeKey ?? passiveNoticeKey;
+  if (snapshot) saveSnapshot(statePaths.snapshot, statePaths.ledger, snapshot, nextNoticeKey);
+  return handled.passiveNoticeKey !== undefined && handled.passiveNoticeKey === passiveNoticeKey
+    ? undefined
+    : handled.output;
 }
 
 export function runPersistentHookCli<TInput extends PersistentHookInput>(

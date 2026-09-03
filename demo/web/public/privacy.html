@@ -24,7 +24,7 @@
   <main>
     <a class="back" href="/">← Back to the demo</a>
     <h1>Koma demo privacy notice</h1>
-    <p>Last updated: 25 August 2026</p>
+    <p>Last updated: 3 September 2026</p>
 
     <p class="summary"><strong>Koma does not save prompts by default.</strong> A prompt is stored only when you mark a verdict as wrong, tick the sharing checkbox, and submit the feedback.</p>
 
@@ -38,6 +38,10 @@
 
     <h2>What the feedback database does not store</h2>
     <p>It does not store the scene, verdict, correction, submission time, account, email address, cookies, IP address, or user-agent string. Cloudflare still processes network information such as your IP address to deliver and rate-limit the request. The Koma rate limiter converts the address to a keyed HMAC identifier and automatically deletes request-window data after it expires; it does not write the raw address to its storage. The configured LLM provider processes the prompt to classify it under that provider's terms and privacy policy.</p>
+
+    <h2 id="visits">Visit count</h2>
+    <p>The footer shows approximate visits counted since 3 September 2026, not unique people. A flag in your tab's session storage prevents normal refreshes from adding another visit. New tab sessions can count again. When that storage is unavailable, the page only reads the total.</p>
+    <p>The counter keeps only a total and the date counting began in Cloudflare storage. It does not save IP addresses, visitor IDs, browser fingerprints, referrers, or cookies, and uses no third-party analytics script. It cannot recover earlier traffic or reliably exclude bots. Cloudflare still processes network information to serve requests.</p>
 
     <h2>Storage and retention</h2>
     <p>Opt-in feedback is stored in a Cloudflare D1 database constrained to the European Union. Each record receives an expiry time 30 days after submission and is removed by a scheduled cleanup. There is no public read endpoint for the database.</p>

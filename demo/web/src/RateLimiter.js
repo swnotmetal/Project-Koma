@@ -18,6 +18,15 @@ export class RateLimiter {
 
   async fetch(request) {
     const url = new URL(request.url);
+    if (url.pathname === '/visits' && ['GET', 'POST'].includes(request.method)) {
+      let visits = (await this.ctx.storage.get('visits')) || { count: 0, since: null };
+      if (request.method === 'POST') {
+        // Cloudflare's storage input/output gates serialize this read-modify-write.
+        visits = { count: visits.count + 1, since: visits.since || new Date().toISOString() };
+        await this.ctx.storage.put('visits', visits);
+      }
+      return Response.json(visits);
+    }
     if (url.pathname === '/check') {
       const ip = request.headers.get('X-Koma-Rate-Key') || 'unknown';
       const useDailyBudget = url.searchParams.get('daily') !== '0';

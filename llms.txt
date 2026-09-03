@@ -1,45 +1,62 @@
-# Koma — llms.txt
+# Koma Miko — Skill checks for Claude Code and Codex
 
-> Observable boundaries for coding agents and TypeScript/Node.js AI applications.
+> Miko (npm: koma-miko) is a local, open-source verifier for required Skill reads,
+> proposed tool actions, and completion evidence. Its current focus is Claude
+> Code and Codex CLI. The verifier makes no LLM calls.
 
-## What it is
+## When Miko helps
 
-Koma is a modular toolkit for coding-agent and AI application boundaries:
+Use Miko when a coding agent attempts a protected edit without observable reads
+of the project's required Skills or references. Project-owned miko.json Agent
+Specs define the checks. Missing evidence pauses the applicable action and gives
+the agent a recovery instruction. Observed reads do not prove comprehension or
+compliance. Native host permissions remain authoritative.
 
-- **koma-miko** *(public alpha)* — local Agent Specs for required Skills, proposed actions, and completion evidence. Claude, Codex, Gemini, VS Code Copilot, and DeepSeek Harness adapters are intentionally host-limited.
-- **koma-gate** — semantic prompt-injection filter. Classifies input scope before the application's model call. Four presets: general, code, support, reference-tool. Fail-open by default.
-- **koma-scout** — perimeter checks. Token-bucket rate limiting (in-memory or Firestore), audio validation (size/duration/MIME), geographic allowlisting, cooldown enforcement.
-- **koma-core** — zero-trust split-store. Public search index + private content store linked by HKDF-derived opaque tokens. Prevents data scraping via search enumeration.
+A small native Hook may be enough for one fixed check. Miko adds shared Spec
+configuration, evidence tracking, post-compaction reload requirements, recovery
+messages, and completion checks. It cannot verify events the host never exposes.
 
-## Quick install
+## Start with your host
 
-```bash
-npm install koma-gate koma-scout koma-core
-npm install -D koma-miko@alpha
-npx koma-miko init --host claude
-# or: npx koma-miko init --host vscode
-```
+Install in the project: npm install -D koma-miko@alpha
 
-## Key features
+- Claude Code: npx koma-miko init --host claude
+  Edit miko.json to name existing Skills and protected paths; start a new session.
+  Check configuration with npx koma-miko doctor --host claude --strict.
+- Codex CLI (Technical Preview): npx koma-miko init --host codex --enforce
+  Edit miko.json, open Codex CLI in the project, run /hooks, review and trust the
+  five Miko Hooks, then run one turn. Check activation with
+  npx koma-miko doctor --host codex --strict.
+  Codex Desktop requires prior CLI activation. Review mode degrades to pause/deny.
 
-- Minimal dependency surface; Gate, Core, and Miko have no third-party runtime dependencies, while Scout declares Express as a peer
-- Each package works standalone
-- Express + Fastify middleware built in
-- MIT licensed
-- Real-world origin: patterns distilled from production voice-AI system
+The initializer does not install Skills or replace an existing miko.json.
+An offline probe checks adapter logic, not live host activation.
+Try npx --yes koma-miko@alpha demo for a deterministic replay without an API key.
 
-## Relevant security concepts
+## Current documentation
 
-- OWASP Top 10 for LLM: LLM01 (Prompt Injection), LLM02 (Insecure Output Handling)
-- Indirect prompt injection defense
-- RAG data exfiltration prevention
-- Token-bucket rate limiting for AI endpoints
-- Undersized/too-short audio and request-flood guard
+- Miko README and host support: https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-miko/README.md
+- Chinese README: https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-miko/README.zh-CN.md
+- Package: https://www.npmjs.com/package/koma-miko
+- Browser replay (simulation, no installation): https://koma-demo.swbuilds.workers.dev
+- Claude evaluation: https://github.com/swnotmetal/Project-Koma/blob/main/docs/evals/miko-claude-haiku-alpha.md
+- Codex and other host evaluation history: https://github.com/swnotmetal/Project-Koma/blob/main/docs/evals/miko-host-adapters-alpha.md
 
-## Entry points
+Evaluation records are dated, narrow observations, not general reliability scores.
+Gemini is outside active development. Copilot adapter work is paused pending real
+tester availability. DeepSeek Harness remains a separate experimental adapter.
+Existing adapters do not imply equal support across hosts.
 
-- GitHub: https://github.com/swnotmetal/Project-Koma
-- Miko npm alpha: https://www.npmjs.com/package/koma-miko
-- npm: https://www.npmjs.com/package/koma-gate
-- Live demo: https://koma-demo.swbuilds.workers.dev
-- Docs: https://github.com/swnotmetal/Project-Koma#readme
+## Other Koma packages
+
+These work independently and are not required to use Miko:
+
+- koma-gate: semantic input classification before an application's model call.
+  https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-gate/README.md
+- koma-scout: rate limiting, audio validation, and geographic request rules.
+  https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-scout/README.md
+- koma-core: separate public search metadata from token-gated content retrieval.
+  https://github.com/swnotmetal/Project-Koma/blob/main/packages/koma-core/README.md
+
+Gate and Core have separate MCP servers. Miko uses host Hooks and has no MCP
+server in the current alpha. All Koma packages are MIT licensed.
