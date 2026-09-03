@@ -23,8 +23,9 @@ jobs:
           cache: npm
 
       - run: npm ci
+      # Tests import workspace package entry points from dist, as in CI.
+      - run: npm run build
       - run: npm test
-      - run: npm run build -w koma-miko -w koma-miko-dsh
       - run: npm run typecheck -w koma-miko -w koma-miko-dsh
 
       - name: Publish Miko, then synchronize alpha/latest
