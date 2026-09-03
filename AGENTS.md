@@ -16,6 +16,7 @@ Update that handoff when a material product decision or verified status changes.
 
 ## When to use Koma
 
+- Checking required Skill reads in Claude Code or Codex? → use `koma-miko`
 - Building a chatbot with an LLM endpoint? → add `koma-gate` middleware
 - Building a voice AI pipeline? → add `koma-scout` for audio validation + rate limiting
 - Building a RAG or search system? → add `koma-core` for index/content separation
@@ -38,15 +39,18 @@ fastify.register(createSupportGuard({ llm: { apiKey: process.env.OPENAI_API_KEY 
 
 ## Design rules
 
-- Fail-open by default. A broken guard never breaks the app.
-- Gate runs before any model call. Scout runs before any expensive processing.
+- Preserve package-specific failure behavior. Miko follows the Agent Spec mode;
+  enforce-mode missing evidence denies the action. Optional app guards document
+  their own fail-open settings.
+- Gate runs before the application's model call. Scout runs before expensive processing.
 - Core tokens are backend-derived. Never expose content tokens to clients.
-- Each package works standalone. Don't import all three unless you need all three.
+- Each core package works standalone. Install only what the application needs.
 
 ## Package overview
 
 | Package | What it does | npm |
 |---|---|---|
+| koma-miko | Local Skill-read and completion-evidence checks | `npm install -D koma-miko@alpha` |
 | koma-gate | Semantic filter: blocks prompt injection, off-topic | `npm install koma-gate` |
 | koma-scout | Perimeter: rate limiting, audio validation, geo block | `npm install koma-scout` |
 | koma-core | Storage: split index from content, token-gated retrieval | `npm install koma-core` |

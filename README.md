@@ -83,6 +83,9 @@ npx koma-miko init --host claude     # after local installation
 [Current host support →](./packages/koma-miko/README.md#host-support) ·
 [10-second web replay →](https://koma-demo.swbuilds.workers.dev)
 
+[Miko replay GIF](./docs/assets/miko-terminal-demo.gif) ·
+[Still image](./docs/assets/miko-terminal-demo-poster.png) — browser simulation, not a live host recording.
+
 Claude Code is the primary alpha workflow. Codex CLI has a verified narrow
 recovery flow with the activation limits above. Gemini is outside active
 development; Copilot adapter work is paused pending a real tester. Existing
@@ -187,7 +190,7 @@ curl http://localhost:8080/self-test
 
 **`koma-gate`** — Prompt injection firewall. LLM-based scope classifier that blocks jailbreaks, off-topic requests, and instruction overrides. Supports OpenAI, Anthropic, Google, DeepSeek, and local Ollama models. [README →](./packages/koma-gate/README.md)
 
-<img src="show-koma.gif" alt="Koma Gate blocking a prompt injection in real time" width="100%" />
+[Try Gate in the browser demo →](https://koma-demo.swbuilds.workers.dev)
 
 **`koma-scout`** — Perimeter protection. Rate limiting, audio upload validation, geo allowlisting. Cheap checks before expensive AI work. [README →](./packages/koma-scout/README.md)
 
@@ -197,7 +200,9 @@ curl http://localhost:8080/self-test
 
 <img src="logo/core-diagram.svg" alt="Koma Core split-store" width="480" />
 
-Each package works standalone. Stack them: Gate filters → Scout throttles → Core stores.
+Each package works standalone. A typical application checks cheap request limits
+with Scout before Gate classification, then uses Core where protected retrieval
+is needed. See the [architecture map](./ARCHITECTURE_MAP.md).
 
 **Application-side MCP servers** — these belong to Gate and Core, not Miko:
 
@@ -242,7 +247,7 @@ it does not require an MCP server.
 - **CodeQL on every push.** Targets OWASP LLM01.
 - **MIT licensed.**
 
-→ [Security policy](./SECURITY.md) · [Known limitations](./SECURITY-HARDENING.md) · [Comparison with alternatives](./COMPARISON.md) · [Contributing](./CONTRIBUTING.md)
+→ [Security policy](./SECURITY.md) · [Known limitations](./SECURITY-HARDENING.md) · [Contributing](./CONTRIBUTING.md)
 
 ---
 

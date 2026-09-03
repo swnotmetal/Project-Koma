@@ -78,6 +78,9 @@ npx koma-miko init --host claude     # 本地安装后自动配置
 [当前宿主支持 →](./packages/koma-miko/README.zh-CN.md#host-support) ·
 [10 秒网页回放 →](https://koma-demo.swbuilds.workers.dev)
 
+[Miko 回放 GIF](./docs/assets/miko-terminal-demo.gif) ·
+[静态截图](./docs/assets/miko-terminal-demo-poster.png) — 网页模拟，并非真实宿主录屏。
+
 Claude Code 是主要 alpha 使用路径；Codex CLI 已有窄范围恢复验证，但仍有上述
 激活限制。Gemini 移出主动开发范围；Copilot 适配开发暂停，等待实际试用者。
 已有适配器和历史测试保留在 [适配器文档](./packages/koma-miko/README.zh-CN.md#other-adapters)。
@@ -164,7 +167,7 @@ curl http://localhost:8080/self-test
 
 **`koma-gate`** — 提示注入防火墙。基于 LLM 的范围分类器，拦截越狱、越界请求和指令覆盖。支持 OpenAI、Anthropic、Google、DeepSeek 和本地 Ollama。[README →](./packages/koma-gate/README.md)
 
-<img src="show-koma.gif" alt="Koma Gate 实时拦截提示注入" width="100%" />
+[在网页 demo 中试用 Gate →](https://koma-demo.swbuilds.workers.dev)
 
 **`koma-scout`** — 外围防护。限流、音频上传校验、地理白名单。在昂贵的 AI 调用之前做便宜检查。[README →](./packages/koma-scout/README.md)
 
@@ -174,7 +177,8 @@ curl http://localhost:8080/self-test
 
 <img src="logo/core-diagram.svg" alt="Koma Core 分离存储" width="480" />
 
-每层独立使用。叠加：Gate 过滤 → Scout 控流 → Core 存数据。
+每个包独立使用。典型应用先由 Scout 做便宜的请求检查，再调用 Gate 分类，
+需要受保护的检索时使用 Core。参见 [架构图](./ARCHITECTURE_MAP.md)。
 
 ---
 
@@ -203,7 +207,7 @@ Miko 不会安装 Skill 本身。
 - **每次推送 CodeQL。** 覆盖 OWASP LLM01。
 - **MIT 协议。**
 
-→ [安全策略](./SECURITY.md) · [已知限制](./SECURITY-HARDENING.md) · [同类对比](./COMPARISON.zh-CN.md) · [贡献指南](./CONTRIBUTING.md)
+→ [安全策略](./SECURITY.md) · [已知限制](./SECURITY-HARDENING.md) · [贡献指南](./CONTRIBUTING.md)
 
 ---
 

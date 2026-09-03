@@ -32,7 +32,9 @@ npm run smoke:npm
 - English-first source.
 - TypeScript strict mode.
 - No `any` in public API signatures.
-- Fail-open by default for all guards and validators.
+- Preserve each package's documented failure behavior. Miko follows the Agent
+  Spec mode; an enforce-mode missing-evidence check denies the action.
+- Follow the package-specific [release policy](VERSIONING.md); versions are independent.
 
 ## Security
 

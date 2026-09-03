@@ -4,8 +4,27 @@ All notable changes to Koma will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Replace the root README logo with the author-supplied artwork.
+- Remove retired Gate promotional media, duplicate artwork, unmaintained
+  comparison tables, and the old adopter stories. Keep current demos and evals.
+- Update the architecture and release guides for the current package boundaries.
+
+## Miko alpha.11 / DSH alpha.9 - 2026-09-03
+
+### Changed
+
+- Focus public setup and discovery docs on Claude Code and Codex CLI.
+- Add compact completion receipts and a deduplicated Codex status relay;
+  no matching Spec reports presence without claiming verification.
+- Pin the DSH adapter to Miko alpha.11.
+
 ### Fixed
 
+- Make the Windows Codex live fixture use a quote-free Hook command and explicit
+  per-invocation trust for its generated project. The fixed recovery case passed.
+- Build workspace entry points before running release checks in a clean checkout.
 - Make every Miko and DSH alpha publish synchronize both npm `alpha` and
   `latest` tags to the package version, then verify the result against the
   registry. This closes the path that left default installs several patches

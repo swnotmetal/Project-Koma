@@ -1,194 +1,71 @@
-# Koma: Architecture Flow Maps
+# Koma architecture
 
-## Component 1: Koma Gate (semantic request filter)
+Current source layout, reviewed 2026-09-03. Koma has four main packages and three
+separate adapters. The packages are not one automatically connected pipeline.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        KOMA GATE FLOW                                        │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌──────────┐     ┌──────────────────┐     ┌────────────────────────────┐  │
-│  │  Client  │────▶│  Koma Scout      │────▶│  Koma Gate                │  │
-│  │  (Voice/ │     │  (Rate Limit +   │     │  ┌──────────────────────┐  │  │
-│  │   Text)  │     │   Geo Allowlist) │     │  │  Semantic Classifier │  │  │
-│  └──────────┘     └──────────────────┘     │  │  (Lightweight LLM)   │  │  │
-│                                             │  │  ──────────────────  │  │  │
-│                                             │  │  Input: User Query   │  │  │
-│                                             │  │  Output: JSON        │  │  │
-│                                             │  │  {"in_scope": bool}  │  │  │
-│                                             │  └──────────┬───────────┘  │  │
-│                                             └─────────────┼──────────────┘  │
-│                                                           │                 │
-│                                    ┌──────────────────────┼──────────────┐  │
-│                                    ▼                      ▼              ▼  │
-│                           ┌───────────────┐       ┌───────────────┐ ┌────────┐
-│                           │  IN_SCOPE     │       │  OUT_OF_SCOPE │ │ ERROR  │
-│                           │  (true)       │       │  (false)      │ │ FALLBACK│
-│                           └───────┬───────┘       └───────┬───────┘ └────┬───┘
-│                                   │                       │             │
-│                                   ▼                       ▼             ▼
-│                          ┌─────────────────┐    ┌─────────────────┐ ┌──────────┐
-│                          │  Route to Core  │    │  Return 400/    │ │ Fail-Open│
-│                          │  Business Logic │    │  Friendly Msg   │ │ (Allow)  │
-│                          │  (RAG, Tools,   │    │  "Out of scope" │ │          │
-│                          │   Generation)   │    │  policy response │ │          │
-│                          └─────────────────┘    └─────────────────┘ └──────────┘
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+## Packages and dependencies
 
-KEY DESIGN PRINCIPLES:
-├── Pre-Filter: Rate Limit + Geo Allowlist (cheap, fast)
-├── Semantic Gate: Single LLM call with strict JSON output
-├── Few-Shot Prompting: up to 10 examples covering edge cases
-├── Fail-Open: Classifier failure → allow request (availability > security)
-├── Token Budget: ~500 tokens per classification call (design target)
-└── Latency Target: < 500ms p99 (design target, provider-dependent)
-```
+| Package | Responsibility | Koma dependency |
+|---|---|---|
+| [koma-miko](packages/koma-miko/README.md) | Required Skill reads, proposed actions, completion evidence | None |
+| [koma-gate](packages/koma-gate/README.md) | Semantic input classification before application model calls | None |
+| [koma-scout](packages/koma-scout/README.md) | Request limits, audio upload checks, geographic rules | None |
+| [koma-core](packages/koma-core/README.md) | Separate public search metadata from protected content | None |
+| [koma-miko-dsh](packages/koma-miko-dsh/README.md) | Experimental DeepSeek Harness adapter | Exact Miko version plus pinned host peers |
+| [koma-gate-mcp](packages/koma-gate-mcp/README.md) | MCP input-classification tool | Gate |
+| [koma-core-mcp](packages/koma-core-mcp/README.md) | MCP search and retrieval tools | Core |
 
----
+Package manifests define the actual dependency versions. Miko has no MCP server.
 
-## Component 2: Koma Core (dual-store routing)
+## Coding-agent path: Miko
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                        KOMA CORE FLOW                                         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  WRITE PATH (Ingestion Pipeline)                                            │
-│  ─────────────────────────────                                              │
-│                                                                              │
-│  ┌─────────────┐    ┌──────────────────┐    ┌────────────────────────────┐  │
-│  │  Raw Data   │───▶│  Validation &    │───▶│  Dual-Collection Writer    │  │
-│  │  (Source)   │    │  Sanitization    │    │  ┌──────────────────────┐  │  │
-│  └─────────────┘    └──────────────────┘    │  │ DB_INDEX (Searchable)│  │  │
-│                                             │  │  ──────────────────  │  │  │
-│                                             │  │  • searchable fields │  │  │
-│                                             │  │  • display_name      │  │  │
-│                                             │  │  • category/tags     │  │  │
-│                                             │  │  • content_hash      │  │  │
-│                                             │  │  • content_token     │  │  │
-│                                             │  │    (backend only)    │  │  │
-│                                             │  │  • NO sensitive data │  │  │
-│                                             │  └──────────┬───────────┘  │  │
-│                                             │             │              │  │
-│                                             │  ┌──────────▼───────────┐  │  │
-│                                             │  │  DB_CONTENT (Private)│  │  │
-│                                             │  │  ──────────────────  │  │  │
-│                                             │  │  • Full payload      │  │  │
-│                                             │  │  • content_token     │  │  │
-│                                             │  │  • SPL_ID (doc ID)   │  │  │
-│                                             │  │  • access_control    │  │  │
-│                                             │  │  • audit_trail       │  │  │
-│                                             │  └──────────────────────┘  │  │
-│                                             └────────────────────────────┘  │
-│                                                                              │
-│  READ PATH (Query Execution)                                                │
-│  ─────────────────────────                                                  │
-│                                                                              │
-│  ┌──────────┐    ┌──────────────┐    ┌──────────────────┐    ┌──────────┐  │
-│  │  Client  │───▶│  Search API  │───▶│  DB_INDEX Lookup │───▶│  Return  │  │
-│  │  Query   │    │  (Gateway)   │    │  (metadata filters)│   │  Index   │  │
-│  └──────────┘    └──────────────┘    └────────┬─────────┘    └──────────┘  │
-│                                                │                            │
-│                                                ▼                            │
-│                                       ┌──────────────────┐                  │
-│                                       │  Client receives │                  │
-│                                       │  lightweight     │                  │
-│                                       │  safe metadata   │                  │
-│                                       │  (NO token)      │                  │
-│                                       └────────┬─────────┘                  │
-│                                                │                            │
-│                                                ▼                            │
-│                                       ┌──────────────────┐                  │
-│                                       │  Detail API      │                  │
-│                                       │  (Authenticated) │                  │
-│                                       │  ──────────────  │                  │
-│                                       │  Map selection   │                  │
-│                                       │  Derive token    │                  │
-│                                       │  Fetch from      │                  │
-│                                       │  DB_CONTENT      │                  │
-│                                       │  Rate limit      │                  │
-│                                       └──────────────────┘                  │
-│                                                                              │
-│  ANTI-SCRAPING MECHANICS                                                    │
-│  ─────────────────────                                                      │
-│  ✓ Search response: Listable metadata, NO high-value content or token       │
-│  ✓ DB_CONTENT: Document ID = HKDF-derived token (unguessable)               │
-│  ✓ Token mapping: Stored ONLY in backend, never exposed to client           │
-│  ✓ Rate limiting: Per-token, per-IP, per-user tiers                         │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
+    Claude Code / Codex host events
+        -> host adapter normalizes observable reads and tool calls
+        -> Miko checks the project's miko.json Agent Specs
+        -> host continues, pauses, or requests a supported user choice
+        -> observed results update the local ledger and snapshot
+        -> completion checks produce a receipt
 
-TOKEN MAPPING SCHEMA:
-┌─────────────────────────────────────────────────────────────────┐
-│  DB_INDEX Document                                              │
-│  ─────────────────                                              │
-│  {                                                              │
-│    "id": "searchable-slug",          // Human-readable          │
-│    "displayName": "Product Name",    // Safe for public         │
-│    "category": "category-tag",       // Filterable              │
-│    "contentHash": "sha256(...)",     // Integrity verification  │
-│    "contentToken": "hkdf(secret,     // Backend-only reference │
-│                       sourceId)",     // stripped from public   │
-│    "metadata": {...}                 // search results          │
-│  }                                                              │
-│                                                                 │
-│  DB_CONTENT Document                                            │
-│  ────────────────────                                           │
-│  {                                                              │
-│    "id": "contentToken",           // = HKDF(secret, sourceId)  │
-│    "sourceId": "original-source-id", // Traceability            │
-│    "payload": { ... },             // Full high-value content   │
-│    "accessTier": "premium",          // Authorization tier      │
-│    "createdAt": timestamp,           // Audit                   │
-│    "accessCount": 0                  // Rate limiting           │
-│  }                                                              │
-└─────────────────────────────────────────────────────────────────┘
-```
+The verifier lives in packages/koma-miko/src/index.ts. Host adapters use the
+shared host-adapter.ts interface; hook-runtime.ts persists the local state.
+Claude Code and Codex CLI are the active focus. See the
+[current support table](packages/koma-miko/README.md#host-support) for activation
+requirements and the status of other adapters.
 
----
+Miko does not override native permissions. A successful read does not prove
+understanding or compliance, and events the host does not expose are outside
+its evidence. Enforce-mode missing evidence denies the applicable action.
 
-## Combined Defense Architecture
+## Application path: Scout, Gate, Core
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                           PROJECT KOMA: LAYERED DEFENSE                       │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                              │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │ LAYER 1: NETWORK PERIMETER                                            │   │
-│  │ ├─ Rate Limiting (IP + User + Endpoint)                              │   │
-│  │ ├─ Geo Allowlist (Configurable country codes)                        │   │
-│  │ ├─ Audio/Upload Validation (Size, MIME, Duration Heuristic)          │   │
-│  │ └─ Cooldown Enforcement                                               │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                    │                                         │
-│                                    ▼                                         │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │ LAYER 2: SEMANTIC FIREWALL (Koma Gate)                                │   │
-│  │ ├─ Prompt Injection Detection (LLM classifier)                       │   │
-│  │ ├─ Intent Classification (In-Scope vs Out-of-Scope)                  │   │
-│  │ ├─ Domain Scope Enforcement                                           │   │
-│  │ └─ Fail-Open Design (Availability Priority)                          │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                    │                                         │
-│                    ┌───────────────┴───────────────┐                         │
-│                    ▼                               ▼                         │
-│           ┌─────────────────┐             ┌─────────────────┐               │
-│           │ IN_SCOPE: Route │             │ OUT_OF_SCOPE:   │               │
-│           │ to Business     │             │ Reject + Log    │               │
-│           │ Logic           │             │ (400/422)       │               │
-│           └────────┬────────┘             └─────────────────┘               │
-│                    │                                                         │
-│                    ▼                                                         │
-│  ┌──────────────────────────────────────────────────────────────────────┐   │
-│  │ LAYER 3: DATA ACCESS CONTROL (Koma Core)                              │   │
-│  │ ├─ Dual-Collection Architecture (Index + Content)                    │   │
-│  │ ├─ Cryptographic Token Mapping (HKDF-derived)                        │   │
-│  │ ├─ Random-suffix index IDs + token-addressed content                 │   │
-│  │ ├─ Per-Token Rate Limiting                                           │   │
-│  │ └─ Audit Trail + Access Tracking                                     │   │
-│  └──────────────────────────────────────────────────────────────────────┘   │
-│                                                                              │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+A developer can compose these independent packages where needed:
+
+    Incoming request -> Scout's cheap checks -> Gate classification -> application
+    Protected retrieval -> Core search metadata -> backend authorization -> content
+
+Gate calls a configured classifier model. Scout and Core do not make LLM calls.
+Core derives content tokens on the backend; public search results do not expose
+those tokens by default. Failure settings belong to each package and entry point,
+not to Koma as a whole. See [known limitations](SECURITY-HARDENING.md).
+
+## Repository layout
+
+- packages/: package source, host examples, schemas, and package documentation.
+- demo/web/: the deployed browser demo. Cloudflare Worker routes live in src/;
+  public/ contains static assets and the Miko replay fixture. Gate uses a real
+  classifier; Miko is an explicitly labelled simulation.
+- demo/server.js: a separate dependency-free local simulation used by Docker.
+- docs/evals/: dated results and limits; preserve these as evidence.
+- docs/design/: current design, recovery, and roadmap notes.
+- docs/assets/: current Miko replay GIF and poster for sharing.
+- logo/: the root README banner and the Scout/Core diagrams.
+- scripts/: package smoke checks, release-tag checks, and Miko GIF assembly.
+- benchmarks/ and examples/: evaluation inputs and runnable integration examples.
+
+The demo has its own copies of the Koma and Miko marks because deployment uploads
+only demo/web/public/. The Miko package assets also ship with its npm package.
+Those deployment copies serve different consumers.
+
+Maintainer-only handoffs, third-party Skills, local Hook configuration, and
+experiments are ignored. See [AGENTS.md](AGENTS.md) and the
+[release policy](VERSIONING.md).

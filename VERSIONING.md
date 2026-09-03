@@ -1,77 +1,45 @@
-# Versioning Policy
+# Versioning and releases
 
-Koma follows semantic versioning for release management.
+Each published package has its own version. The private root package is not an
+npm release and does not need to match a workspace package. Check each
+package.json and the registry before choosing a new version.
 
-## Version Format
+Use semantic versions for stable packages and explicit prerelease versions for
+Miko's alpha. A docs-only repository or logo change does not need an npm release.
 
-Use `MAJOR.MINOR.PATCH` and git tags in the form `vMAJOR.MINOR.PATCH`.
+## Miko and DSH alpha
 
-## Release Rules
+1. Update the Miko version, the DSH adapter version, its exact koma-miko dependency,
+   and the matching package-lock.json entries together.
+2. Update the relevant package README and [changelog](CHANGELOG.md).
+3. Build before checking: tests and dependent packages resolve workspace dist files.
 
-- `PATCH`: bug fixes, doc fixes, and non-breaking maintenance changes.
-- `MINOR`: backward-compatible feature additions.
-- `MAJOR`: breaking API changes or package structure changes that require user action.
+    npm run build
+    npm run typecheck
+    npm test
+    npm run smoke:npm
 
-## Repository Policy
+4. Run the fixed Codex recovery fixture for a Miko release, using the installed
+   standalone CLI via MIKO_CODEX_BIN. Additional paid host tests depend on the
+   affected behavior and available budget. See the
+   [host evaluation](docs/evals/miko-host-adapters-alpha.md).
+5. Commit, check remote changes, push, and verify CI. Manually dispatch
+   [Publish Miko alpha](.github/workflows/publish-miko.yml) on the intended branch.
 
-- Keep the root `package.json` version aligned with the latest released workspace state.
-- Keep the three package versions aligned unless one package is intentionally released independently later.
-- Update the relevant README files when exported names or import paths change.
+The workflow publishes only Miko and DSH, in that order. Their postpublish script
+synchronizes both alpha and latest to the published version and reads them back.
+A failed tag check means the release is incomplete; do not skip lifecycle scripts.
+Confirm the exact DSH dependency and both tags independently after publication.
 
-## Release Flow
+## Other packages
 
-### 1. Decide the bump
+Release only the packages affected. Do not use the root release:* scripts as a
+routine Miko bump: they target every workspace package.
 
-```
-npm run release:patch   # 0.1.0 → 0.1.1  (bug fixes, docs)
-npm run release:minor   # 0.1.0 → 0.2.0  (new features, backward-compatible)
-npm run release:major   # 0.1.0 → 1.0.0  (breaking changes)
-```
+The older [Publish to npm workflow](.github/workflows/publish.yml) publishes Gate,
+Scout, and Core together on a published GitHub Release or manual dispatch. It is
+not triggered by a plain tag push. Use it only when all three versions are ready;
+MCP packages are not included. Review independent release changes before publishing.
 
-This updates all three package versions and the root version in lockstep.
-
-### 2. Update the changelog
-
-Add entries to [CHANGELOG.md](CHANGELOG.md) under the new version heading.
-
-### 3. Verify
-
-```bash
-npm run typecheck
-npm run build
-npm run smoke:npm
-```
-
-### 4. Commit and tag
-
-```bash
-git add -A
-git commit -m "Release v0.2.0"
-git tag v0.2.0
-git push origin main --tags
-```
-
-### 5. Publish to npm
-
-The tag push triggers [Publish to npm](.github/workflows/publish.yml) via GitHub Actions.
-Or publish manually:
-
-```bash
-cd packages/koma-gate  && npm publish --access public
-cd packages/koma-scout && npm publish --access public
-cd packages/koma-core  && npm publish --access public
-```
-
-### Quick-reference cheat sheet
-
-| What changed | Command | Tag |
-|---|---|---|
-| Docs, bug fixes | `release:patch` | `v0.1.1` |
-| New feature | `release:minor` | `v0.2.0` |
-| Break old API | `release:major` | `v1.0.0` |
-
-## Language Policy
-
-- `README.md` is the default English entry.
-- `README.zh-CN.md` is the Chinese entry.
-- If both are updated, keep the structure and headings aligned.
+Keep English and Chinese package documentation aligned when public behavior or
+setup changes. Published npm versions are immutable; corrections need a new version.
