@@ -169,6 +169,8 @@ curl http://localhost:8080/self-test
 
 [在网页 demo 中试用 Gate →](https://koma-demo.swbuilds.workers.dev)
 
+<img src="show-koma.gif" alt="Koma Gate 实时拦截提示注入" width="100%" />
+
 **`koma-scout`** — 外围防护。限流、音频上传校验、地理白名单。在昂贵的 AI 调用之前做便宜检查。[README →](./packages/koma-scout/README.md)
 
 <img src="logo/scout-diagram.svg" alt="Koma Scout 外围检查" width="480" />

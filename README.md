@@ -192,6 +192,8 @@ curl http://localhost:8080/self-test
 
 [Try Gate in the browser demo →](https://koma-demo.swbuilds.workers.dev)
 
+<img src="show-koma.gif" alt="Koma Gate blocking a prompt injection in real time" width="100%" />
+
 **`koma-scout`** — Perimeter protection. Rate limiting, audio upload validation, geo allowlisting. Cheap checks before expensive AI work. [README →](./packages/koma-scout/README.md)
 
 <img src="logo/scout-diagram.svg" alt="Koma Scout perimeter checks" width="480" />
