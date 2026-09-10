@@ -565,10 +565,16 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
   function missingPreparation(
     task: TaskState,
     matched: MikoContract[],
-  ): { items: string[]; contracts: MikoContract[]; assertedSkills: boolean } {
+  ): {
+    items: string[];
+    contracts: MikoContract[];
+    assertedSkills: boolean;
+    staleAfterCompaction: boolean;
+  } {
     const missing: string[] = [];
     const missingContracts = new Set<MikoContract>();
     let assertedSkills = false;
+    let staleAfterCompaction = false;
     for (const contract of matched) {
       for (const name of contract.requires?.skills ?? []) {
         const skill = normalizeSkillRequirement(name);
@@ -578,6 +584,7 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
           missing.push(`${contract.id}:${requirementKey(requirement)}`);
           missingContracts.add(contract);
           assertedSkills ||= hasAssertedEvidence(task, requirement, minimumEpoch);
+          staleAfterCompaction ||= minimumEpoch > 0 && hasEvidence(task, requirement, 0);
         }
       }
       for (const path of contract.requires?.references ?? []) {
@@ -588,7 +595,7 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
         }
       }
     }
-    return { items: missing, contracts: [...missingContracts], assertedSkills };
+    return { items: missing, contracts: [...missingContracts], assertedSkills, staleAfterCompaction };
   }
 
   function lookup(
@@ -639,7 +646,9 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
         missing.assertedSkills ? 'SKILL_DECLARED_BUT_NOT_OBSERVED' : 'PREPARATION_EVIDENCE_MISSING',
         missing.assertedSkills
           ? 'The agent declared a required skill, but the host did not observe it being loaded.'
-          : 'Required preparation evidence is missing.',
+          : missing.staleAfterCompaction
+            ? 'Required Skill evidence was observed before context compaction and must be loaded again.'
+            : 'Required preparation evidence is missing.',
         contractIds,
         missing.items,
         'PREPARE',

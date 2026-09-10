@@ -91,7 +91,9 @@ describe('Koma Miko alpha', () => {
 
     expect(miko.verifyPreparation('compact-task').decision).toBe('ALLOW');
     expect(miko.advanceContext('compact-task', 'compaction').epoch).toBe(1);
-    expect(miko.verifyPreparation('compact-task').decision).toBe('DENY');
+    const stale = miko.verifyPreparation('compact-task');
+    expect(stale.decision).toBe('DENY');
+    expect(stale.reason).toContain('observed before context compaction');
 
     miko.record({
       taskId: 'compact-task', type: 'skill_loaded', name: 'product-design', source: 'observed',
