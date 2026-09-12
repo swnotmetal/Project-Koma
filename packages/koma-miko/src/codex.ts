@@ -70,6 +70,8 @@ const CODEX_PROFILE: HostToolProfile = {
   unknownRisk: 'high',
 };
 
+const MAX_SHELL_READ_COMMAND_LENGTH = 4096;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -92,7 +94,8 @@ export function pathsFromCodexPatch(command: unknown, cwd: string): string[] {
 
 /** Recognize a deliberately tiny single-file read subset without retaining contents. */
 export function readPathFromCodexShell(command: unknown, cwd: string): string | undefined {
-  if (!nonEmptyString(command) || /[;&|><`$()\r\n]/.test(command)) return undefined;
+  if (!nonEmptyString(command) || command.length > MAX_SHELL_READ_COMMAND_LENGTH ||
+      /[;&|><`$()\r\n]/.test(command)) return undefined;
   const candidate = command.trim();
   const powerShell = candidate.match(
     /^Get-Content(?:\s+-Raw)?(?:\s+-LiteralPath)?\s+(?:(['"])([^'"]+)\1|([^\s'"]+))$/i,

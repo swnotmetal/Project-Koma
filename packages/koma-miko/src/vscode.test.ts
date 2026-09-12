@@ -90,6 +90,14 @@ describe('VS Code Copilot adapter', () => {
       "cat '.github/skills/product-design/SKILL.md' && npm test",
       base.cwd,
     )).toBeUndefined();
+    expect(skillReadPathFromVSCodeTerminal(
+      'cat $(Get-Location)/SKILL.md',
+      base.cwd,
+    )).toBeUndefined();
+    expect(skillReadPathFromVSCodeTerminal(
+      `cat ${' '.repeat(5000)}\"`,
+      base.cwd,
+    )).toBeUndefined();
   });
 
   it('denies an edit, permits the exact Skill read, then allows the retry', () => {

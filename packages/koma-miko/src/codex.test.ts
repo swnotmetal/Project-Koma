@@ -118,6 +118,10 @@ describe('Codex adapter', () => {
       'Get-Content -Raw docs/design-system.md; Get-Content -Raw $(Get-Location)',
       'D:\\portfolio',
     )).toBeUndefined();
+    expect(readPathFromCodexShell(
+      `cat ${' '.repeat(5000)}\"`,
+      'D:\\portfolio',
+    )).toBeUndefined();
     expect(skillReadPathFromCodexShell(
       "Get-Content -Raw -LiteralPath 'docs/design-system.md'",
       'D:\\portfolio',

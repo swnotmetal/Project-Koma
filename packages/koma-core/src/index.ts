@@ -11,6 +11,8 @@
 
 import { createHash, randomBytes, hkdfSync } from 'crypto';
 
+const MAX_SLUG_SOURCE_LENGTH = 256;
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -543,13 +545,15 @@ export class DualCollectionWriter {
   }
 
   private generateIndexId(displayName: string, category: string): string {
-    const slug = displayName
+    const slug = displayName.slice(0, MAX_SLUG_SOURCE_LENGTH)
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+/, '')
       .replace(/-+$/, '')
       .substring(0, 80);
-    const catSlug = category.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const catSlug = category.slice(0, MAX_SLUG_SOURCE_LENGTH)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-');
     return `${slug}-${catSlug}-${randomBytes(4).toString('hex')}`;
   }
 

@@ -61,6 +61,8 @@ export type VSCodeHookInput =
   | VSCodeStopInput
   | VSCodeHookBase;
 
+const MAX_SHELL_READ_COMMAND_LENGTH = 4096;
+
 const VSCODE_PROFILE: HostToolProfile = {
   skillTools: [],
   readTools: ['read_file', 'readFile'],
@@ -116,7 +118,8 @@ export function skillReadPathFromVSCodeTerminal(
   command: unknown,
   cwd: string,
 ): string | undefined {
-  if (!nonEmptyString(command) || /[;&|><`\r\n]/.test(command)) return undefined;
+  if (!nonEmptyString(command) || command.length > MAX_SHELL_READ_COMMAND_LENGTH ||
+      /[;&|><`$()\r\n]/.test(command)) return undefined;
   const candidate = command.trim();
   const powerShell = candidate.match(
     /^Get-Content(?:\s+-Raw)?\s+-LiteralPath\s+(['"])([^'"]+[\\/]SKILL\.md)\1$/i,

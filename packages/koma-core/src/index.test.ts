@@ -286,6 +286,18 @@ describe('DualCollectionWriter', () => {
 
     expect(r1.indexId).not.toBe(r2.indexId);
   });
+
+  it('should bound uncontrolled index ID source text', async () => {
+    const result = await writer.ingest({
+      sourceId: 'long-id',
+      displayName: 'a'.repeat(10_000),
+      category: 'b'.repeat(10_000),
+      tags: [],
+      payload: {},
+    });
+
+    expect(result.indexId.length).toBeLessThan(400);
+  });
 });
 
 // ---------------------------------------------------------------------------
