@@ -558,7 +558,10 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
       const actionMatch = action !== undefined && contract.appliesWhen.action !== undefined &&
         matchesActionSelector(action, contract.appliesWhen.action);
       if (actionMatch) task.activeContractIds.add(contract.id);
-      return tagMatch || explicitMatch || actionMatch;
+      // An action selector is a boundary, not a task-wide mode switch. Once an
+      // action-scoped contract activates, keep it for completion checks, but do
+      // not apply its preparation or policy to unrelated tool calls.
+      return tagMatch || actionMatch || (action === undefined && explicitMatch);
     });
   }
 
@@ -635,11 +638,9 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
     return { task, matched };
   }
 
-  function verifyPreparation(taskId: string): VerificationResult {
-    const found = lookup(taskId);
-    if (found.error) return found.error;
-    const missing = missingPreparation(found.task!, found.matched);
-    const contractIds = found.matched.map((contract) => contract.id);
+  function preparationResult(task: TaskState, matched: MikoContract[]): VerificationResult {
+    const missing = missingPreparation(task, matched);
+    const contractIds = matched.map((contract) => contract.id);
     if (missing.items.length > 0) {
       return result(
         missingDecision(missing.contracts),
@@ -662,6 +663,12 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
       undefined,
       'PREPARE',
     );
+  }
+
+  function verifyPreparation(taskId: string): VerificationResult {
+    const found = lookup(taskId);
+    if (found.error) return found.error;
+    return preparationResult(found.task!, found.matched);
   }
 
   return {
@@ -770,7 +777,7 @@ export function createMiko(config: { contracts: MikoContract[] }): Miko {
       }
       const found = lookup(input.taskId, input);
       if (found.error) return found.error;
-      const preparation = verifyPreparation(input.taskId);
+      const preparation = preparationResult(found.task!, found.matched);
       if (preparation.decision !== 'ALLOW') return preparation;
       const contractIds = found.matched.map((contract) => contract.id);
 

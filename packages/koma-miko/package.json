@@ -1,6 +1,6 @@
 {
   "name": "koma-miko",
-  "version": "0.1.0-alpha.11",
+  "version": "0.1.0-alpha.12",
   "description": "Local Skill-read and completion-evidence checks for Claude Code and Codex CLI workflows.",
   "author": "Shuang Wu",
   "type": "module",

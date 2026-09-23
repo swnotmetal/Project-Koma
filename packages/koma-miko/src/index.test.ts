@@ -168,6 +168,27 @@ describe('Koma Miko alpha', () => {
     expect(miko.getActiveContractIds('path-task')).toEqual(['ui-path-contract']);
   });
 
+  it('keeps an activated action contract from blocking unrelated reads', () => {
+    const pathContract: MikoContract = {
+      id: 'order-write-and-review',
+      appliesWhen: { action: { tools: ['erp_create_order'] } },
+      requires: { skills: ['order-review'] },
+      mode: 'enforce',
+    };
+    const miko = createMiko({ contracts: [pathContract] });
+    miko.startTask({ sessionId: 'order-session', taskId: 'order-task', tags: [] });
+
+    expect(miko.verifyAction({
+      taskId: 'order-task', tool: 'erp_create_order', risk: 'high',
+    }).reasonCode).toBe('PREPARATION_EVIDENCE_MISSING');
+    expect(miko.verifyAction({
+      taskId: 'order-task', tool: 'readFeedback', risk: 'low',
+    }).reasonCode).toBe('NO_APPLICABLE_CONTRACT');
+    expect(miko.verifyAction({
+      taskId: 'order-task', tool: 'erp_create_order', risk: 'high',
+    }).reasonCode).toBe('PREPARATION_EVIDENCE_MISSING');
+  });
+
   it('denies a forbidden tool even after preparation succeeds', () => {
     const miko = startUiTask();
     recordPreparation(miko);

@@ -215,8 +215,11 @@ export function verifyBeforeHostTool(
     risk: riskForHostTool(call.tool, profile),
     arguments: normalizedHostArguments(call.arguments, call.cwd, names(profile)),
   });
+  const preparation = verification.reasonCode === 'NO_APPLICABLE_CONTRACT'
+    ? miko.verifyPreparation(taskId)
+    : verification;
   return {
     verification,
-    remediation: isRequiredPreparationTool(call, verification, profile),
+    remediation: isRequiredPreparationTool(call, preparation, profile),
   };
 }

@@ -144,6 +144,10 @@ The developer-facing project file is `miko.json`:
 }
 ```
 
+An action-scoped Spec checks only tool calls that match its `tools` and path
+selector. After activation, Miko keeps the Spec for completion checks without
+capturing unrelated reads or queries. Task-tagged Specs remain task-wide.
+
 The TypeScript API consumes the same spec objects directly:
 
 ```ts

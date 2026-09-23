@@ -98,6 +98,10 @@ describe('Codex adapter', () => {
       'Get-Content -Raw docs/design-system.md',
       'D:\\portfolio',
     )).toBe('docs/design-system.md');
+    expect(readPathFromCodexShell(
+      "Get-Content -LiteralPath `\n  'D:\\portfolio\\.agents\\skills\\product-design\\SKILL.md' -Raw",
+      'D:\\portfolio',
+    )).toBe('.agents/skills/product-design/SKILL.md');
     expect(skillReadPathFromCodexShell(
       'Get-Content -Raw .agents/skills/product-design/SKILL.md',
       'D:\\portfolio',
@@ -137,7 +141,7 @@ describe('Codex adapter', () => {
       hook_event_name: 'PreToolUse' as const,
       tool_name: 'exec_command',
       tool_input: {
-        cmd: "Get-Content -Raw -LiteralPath '.agents/skills/product-design/SKILL.md'",
+        cmd: "Get-Content -LiteralPath `\n  'D:\\portfolio\\.agents\\skills\\product-design\\SKILL.md' -Raw",
       },
     };
     expect(handleCodexHookEvent(miko, 'codex-session', shellInput).output).toBeUndefined();
@@ -148,6 +152,30 @@ describe('Codex adapter', () => {
     });
     expect(recovered.output).toMatchObject({ systemMessage: expect.stringContaining('Miko recovered') });
     expect(handleCodexHookEvent(miko, 'codex-session', patchInput).output).toBeUndefined();
+  });
+
+  it('does not let an active write contract capture unrelated reads', () => {
+    const miko = start();
+    expect(handleCodexHookEvent(miko, 'codex-session', patchInput).verification?.decision).toBe('DENY');
+
+    const sourceRead = {
+      session_id: 'codex-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PreToolUse' as const,
+      tool_name: 'read_file',
+      tool_input: { path: 'src/server/orders.ts' },
+    };
+    expect(handleCodexHookEvent(miko, 'codex-session', sourceRead).output).toBeUndefined();
+
+    const feedbackRead = {
+      session_id: 'codex-session',
+      cwd: 'D:\\portfolio',
+      hook_event_name: 'PreToolUse' as const,
+      tool_name: 'mcp__langsmith__readFeedback',
+      tool_input: { runId: 'run-1' },
+    };
+    expect(handleCodexHookEvent(miko, 'codex-session', feedbackRead).output).toBeUndefined();
+    expect(miko.getActiveContractIds('codex-session')).toEqual(['codex-ui-v1']);
   });
 
   it('treats an all-read PowerShell batch as recovery instead of a shell action', () => {

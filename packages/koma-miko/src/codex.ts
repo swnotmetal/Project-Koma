@@ -94,14 +94,29 @@ export function pathsFromCodexPatch(command: unknown, cwd: string): string[] {
 
 /** Recognize a deliberately tiny single-file read subset without retaining contents. */
 export function readPathFromCodexShell(command: unknown, cwd: string): string | undefined {
-  if (!nonEmptyString(command) || command.length > MAX_SHELL_READ_COMMAND_LENGTH ||
-      /[;&|><`$()\r\n]/.test(command)) return undefined;
-  const candidate = command.trim();
-  const powerShell = candidate.match(
-    /^Get-Content(?:\s+-Raw)?(?:\s+-LiteralPath)?\s+(?:(['"])([^'"]+)\1|([^\s'"]+))$/i,
-  );
+  if (!nonEmptyString(command) || command.length > MAX_SHELL_READ_COMMAND_LENGTH) return undefined;
+  const candidate = command.replace(/`\r?\n\s*/g, ' ').trim();
+  if (/[;&|><`$()\r\n]/.test(candidate)) return undefined;
   const posix = candidate.match(/^cat\s+(['"]?)([^'"]+)\1$/i);
-  const pathname = powerShell?.[2] ?? powerShell?.[3] ?? posix?.[2];
+  if (posix?.[2]) return toProjectRelativePath(posix[2], cwd);
+
+  const tokens = candidate.match(/"[^"]*"|'[^']*'|\S+/g);
+  if (!tokens || tokens[0]?.toLowerCase() !== 'get-content') return undefined;
+  let pathname: string | undefined;
+  for (let index = 1; index < tokens.length; index += 1) {
+    const token = tokens[index]!;
+    const option = token.toLowerCase();
+    if (option === '-raw') continue;
+    if (option === '-literalpath' || option === '-path') {
+      const value = tokens[++index];
+      if (!value || value.startsWith('-') || pathname !== undefined) return undefined;
+      pathname = value;
+      continue;
+    }
+    if (token.startsWith('-') || pathname !== undefined) return undefined;
+    pathname = token;
+  }
+  if (pathname && /^(['"]).*\1$/.test(pathname)) pathname = pathname.slice(1, -1);
   return pathname ? toProjectRelativePath(pathname, cwd) : undefined;
 }
 
