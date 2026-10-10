@@ -2,15 +2,20 @@
 
 ### Miko：为 Claude Code 和 Codex 检查必需的 Skill 读取
 
-总要提醒编程 agent 先读必需的 Skill，再修改文件？**Miko** 在受保护的编辑前
-检查可观察的 Skill 读取证据。缺少证据时，它暂停动作，告诉 agent 要补读什么，
-再让它重试。本地运行，验证器不调用 LLM，免费开源。
+> **你的 coding agent 说它读了 Skill，但它真的读了吗？**
+>
+> Miko 在 Hook 层拦截编辑动作，如果 agent 没有先读取你指定的 Skill，就拒绝这次编辑，并给出一次可见的重试路径。本地运行，零依赖，验证器不调用 LLM，免费开源。
 
-当前主攻 **Claude Code 和 Codex CLI**。Miko 属于 Koma；独立的 **Gate、Scout
-和 Core** 分别处理 AI 应用输入、请求限制和检索。使用 Miko 不需要安装其他包。
+#### 谁需要这个？
+- 你在用 **Claude Code** / **Codex CLI**，并且写了 Skill 但不确定 agent 是否遵守
+- 你希望编辑前有**硬性检查**，而不是靠 prompt 提醒
+- 你想让 Skill 的读取行为变成**可观测、可拒绝、可恢复的**
+
+#### 与其他工具的区别
+与静态 Skill 校验或安全扫描工具不同，Miko 工作在**运行时 Hook 层**，拦截的是 agent 实际的编辑工具调用，而不是对 Skill 文件进行静态扫描。
 
 ```bash
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host claude
 ```
 
@@ -63,8 +68,8 @@ Claude CLI 的 guided 模式遇到真正的范围例外时，会显示一次明�
 只允许完全相同的下一次重试，或保留当前边界。
 
 ```bash
-npx --yes koma-miko@alpha demo       # 确定性回放；无需 API key
-npx --yes koma-miko@alpha probe --host claude  # 隔离式 adapter 检查；不调用模型
+npx --yes koma-miko demo             # 确定性回放；无需 API key
+npx --yes koma-miko probe --host claude  # 隔离式 adapter 检查；不调用模型
 npx koma-miko init --host claude     # 本地安装后自动配置
 ```
 
@@ -88,6 +93,15 @@ Claude Code 是主要 alpha 使用路径；Codex CLI 已有窄范围恢复验证
 **为什么不直接写一个 Hook？** 单个固定检查用原生 Hook 就够了。Miko 把项目
 Spec、读取记录、压缩后的重载要求、恢复提示和完成证据放在一起维护。两者都
 不能证明模型理解了指令。参见 [什么时候适合使用 Miko](./packages/koma-miko/README.zh-CN.md#when-to-use-miko)。
+
+**零依赖设计**：纯 TypeScript，0 个 npm 运行时依赖。你得到的是一个轻量级 Hook 层，可以在不引入庞大框架的前提下拦住未经验证的编辑。
+
+**核心技术文档与评估摘要**：
+- **[Recovery Playbook（恢复剧本）](./docs/design/miko-recovery-playbook.md)**：当 agent 被拒绝后，如何提供结构化、可观测的重试路径，避免 agent 进入死锁循环。
+- **[Claude Haiku 实测评估](./docs/evals/miko-claude-haiku-alpha.md)**：在 Claude Haiku 等模型上的实测评估结果，覆盖多个真实 Skill 场景与恢复拦截。
+
+**反馈与交流**：
+有问题或想提出新的需求方向？欢迎提交 [Issue](https://github.com/swnotmetal/Project-Koma/issues) 或开启 [Discussion](https://github.com/swnotmetal/Project-Koma/discussions)，我会认真查看并根据实际反馈持续改进。
 
 ---
 

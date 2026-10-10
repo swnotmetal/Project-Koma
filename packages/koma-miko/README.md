@@ -4,12 +4,19 @@
   <img src="./assets/miko-lockup.png" alt="Koma Miko" width="420" />
 </p>
 
-Local checks for required Skill reads in **Claude Code and Codex CLI**.
+> **Your coding agent says it read the Skill, but did it really?**
+>
+> Miko intercepts edit actions at the Hook layer. If your agent hasn't read the required Skill first, Miko rejects the edit and provides a clear, observable recovery path. You define requirements in a project-owned `miko.json` **Agent Spec**. Miko runs locally, is zero-dependency, free, open source (MIT), and makes no LLM calls.
 
-When an agent tries to edit a protected file before reading a required Skill,
-Miko pauses the action, names the missing evidence, and gives the agent a path
-to retry. You define the requirements in a project-owned `miko.json`
-**Agent Spec**. Miko runs locally, is MIT licensed, and makes no LLM calls.
+### Who needs this?
+
+- You use **Claude Code** or **Codex CLI**, wrote project Skills/instructions, but aren't sure if the agent follows them.
+- You want a **hard check** before file edits instead of relying solely on prompt instructions.
+- You want Skill loading and checks to be **observable, rejectable, and recoverable**.
+
+### How Miko differs
+
+Unlike static Skill linters or security scanners, Miko works at the **runtime Hook layer**—intercepting the agent's actual file edit tool calls in real time rather than statically analyzing Skill files.
 
 Miko checks observable evidence at three points:
 
@@ -21,14 +28,13 @@ Miko checks observable evidence at three points:
 
 Use the setup for your host from the project root. Miko does not install Skills;
 the generated `miko.json` must name Skills and paths that exist in your project.
-The public alpha API may change before the first stable release.
 The starter uses `frontend-design` and `src`; replace them if your project uses
 different names, or pass `--skill <name> --path <prefix>` to `init`.
 
 ### Claude Code
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host claude
 ```
 
@@ -49,7 +55,7 @@ The checks require the host to enable and emit the configured Hook events.
 ### Codex CLI (Technical Preview)
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host codex --enforce
 ```
 
@@ -66,7 +72,7 @@ supported alpha path. Codex uses `enforce`; `review` degrades to a recoverable
 pause/deny rather than a native approval choice.
 
 Want to inspect the behavior first? The [browser replay](https://koma-demo.swbuilds.workers.dev)
-needs no installation. `npx --yes koma-miko@alpha demo` runs a deterministic
+needs no installation. `npx --yes koma-miko demo` runs a deterministic
 terminal replay without an API key. Both are demonstrations, not live host tests.
 
 <a id="host-support"></a>
@@ -317,7 +323,7 @@ To try the alpha in a Claude Code project, install it and let the initializer
 wire the local files for you:
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host claude
 ```
 
@@ -348,7 +354,7 @@ Codex Hooks are reviewed by exact command hash and are skipped until the user
 trusts them. The current reliable first-run path is:
 
 ```text
-1. Run: npm install -D koma-miko@alpha
+1. Run: npm install -D koma-miko
 2. Run: npx koma-miko init --host codex --enforce
 3. Start Codex CLI in that project and run: /hooks
 4. Trust the five Miko Hooks, then send one small turn
@@ -474,7 +480,7 @@ The initializer still accepts `--host gemini` and `--host vscode`
 For a small Copilot Agent-mode trial, point Miko at one existing project Skill:
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host vscode --skill product-design --path src --enforce
 npx koma-miko doctor --host vscode --strict
 ```
@@ -521,10 +527,10 @@ terminal command. See [`examples/codex`](./examples/codex),
 
 ## Automated replay
 
-Try the published alpha without cloning the repository:
+Try the published package without cloning the repository:
 
 ```sh
-npx koma-miko@alpha demo
+npx koma-miko demo
 ```
 
 This runs the ten deterministic Agent Spec profiles with no API key or project
@@ -541,7 +547,22 @@ hook processes and verifies an audited `DENY → observed Skill → ALLOW` plus
 ledger privacy.
 `npm run eval:codex-hook -w koma-miko`, `npm run eval:gemini-hook -w koma-miko`,
 and `npm run eval:vscode-hook -w koma-miko` run the same conformance flow
-through independent Hook processes without an API key. The VS Code run covers
+through independent Hook processes without an API key.
+
+## Zero Dependencies
+
+**Zero dependencies, pure TypeScript.** You don't need to pull in a massive security framework or complex infrastructure—just a lightweight, robust local Hook that stops unverified agent edits in their tracks.
+
+## Technical Depth & Evals
+
+- **[Recovery Playbook](../../docs/design/miko-recovery-playbook.md)**: Details how Miko provides a structured, observable recovery path when an agent is paused or denied, preventing agent deadlocks.
+- **[Claude Haiku Evals](../../docs/evals/miko-claude-haiku-alpha.md)**: Empirical evaluation results on Claude Haiku across multiple Skill scenarios, proving real-world recovery and enforcement capabilities.
+- **[Host Adapters Evals](../../docs/evals/miko-host-adapters-alpha.md)**: Detailed status and verified limits across Claude Code, Codex CLI, Gemini, and VS Code Copilot.
+
+## Feedback & Discussions
+
+Have questions, encountered an issue, or want a specific direction built?
+Open an [Issue](https://github.com/swnotmetal/Project-Koma/issues) or start a [Discussion](https://github.com/swnotmetal/Project-Koma/discussions)—all feedback is read and directly shapes Miko's development.
 the documented Hook schema, not a live editor session. The Codex live runner
 (`npm run eval:codex-live -w koma-miko`) uses an existing Codex CLI login
 (`MIKO_CODEX_BIN`) and no OpenAI API key. The Gemini live runner

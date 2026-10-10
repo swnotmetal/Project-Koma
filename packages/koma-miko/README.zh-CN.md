@@ -4,11 +4,19 @@
   <img src="./assets/miko-lockup.png" alt="Koma Miko" width="420" />
 </p>
 
-为 **Claude Code 和 Codex CLI** 检查必需的 Skill 读取。
+> **你的 coding agent 说它读了 Skill，但它真的读了吗？**
+>
+> Miko 在 Hook 层拦截编辑动作，如果 agent 没有先读取你指定的 Skill，就拒绝这次编辑，并给出一次可见的重试路径。项目要求写在开发者维护的 `miko.json` **Agent Spec** 中。Miko 本地运行，零依赖，MIT 开源，验证器不调用 LLM。
 
-Agent 未读必需 Skill 就尝试修改受保护文件时，Miko 会暂停动作、指出缺失证据，
-让 agent 补读后重试。项目要求写在开发者维护的 `miko.json` **Agent Spec** 中。
-Miko 本地运行，MIT 开源，验证器不调用 LLM。
+### 谁需要这个？
+
+- 你在用 **Claude Code** / **Codex CLI**，并且写了 Skill 但不确定 agent 是否遵守
+- 你希望编辑前有**硬性检查**，而不是靠 prompt 提醒
+- 你想让 Skill 的读取行为变成**可观测、可拒绝、可恢复的**
+
+### 与其他工具的区别
+
+与静态 Skill 校验或安全扫描工具不同，Miko 工作在**运行时 Hook 层**，拦截的是 agent 实际的编辑工具调用，而不是对 Skill 文件进行静态扫描。
 
 Miko 在三个可观察节点检查证据：
 
@@ -19,14 +27,14 @@ Miko 在三个可观察节点检查证据：
 ## 快速开始
 
 在项目根目录按你使用的宿主配置。Miko 不会安装 Skill；生成的 `miko.json`
-需要填写项目已有的 Skill 和路径。公开 alpha 的 API 在首次稳定版之前仍可能调整。
+需要填写项目已有的 Skill 和路径。
 初始示例使用 `frontend-design` 和 `src`；请按项目实际名称修改，或在 `init`
 时传入 `--skill <name> --path <prefix>`。
 
 ### Claude Code
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host claude
 ```
 
@@ -46,7 +54,7 @@ Hook 事件。
 ### Codex CLI（Technical Preview）
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host codex --enforce
 ```
 
@@ -62,7 +70,7 @@ npx koma-miko doctor --host codex --strict
 `review` 会降级为可恢复的暂停/拒绝，而不是原生审批选择。
 
 想先看效果？[浏览器回放](https://koma-demo.swbuilds.workers.dev) 无需安装；
-`npx --yes koma-miko@alpha demo` 可运行无需 API key 的确定性终端回放。
+`npx --yes koma-miko demo` 可运行无需 API key 的确定性终端回放。
 两者都是演示，不代表真实宿主已启用。
 
 <a id="host-support"></a>
@@ -276,7 +284,7 @@ fingerprint 与有界的 review 元数据。Claude Code 2.1.257 / Haiku 4.5 真�
 在 Claude Code 项目中试用 alpha 时，安装后让初始化命令自动完成配置：
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host claude
 ```
 
@@ -302,7 +310,7 @@ npx koma-miko init --host claude
 精确 hash 接受审阅；用户信任前，Codex 会跳过它们。目前可靠的首次流程是：
 
 ```text
-1. 运行：npm install -D koma-miko@alpha
+1. 运行：npm install -D koma-miko
 2. 运行：npx koma-miko init --host codex --enforce
 3. 在该项目启动 Codex CLI，运行：/hooks
 4. 信任 5 个 Miko Hook，然后发送一个很小的任务
@@ -410,7 +418,7 @@ Codex 适配器把宿主事件交给 Miko 的共享验证器：
 可以让 Copilot Agent mode 针对一个已有项目 Skill 做小范围测试：
 
 ```sh
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host vscode --skill product-design --path src --enforce
 npx koma-miko doctor --host vscode --strict
 ```
@@ -449,10 +457,10 @@ VS Code Agent Hooks 目前仍是 Preview，且组织策略可以禁用。VS Code
 
 ## 自动化回放
 
-无需克隆仓库即可试用已发布的 alpha：
+无需克隆仓库即可试用：
 
 ```sh
-npx koma-miko@alpha demo
+npx koma-miko demo
 ```
 
 该命令会在无需 API key 或项目配置的情况下运行十个确定性的 Agent Spec。
@@ -466,10 +474,21 @@ npx koma-miko@alpha demo
 验证带审计记录的 `DENY → 观察到 Skill → ALLOW`，并确认账本没有保存代码内容。
 `npm run eval:codex-hook -w koma-miko`、`npm run eval:gemini-hook -w koma-miko`
 与 `npm run eval:vscode-hook -w koma-miko` 会在无需 API key 的情况下走同一套
-独立 Hook 一致性测试；VS Code 这一步覆盖文档化 Hook schema，不代表真实编辑器
-活体验证。Codex live runner（`npm run eval:codex-live -w koma-miko`）使用现有
-Codex CLI 登录态（`MIKO_CODEX_BIN`），不需要 OpenAI API key。Gemini live
-runner（`npm run eval:gemini-live -w koma-miko`）使用父进程中的
+独立 Hook 一致性测试。
+
+## 零依赖设计
+
+**零依赖，纯 TypeScript。** 你不需要引入一整个复杂的安全框架，只需要一个能在 Hook 层拦住 agent 未授权编辑动作的轻量级工具。
+
+## 技术文档与实测评估
+
+- **[Recovery Playbook（恢复剧本）](../../docs/design/miko-recovery-playbook.md)**：当 agent 被拒绝后，如何提供结构化、可观测的重试路径，避免 agent 进入死锁循环。
+- **[Claude Haiku 实测评估](../../docs/evals/miko-claude-haiku-alpha.md)**：在 Claude Haiku 等模型上的 alpha 评估结果，覆盖多个真实 Skill 场景与恢复拦截。
+- **[宿主适配器评估](../../docs/evals/miko-host-adapters-alpha.md)**：覆盖 Claude Code、Codex CLI、Gemini 以及 VS Code Copilot 的适配状态与已知边界。
+
+## 反馈与交流
+
+有问题或想提出新的需求方向？欢迎提交 [Issue](https://github.com/swnotmetal/Project-Koma/issues) 或开启 [Discussion](https://github.com/swnotmetal/Project-Koma/discussions)，我会认真查看并根据实际反馈持续改进。
 `GEMINI_API_KEY` 或 `GOOGLE_API_KEY` 与官方 Gemini CLI 入口
 （`MIKO_GEMINI_ENTRY`）。两个 runner 都使用一次性夹具，且不会读取 env 文件。
 每次 Miko 发布时，Codex 的模型活测刻意只运行这一条固定、一次性的

@@ -2,17 +2,20 @@
 
 ### Miko: required Skill checks for Claude Code and Codex
 
-Keep reminding your coding agent to read a required Skill before editing?
-**Miko** checks for observable Skill reads before protected edits. When evidence
-is missing, it pauses the action and tells the agent what to load before retrying.
-It runs locally, makes no LLM calls, and is free and open source.
+> **Your coding agent says it read the Skill, but did it really?**
+>
+> Miko intercepts file edits at the Hook layer. If your agent hasn't read the required Skill first, Miko rejects the edit and provides a clear, observable recovery path. It runs locally, zero-dependency, makes no LLM calls, and is free and open source.
 
-The current focus is **Claude Code and Codex CLI**. Miko is part of Koma;
-the separate **Gate, Scout, and Core** packages cover AI application input,
-request limits, and retrieval. You do not need them to use Miko.
+#### Who needs this?
+- You use **Claude Code** or **Codex CLI**, wrote project Skills/instructions, but aren't sure if the agent follows them.
+- You want a **hard check** before file edits instead of relying solely on prompt instructions.
+- You want Skill loading and checks to be **observable, rejectable, and recoverable**.
+
+#### How Miko differs
+Unlike static Skill linters or security scanners, Miko works at the **runtime Hook layer**—intercepting the agent's actual file edit tool calls in real time rather than statically analyzing Skill files.
 
 ```bash
-npm install -D koma-miko@alpha
+npm install -D koma-miko
 npx koma-miko init --host claude
 ```
 
@@ -67,8 +70,8 @@ In Claude CLI guided mode, a genuine scope exception opens one visible Miko
 choice: allow that exact retry once, or keep the current boundary.
 
 ```bash
-npx --yes koma-miko@alpha demo       # deterministic; no API key
-npx --yes koma-miko@alpha probe --host claude  # isolated adapter check; no model
+npx --yes koma-miko demo             # deterministic; no API key
+npx --yes koma-miko probe --host claude  # isolated adapter check; no model
 npx koma-miko init --host claude     # after local installation
 ```
 
@@ -97,6 +100,15 @@ single fixed check. Miko packages project Specs, observed-read tracking,
 post-compaction reload requirements, recovery messages, and completion evidence
 so you can maintain those checks together. Neither approach proves the model
 understood the instructions. See [when Miko helps](./packages/koma-miko/README.md#when-to-use-miko).
+
+**Zero Dependencies**: Pure TypeScript with 0 npm runtime dependencies. You get a lightweight Hook layer that halts unverified agent edits without heavy frameworks.
+
+**Key Research & Evals**:
+- **[Miko Recovery Playbook](./docs/design/miko-recovery-playbook.md)**: How Miko gives agents a structured, observable path to recover after being paused/denied, avoiding agent deadlock loops.
+- **[Claude Haiku Evals](./docs/evals/miko-claude-haiku-alpha.md)**: Evaluation on Claude Haiku across N Skill scenarios proving real-world recovery and enforcement.
+
+**Feedback & Discussions**:
+Have questions or want a specific capability? Open an [Issue](https://github.com/swnotmetal/Project-Koma/issues) or [Discussion](https://github.com/swnotmetal/Project-Koma/discussions)—all input is read and shapes the project roadmap directly.
 
 ---
 
