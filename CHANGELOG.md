@@ -11,6 +11,23 @@ All notable changes to Koma will be documented in this file.
   comparison tables, and the old adopter stories. Keep current demos and evals.
 - Update the architecture and release guides for the current package boundaries.
 
+## Miko alpha.14 / DSH alpha.13 - 2026-10-13
+
+### Changed
+
+- Add a bilingual scope statement to the root and package READMEs: Miko is an
+  extremely lightweight tool, not a security or compliance boundary, and users
+  should tell their agent to load the Skills it needs at the start of a
+  conversation. Miko is the backstop, not a replacement for instruction.
+- Remove the remaining "Copilot adapter work is paused" claims from the package
+  READMEs, `llms.txt`, the host-adapter evaluation record, and the roadmap, so
+  they no longer contradict the current support table.
+- Record the silent-under-enforcement mode in the package README disclaimers: a
+  Spec whose tool names match nothing the host reports leaves the ledger full of
+  evidence while recording no `contract_activated`, which looks identical to
+  "nothing needed checking".
+- Pin the DSH adapter to Miko alpha.14.
+
 ## Miko alpha.13 / DSH alpha.12 - 2026-10-13
 
 ### Changed
@@ -24,6 +41,42 @@ All notable changes to Koma will be documented in this file.
   described as paused. The cycle ran on the Local harness (Copilot Chat 0.69.0 /
   VS Code 1.141.0); the ledger holds `contract_activated` and the denial.
 - Pin the DSH adapter to Miko alpha.13.
+
+## DSH alpha.11 - 2026-09-28
+
+### Changed
+
+- Widen the DeepSeek Harness peer dependencies to `>=0.1.1-rc.2` so a DSH release
+  candidate bump no longer forces a Miko republish. `devDependencies` remain
+  pinned for local builds.
+
+## Miko alpha.12 / DSH alpha.10 - 2026-09-23
+
+### Added
+
+- Explain stale Skill evidence after auto-compaction. Compaction advances the
+  evidence epoch, so a real pre-compaction Skill read no longer satisfied a
+  `reloadAfterCompaction` requirement and was reported only as missing, which
+  read like Miko had forgotten the read. The result now states that the evidence
+  was observed before compaction and must be repeated. Reason codes and blocking
+  behaviour are unchanged.
+
+### Fixed
+
+- Stop an action-scoped Agent Spec from capturing unrelated later reads or
+  queries. Preparation and action policy now apply only to the calls matching the
+  activating selector, while the Spec stays active for completion checks.
+- Accept the PowerShell backtick-continuation and trailing `-Raw` forms of the
+  safe read-only Skill reload in the Codex adapter, so preparation recovery can
+  complete in that shell.
+- Bound host-supplied strings before they reach a regex: Codex and VS Code shell
+  Skill reads are capped at 4096 characters (VS Code also rejects `$()`
+  substitution), and Core index-ID slugs at 256 characters. Addresses three
+  CodeQL polynomial-regex findings.
+
+### Changed
+
+- Pin the DSH adapter to Miko alpha.12.
 
 ## Miko alpha.11 / DSH alpha.9 - 2026-09-03
 

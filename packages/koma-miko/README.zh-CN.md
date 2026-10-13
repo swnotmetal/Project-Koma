@@ -24,6 +24,15 @@ Miko 在三个可观察节点检查证据：
 2. **动作之前** — 工具、风险等级与路径范围是否符合契约；
 3. **完成之前** — 测试、UI 渲染检查或其他交付义务是否真的执行。
 
+### 适用范围
+
+**Miko 是一个极其轻量的工具。** 它只检查少量可观察事件，只拦住不满足要求的动作。
+它不是安全边界，不是合规系统，也不能证明模型理解了它读到的东西。
+
+**请在每次对话开始时，明确要求 agent 主动加载它需要的 Skills。**
+Miko 是 agent 忘记时的兜底，不能替代你把要求讲清楚。指令越清楚，被暂停的次数越少，
+Miko 只需要处理漏掉的部分。
+
 ## 快速开始
 
 在项目根目录按你使用的宿主配置。Miko 不会安装 Skill；生成的 `miko.json`
@@ -389,9 +398,10 @@ Codex 适配器把宿主事件交给 Miko 的共享验证器：
 
 ## 其他适配器
 
-以下实现为已有使用者及历史测试保留。Gemini 已移出主动开发；Copilot 开发暂停，
-等待实际试用者。包里保留实现，不代表它们与 Claude Code 或 Codex CLI 有同等
-支持程度。DeepSeek Harness 使用独立的[实验包](../koma-miko-dsh/README.md)。
+以下实现为已有使用者及历史测试保留。Gemini 已移出主动开发；VS Code Copilot
+已在 Local harness 上完成一次真实拦截验证，但没有广泛兼容测试，见
+[当前宿主支持](#host-support)。包里保留实现，不代表它们与 Claude Code 或
+Codex CLI 有同等支持程度。DeepSeek Harness 使用独立的[实验包](../koma-miko-dsh/README.md)。
 
 <details>
 <summary>Gemini 与 VS Code Copilot 配置及实现细节</summary>
@@ -560,10 +570,12 @@ cache、turn 与成本。runner 不会读取 env 文件。结果见
 - **Codex Desktop 必须先完成 CLI Hook 激活；配置存在和离线 probe 通过都不等于
   已经激活；**
 - **VS Code Agent Hooks 仍是 Preview；适配器已通过一次真实 Copilot
-  Agent-mode REVIEW 恢复流程，但这不代表对不同模型、工具名、编辑器版本或
-  组织策略的广泛兼容；**
+  Agent-mode REVIEW 恢复流程，以及一次真实 `DENY → 读 Skill → 重试` 拦截流程，
+  但这不代表对不同模型、工具名、编辑器版本或组织策略的广泛兼容；**
 - **Copilot 可能在没有通知的情况下增加工具名；适配器只能治理已识别的别名。
-  恢复主动支持前需要重新活测；当前适配开发暂停；**
+  如果 Spec 的工具名与宿主实际上报的名字完全不相交，它会静默失效——账本里
+  只有证据、没有 `contract_activated`。配置 Spec 后请检查账本，宿主更新后
+  重新活测；**
 - **不自动改写工具调用；**
 - **不声称“加载过 Skill”就等于模型理解、持续记住或遵守了 Skill。**
 

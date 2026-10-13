@@ -16,7 +16,8 @@ Preferred product sentence:
 
 Claude Code is the primary alpha path. Codex CLI is a Technical Preview with
 explicit Hook trust; Desktop requires prior CLI activation. Gemini is outside
-active development. Copilot adapter work is paused until a tester can use it.
+active development. VS Code Copilot has one verified live enforcement cycle
+(2026-10-13) on the Local harness; that host does not render Miko's status text.
 Existing adapters and completed experiments remain in this roadmap as history;
 unchecked items are candidates, not release commitments. See
 [current support](../../packages/koma-miko/README.md#host-support).
@@ -68,7 +69,7 @@ reproducible probe and one small result bundle to return.
   CLI is a Technical Preview, `enforce` is promoted, and Desktop requires prior
   CLI activation. Revisit only when the host exposes Desktop Hook review or
   supports `permissionDecision: ask`.
-- [ ] **Paused until tester availability:** add a one-command VS Code Copilot probe that creates an isolated Skill,
+- [ ] **Unblocked 2026-10-13 — a real tester is now available:** add a one-command VS Code Copilot probe that creates an isolated Skill,
   Agent Spec, Hook configuration, and disposable `src/miko-probe` fixture.
 - [ ] Emit a privacy-safe probe report containing only host/version metadata,
   Hook event order, tool names, argument-key names, and Miko decisions; never

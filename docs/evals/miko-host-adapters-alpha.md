@@ -4,11 +4,12 @@ Initial record: 2026-08-27; later dated observations are included below.
 These are narrow integration signals for pinned host versions, not reliability
 claims about any model or editor.
 
-> **Current focus (2026-09-03): Claude Code and Codex CLI.** Start with the
+> **Current focus: Claude Code and Codex CLI.** Start with the
 > [current support table and setup](../../packages/koma-miko/README.md#host-support).
 > The Codex section below includes successful recovery runs after the initial
-> quota failure. Gemini is outside active development; Copilot adapter work is
-> paused. The historical results below do not imply equal support across hosts.
+> quota failure. Gemini is outside active development. VS Code Copilot gained a
+> verified live enforcement cycle on 2026-10-13 (recorded below). The historical
+> results below do not imply equal support across hosts.
 
 ## Offline conformance
 
@@ -35,13 +36,43 @@ paths and verifies that edit content and `tool_response` are absent from the
 ledger.
 
 At the time of the initial 2026-08-27 record, this was not yet a live-editor pass.
-Later limited REVIEW/Skip recovery and edit-alias observations are recorded in
+Later limited REVIEW/Skip recovery and edit-alias observations are summarised in
 the [adapter details](../../packages/koma-miko/README.md#other-adapters).
-VS Code tool names can vary by model and
-request, and native Copilot Skill injection might not emit an observable read.
-Before resuming active support, confirm the actual tool names and an explicit
-`SKILL.md` recovery read. Start with `doctor`; request a bounded debug capture
-only if needed to explain a concrete failure.
+
+### 2026-10-13: first live enforcement cycle
+
+Copilot Chat 0.69.0 / VS Code 1.141.0, Local harness, project Spec with
+`mode: "enforce"`, triggered by an ordinary edit request. The ledger recorded:
+
+```text
+contract_activated: order-write-and-review
+decision_recorded:  PreToolUse DENY PREPARE PREPARATION_EVIDENCE_MISSING
+reference_read:     .agents/skills/order-review/SKILL.md
+skill_loaded:       order-review
+artifact_changed:   src/domain.ts
+```
+
+The agent loaded the named Skill and retried without user intervention. Two
+limits were observed in the same session.
+
+**Tool names must match the host.** An earlier Spec built from the Codex starter
+tool list (`apply_patch`, `Edit`, `Write`) never matched the VS Code names
+`create_file` / `replace_string_in_file`. The Spec stayed inactive: 43 edits
+produced 270 evidence records and **zero** `contract_activated` entries. Silent
+under-enforcement is indistinguishable from "nothing needed checking", so verify
+`contract_activated` in the ledger after configuring a Spec.
+
+**Hook status is not rendered.** The `GitHub Copilot Chat Hooks` output channel
+shows all five configured events firing and VS Code receiving Miko's
+`systemMessage`, but the chat UI renders none of it — the chat transcript has no
+hook-notice element type. The denial still reaches the model through
+`permissionDecisionReason`. From `0.1.0-alpha.13` the adapter also asks the agent
+to relay one deduplicated status line, because the model is the only remaining
+channel; relay is best-effort.
+
+VS Code tool names can still vary by model and request, and native Copilot Skill
+injection might not emit an observable read. Start with `doctor`; request a
+bounded debug capture only if needed to explain a concrete failure.
 
 ## DeepSeek Harness
 

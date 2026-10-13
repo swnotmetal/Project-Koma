@@ -24,6 +24,17 @@ Miko checks observable evidence at three points:
 2. **Pre-action** — is the proposed tool, risk, and path scope allowed?
 3. **Complete** — did the required tests, reviews, or artifacts actually happen?
 
+### Scope
+
+**Miko is an extremely lightweight tool.** It checks a small set of observable
+events and blocks only the actions that fail them. It is not a security
+boundary, a compliance system, or proof that a model understood anything it read.
+
+**Start every conversation by telling your agent to load the Skills it needs.**
+Miko is the backstop for when the agent forgets, not a replacement for saying
+what you want. Clearer instructions mean fewer pauses, and Miko only has to
+catch the gaps.
+
 ## Quick start
 
 Use the setup for your host from the project root. Miko does not install Skills;
@@ -447,10 +458,11 @@ The Codex adapter maps the host's events to Miko's shared verifier:
 ## Other adapters
 
 These implementations are retained for existing users and historical tests.
-Gemini is outside active development. Copilot work is paused pending real
-tester availability. Their presence in the package does not imply the same
-support level as Claude Code or Codex CLI. DeepSeek Harness has its own
-[experimental package](../koma-miko-dsh/README.md).
+Gemini is outside active development. VS Code Copilot has one verified live
+enforcement cycle on the Local harness but no broad compatibility testing; see
+[current host support](#host-support). Their presence in the package does not
+imply the same support level as Claude Code or Codex CLI. DeepSeek Harness has
+its own [experimental package](../koma-miko-dsh/README.md).
 
 <details>
 <summary>Gemini and VS Code Copilot setup and implementation details</summary>
@@ -651,11 +663,14 @@ events. This is one bounded UX observation, not a general model benchmark.
 - **Codex Desktop requires prior CLI Hook activation; config presence and
   offline probe success do not prove activation**
 - **VS Code Agent Hooks are Preview; the adapter has passed one live Copilot
-  Agent-mode REVIEW recovery flow, not broad compatibility testing across
-  models, tool names, editor versions, or organization policies**
+  Agent-mode REVIEW recovery flow and one live `DENY → Skill read → retry`
+  enforcement cycle, not broad compatibility testing across models, tool names,
+  editor versions, or organization policies**
 - **Copilot can introduce new tool names without notice; the adapter only
-  governs aliases it recognizes. Repeat live testing before resuming active
-  support; current adapter work is paused**
+  governs aliases it recognizes. A Spec whose tool names match nothing the host
+  reports fails silently — the ledger fills with evidence but records no
+  `contract_activated`. Check the ledger after configuring a Spec, and repeat
+  live testing after host updates**
 - **No automatic rewriting of tool calls**
 - **No claim that loading a skill proves the model understood, retained, or followed it**
 

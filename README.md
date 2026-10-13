@@ -14,6 +14,12 @@
 #### How Miko differs
 Unlike static Skill linters or security scanners, Miko works at the **runtime Hook layer**—intercepting the agent's actual file edit tool calls in real time rather than statically analyzing Skill files.
 
+#### Scope
+
+**Miko is an extremely lightweight tool.** It checks a small set of observable events and blocks only the actions that fail them. It is not a security boundary, a compliance system, or proof that a model understood anything.
+
+**Start every conversation by telling your agent to load the Skills it needs.** Miko is the backstop for when the agent forgets, not a replacement for saying what you want. Clearer instructions mean fewer pauses.
+
 ```bash
 npm install -D koma-miko
 npx koma-miko init --host claude

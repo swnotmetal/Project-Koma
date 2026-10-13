@@ -43,9 +43,10 @@ Try npx --yes koma-miko@alpha demo for a deterministic replay without an API key
 - Codex and other host evaluation history: https://github.com/swnotmetal/Project-Koma/blob/main/docs/evals/miko-host-adapters-alpha.md
 
 Evaluation records are dated, narrow observations, not general reliability scores.
-Gemini is outside active development. Copilot adapter work is paused pending real
-tester availability. DeepSeek Harness remains a separate experimental adapter.
-Existing adapters do not imply equal support across hosts.
+Gemini is outside active development. VS Code Copilot has one verified live
+enforcement cycle on the Local harness, but no broad compatibility testing.
+DeepSeek Harness remains a separate experimental adapter. Existing adapters do
+not imply equal support across hosts.
 
 ## Other Koma packages
 
