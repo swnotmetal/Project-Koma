@@ -77,7 +77,7 @@ npx koma-miko doctor --host codex --strict
 
 ## 当前宿主支持
 
-方向核对于 **2026-09-03**。以下是窄范围 alpha 路径，不保证不同编辑器、模型或
+方向核对于 **2026-10-13**。以下是窄范围 alpha 路径，不保证不同编辑器、模型或
 组织策略下的体验完全一致。
 
 | 宿主 | 当前范围 |
@@ -86,7 +86,7 @@ npx koma-miko doctor --host codex --strict
 | **Codex CLI** | 主攻方向，**Technical Preview**；明确完成 Hook 信任后，固定恢复流程已通过。 |
 | Codex Desktop | 在 CLI 激活后有测试；不承诺独立首次配置，状态展示依赖宿主与 agent 转述。 |
 | Gemini CLI | 移出主动开发；离线一致性通过，记录中的真实模型测试超时。 |
-| VS Code Copilot | 适配开发暂停，等待试用者实际使用；保留代码和有限的真实观察记录。 |
+| VS Code Copilot | Local harness。2026-10-13 实测完成一次 `DENY → 读 Skill → 重试 → ALLOW`（Copilot Chat 0.69.0 / VS Code 1.141.0），账本记录了 `contract_activated` 与拒绝事件。**该宿主会接收 hook 输出，但不会在 chat UI 渲染 `systemMessage`**，因此 Miko 改为请 agent 在状态变化时转述一行摘要（已去重）。转述不保证成功，账本仍是权威记录。 |
 | DeepSeek Harness | 面向固定 Developer Preview 的独立[实验适配器](../koma-miko-dsh/README.md)，不是主要首次使用路径。 |
 
 已测版本与限制见带日期的 [Claude 评估](../../docs/evals/miko-claude-haiku-alpha.md)

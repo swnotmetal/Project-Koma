@@ -87,7 +87,9 @@ npx koma-miko init --host claude     # 本地安装后自动配置
 [静态截图](./docs/assets/miko-terminal-demo-poster.png) — 网页模拟，并非真实宿主录屏。
 
 Claude Code 是主要 alpha 使用路径；Codex CLI 已有窄范围恢复验证，但仍有上述
-激活限制。Gemini 移出主动开发范围；Copilot 适配开发暂停，等待实际试用者。
+激活限制。Gemini 移出主动开发范围。VS Code Copilot 现已在 Local harness 上有
+一次真实拦截验证，但该宿主的 chat UI 不渲染 Miko 状态文本，Miko 因此请 agent
+代为转述。
 已有适配器和历史测试保留在 [适配器文档](./packages/koma-miko/README.zh-CN.md#other-adapters)。
 
 **为什么不直接写一个 Hook？** 单个固定检查用原生 Hook 就够了。Miko 把项目

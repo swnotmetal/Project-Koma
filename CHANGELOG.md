@@ -11,6 +11,20 @@ All notable changes to Koma will be documented in this file.
   comparison tables, and the old adopter stories. Keep current demos and evals.
 - Update the architecture and release guides for the current package boundaries.
 
+## Miko alpha.13 / DSH alpha.12 - 2026-10-13
+
+### Changed
+
+- Relay Miko's passive one-line status through the agent on VS Code Copilot. That
+  host captures hook output but does not render `systemMessage` in its chat UI, so
+  the completion receipt and recovery notice were reaching nobody. The adapter now
+  mirrors the deduplicated Codex `PostToolUse` relay via `additionalContext`.
+- Record the first verified live VS Code Copilot enforcement cycle in the host
+  support table, and state the visibility limit instead of leaving adapter work
+  described as paused. The cycle ran on the Local harness (Copilot Chat 0.69.0 /
+  VS Code 1.141.0); the ledger holds `contract_activated` and the denial.
+- Pin the DSH adapter to Miko alpha.13.
+
 ## Miko alpha.11 / DSH alpha.9 - 2026-09-03
 
 ### Changed

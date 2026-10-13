@@ -197,6 +197,31 @@ export function handleVSCodeHookEvent(
     };
   }
 
+  // VS Code captures hook output but does not render `systemMessage` in its chat
+  // UI, so a passive status is only visible if the agent relays it. This mirrors
+  // the Codex PostToolUse relay; the deduplication lives in the shared runtime.
+  if (input.hook_event_name === 'PostToolUse' && evidence.length > 0) {
+    const verification = miko.verifyCompletion(taskId);
+    const receipt = formatMikoCompletionReceipt(verification);
+    if (receipt) {
+      const notice = verification.reasonCode === 'NO_APPLICABLE_CONTRACT'
+        ? '⚪ Miko active · no Agent Spec applies to observed actions so far.'
+        : `🟢 Miko · evidence for ${verification.contractIds.length} active Agent Spec(s) satisfied so far.`;
+      return {
+        evidence,
+        passiveNoticeKey: JSON.stringify([
+          miko.getContextEpoch(taskId), verification.reasonCode, verification.contractIds,
+        ]),
+        output: {
+          hookSpecificOutput: {
+            hookEventName: 'PostToolUse',
+            additionalContext: `${notice}\nBriefly relay this status once in your next normal progress message, in the user's language. This is a checkpoint, not approval of the whole answer or task. Later Miko decisions supersede it. Do not add a model turn or repeat it for every tool.`,
+          },
+        },
+      };
+    }
+  }
+
   if (input.hook_event_name === 'PreToolUse') {
     const event = input as VSCodePreToolUseInput;
     for (const call of canonicalVSCodeCalls(event.tool_name, event.tool_input, event.cwd)) {

@@ -91,8 +91,10 @@ npx koma-miko init --host claude     # after local installation
 
 Claude Code is the primary alpha workflow. Codex CLI has a verified narrow
 recovery flow with the activation limits above. Gemini is outside active
-development; Copilot adapter work is paused pending a real tester. Existing
-adapters and their dated results remain available in the
+development. VS Code Copilot now has one verified live enforcement cycle on the
+Local harness, but that host does not render Miko's status text in the chat UI,
+so Miko asks the agent to relay it. Existing adapters and their dated results
+remain available in the
 [adapter documentation](./packages/koma-miko/README.md#other-adapters).
 
 **Why use Miko instead of writing a Hook?** A small native Hook is enough for a

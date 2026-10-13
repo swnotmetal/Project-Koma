@@ -79,7 +79,7 @@ terminal replay without an API key. Both are demonstrations, not live host tests
 
 ## Current host support
 
-Focus reviewed **2026-09-03**. These are narrow alpha paths, not a promise of
+Focus reviewed **2026-10-13**. These are narrow alpha paths, not a promise of
 identical behavior across editors, models, or organization policies.
 
 | Host | Current scope |
@@ -88,7 +88,7 @@ identical behavior across editors, models, or organization policies.
 | **Codex CLI** | Primary focus, **Technical Preview**; a fixed live recovery flow passed after explicit Hook trust. |
 | Codex Desktop | Tested after CLI activation; no standalone onboarding promise. Status presentation depends on the host and agent relay. |
 | Gemini CLI | Outside active development. Offline conformance passed; the recorded live attempt timed out. |
-| VS Code Copilot | Adapter work paused until a tester can use it. Existing code and limited live observations remain available. |
+| VS Code Copilot | Local harness. One live `DENY → load Skill → retry → ALLOW` cycle verified 2026-10-13 (Copilot Chat 0.69.0 / VS Code 1.141.0), with `contract_activated` and the denial recorded in the ledger. **This host captures hook output but does not render `systemMessage` in the chat UI**, so Miko asks the agent to relay a one-line status once per state change (deduplicated). Relay is best-effort; the ledger stays the authoritative record. |
 | DeepSeek Harness | Separate experimental [adapter](../koma-miko-dsh/README.md) for a pinned Developer Preview; not the primary onboarding path. |
 
 See the dated [Claude](../../docs/evals/miko-claude-haiku-alpha.md) and
